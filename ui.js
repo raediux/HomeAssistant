@@ -1,15 +1,64 @@
 // ── PIN auth ──────────────────────────────────────────────────
 (async () => {
-  const overlay = document.getElementById('pin-overlay');
-  const input   = document.getElementById('pin-input');
-  const errMsg  = document.getElementById('pin-error');
+  const overlay  = document.getElementById('pin-overlay');
+  const input    = document.getElementById('pin-input');
+  const errMsg   = document.getElementById('pin-error');
+  const remember = document.getElementById('pin-remember-check');
 
+  const LOCKOUT_MS   = 10 * 60 * 1000; // 10 minutes
+  const MAX_ATTEMPTS = 2;
+
+  // Trusted device — skip PIN entirely
+  if (localStorage.getItem('ha_trusted') === '1') {
+    overlay.classList.add('hidden');
+    return;
+  }
+
+  // Session already authenticated
   if (sessionStorage.getItem('ha_auth') === '1') {
     overlay.classList.add('hidden');
     return;
   }
 
-  input.focus();
+  // Check if currently locked out
+  function getLockoutRemaining() {
+    const until = parseInt(localStorage.getItem('ha_lockout_until') || '0', 10);
+    return Math.max(0, until - Date.now());
+  }
+
+  function applyLockout() {
+    const remaining = getLockoutRemaining();
+    if (remaining <= 0) return false;
+    input.disabled = true;
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.ceil((remaining % 60000) / 1000);
+    errMsg.textContent = `Too many attempts. Try again in ${mins}:${String(secs).padStart(2, '0')}`;
+    errMsg.classList.add('visible');
+    return true;
+  }
+
+  // Countdown ticker during lockout
+  function startCountdown() {
+    const timer = setInterval(() => {
+      const remaining = getLockoutRemaining();
+      if (remaining <= 0) {
+        clearInterval(timer);
+        input.disabled = false;
+        input.value = '';
+        errMsg.classList.remove('visible');
+        errMsg.textContent = 'Incorrect PIN';
+        localStorage.removeItem('ha_fail_count');
+        input.focus();
+      } else {
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.ceil((remaining % 60000) / 1000);
+        errMsg.textContent = `Too many attempts. Try again in ${mins}:${String(secs).padStart(2, '0')}`;
+      }
+    }, 1000);
+  }
+
+  if (applyLockout()) startCountdown();
+  else input.focus();
 
   async function hashPin(pin) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
@@ -17,15 +66,31 @@
   }
 
   async function checkPin() {
+    if (getLockoutRemaining() > 0) return;
     const hash = await hashPin(input.value);
     if (hash === PIN_HASH) {
+      localStorage.removeItem('ha_fail_count');
+      localStorage.removeItem('ha_lockout_until');
       sessionStorage.setItem('ha_auth', '1');
+      if (remember.checked) localStorage.setItem('ha_trusted', '1');
       overlay.classList.add('hidden');
     } else {
-      errMsg.classList.add('visible');
       input.classList.add('shake');
       input.value = '';
-      setTimeout(() => { input.classList.remove('shake'); errMsg.classList.remove('visible'); }, 1200);
+      setTimeout(() => input.classList.remove('shake'), 1200);
+
+      const fails = parseInt(localStorage.getItem('ha_fail_count') || '0', 10) + 1;
+      localStorage.setItem('ha_fail_count', fails);
+
+      if (fails >= MAX_ATTEMPTS) {
+        localStorage.setItem('ha_lockout_until', Date.now() + LOCKOUT_MS);
+        applyLockout();
+        startCountdown();
+      } else {
+        errMsg.textContent = `Incorrect PIN — ${MAX_ATTEMPTS - fails} attempt${MAX_ATTEMPTS - fails === 1 ? '' : 's'} remaining`;
+        errMsg.classList.add('visible');
+        setTimeout(() => errMsg.classList.remove('visible'), 2000);
+      }
     }
   }
 
