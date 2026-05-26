@@ -40,6 +40,14 @@ document.getElementById('today-label').textContent = new Date().toLocaleDateStri
   weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
 });
 
+function updateTime() {
+  document.getElementById('time-label').textContent = new Date().toLocaleTimeString('en-AU', {
+    hour: 'numeric', minute: '2-digit', hour12: true
+  });
+}
+updateTime();
+setInterval(updateTime, 1000);
+
 // ── Tab switching ─────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
