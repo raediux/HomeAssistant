@@ -39,6 +39,26 @@ async function dbDeleteTask(id) {
   if (error) console.error('dbDeleteTask:', error);
 }
 
+// ── Calendar badges ───────────────────────────────────────────
+async function dbLoadBadges() {
+  const { data, error } = await db.from('calendar_badges').select('*').order('id');
+  if (error) { console.error('dbLoadBadges:', error); return []; }
+  return data.map(row => ({ id: row.id, date: row.date, label: row.label, color: row.color }));
+}
+
+async function dbSaveBadge(badge) {
+  const { data, error } = await db.from('calendar_badges').insert(
+    { date: badge.date, label: badge.label, color: badge.color }
+  ).select().single();
+  if (error) { console.error('dbSaveBadge:', error); return null; }
+  return data.id;
+}
+
+async function dbDeleteBadge(id) {
+  const { error } = await db.from('calendar_badges').delete().eq('id', id);
+  if (error) console.error('dbDeleteBadge:', error);
+}
+
 // ── Shopping — working list ───────────────────────────────────
 async function dbLoadWorkingItems() {
   const { data, error } = await db.from('shopping_working').select('*').order('id');
