@@ -105,6 +105,26 @@ body { padding: 0 20px 20px; }
 .tab-panel { display: none; flex: 1; min-height: 0; overflow: hidden; }
 .tab-panel.active { display: flex; flex-direction: column; }
 
+/* ── Tasks names bar ── */
+.names-bar {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  padding: 10px 0 4px;
+  background: var(--bg);
+}
+.names-bar-spacer {
+  width: 42px; /* 1px section border + 40px row-label + 1px row-label border */
+  flex-shrink: 0;
+}
+.names-bar span {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0 22px;
+}
+
 /* ── Tasks layout ── */
 .tasks-layout {
   display: flex;
@@ -248,7 +268,7 @@ body { padding: 0 20px 20px; }
 .fp-sep { width: 1px; background: var(--border); align-self: stretch; margin: 0 2px; }
 
 /* ── Task items ── */
-.items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-items: start; }
+.items { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; align-items: start; }
 
 .task-card {
   background: var(--surface2);
