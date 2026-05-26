@@ -1,0 +1,91 @@
+// ── Supabase client ───────────────────────────────────────────
+// Loaded after config.js which defines SUPABASE_URL and SUPABASE_ANON_KEY.
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── Tasks ─────────────────────────────────────────────────────
+async function dbLoadTasks() {
+  const { data, error } = await db.from('tasks').select('*').order('id');
+  if (error) { console.error('dbLoadTasks:', error); return []; }
+  return data.map(row => ({
+    id:        row.id,
+    person:    row.person,
+    frequency: row.frequency,
+    title:     row.title,
+    dueDate:   row.due_date,
+    dow:       row.dow,
+    done:      row.done,
+  }));
+}
+
+async function dbSaveTask(task) {
+  const row = {
+    id:        task.id,
+    person:    task.person,
+    frequency: task.frequency,
+    title:     task.title,
+    due_date:  task.dueDate || null,
+    dow:       task.dow     ?? null,
+    done:      task.done,
+  };
+  const { error } = await db.from('tasks').upsert(row, { onConflict: 'id' });
+  if (error) console.error('dbSaveTask:', error);
+}
+
+async function dbDeleteTask(id) {
+  const { error } = await db.from('tasks').delete().eq('id', id);
+  if (error) console.error('dbDeleteTask:', error);
+}
+
+// ── Shopping — working list ───────────────────────────────────
+async function dbLoadWorkingItems() {
+  const { data, error } = await db.from('shopping_working').select('*').order('id');
+  if (error) { console.error('dbLoadWorkingItems:', error); return []; }
+  return data.map(row => ({
+    id:       row.id,
+    name:     row.name,
+    qty:      row.qty,
+    store:    row.store,
+    got:      row.got,
+    category: row.category,
+  }));
+}
+
+async function dbSaveWorkingItem(item) {
+  const { error } = await db.from('shopping_working').upsert({
+    id: item.id, name: item.name, qty: item.qty || null,
+    store: item.store || null, got: item.got, category: item.category,
+  }, { onConflict: 'id' });
+  if (error) console.error('dbSaveWorkingItem:', error);
+}
+
+async function dbDeleteWorkingItem(id) {
+  const { error } = await db.from('shopping_working').delete().eq('id', id);
+  if (error) console.error('dbDeleteWorkingItem:', error);
+}
+
+// ── Shopping — past purchases ─────────────────────────────────
+async function dbLoadPastItems() {
+  const { data, error } = await db.from('shopping_past').select('*').order('times', { ascending: false });
+  if (error) { console.error('dbLoadPastItems:', error); return []; }
+  return data.map(row => ({
+    id:       row.id,
+    name:     row.name,
+    store:    row.store,
+    times:    row.times,
+    category: row.category,
+  }));
+}
+
+async function dbSavePastItem(item) {
+  const { error } = await db.from('shopping_past').upsert({
+    id: item.id, name: item.name, store: item.store || null,
+    times: item.times, category: item.category || 'Other',
+  }, { onConflict: 'id' });
+  if (error) console.error('dbSavePastItem:', error);
+}
+
+async function dbDeletePastItem(id) {
+  const { error } = await db.from('shopping_past').delete().eq('id', id);
+  if (error) console.error('dbDeletePastItem:', error);
+}

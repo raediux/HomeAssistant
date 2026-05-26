@@ -1,0 +1,293 @@
+// ── PIN auth ──────────────────────────────────────────────────
+(async () => {
+  const overlay = document.getElementById('pin-overlay');
+  const input   = document.getElementById('pin-input');
+  const errMsg  = document.getElementById('pin-error');
+
+  if (sessionStorage.getItem('ha_auth') === '1') {
+    overlay.classList.add('hidden');
+    return;
+  }
+
+  input.focus();
+
+  async function hashPin(pin) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+    return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function checkPin() {
+    const hash = await hashPin(input.value);
+    if (hash === PIN_HASH) {
+      sessionStorage.setItem('ha_auth', '1');
+      overlay.classList.add('hidden');
+    } else {
+      errMsg.classList.add('visible');
+      input.classList.add('shake');
+      input.value = '';
+      setTimeout(() => { input.classList.remove('shake'); errMsg.classList.remove('visible'); }, 1200);
+    }
+  }
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+})();
+
+document.getElementById('add-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeAddModal();
+});
+
+document.getElementById('today-label').textContent = new Date().toLocaleDateString('en-AU', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+});
+
+// ── Tab switching ─────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+
+// ── Shopping data ─────────────────────────────────────────────
+const CATEGORIES = ['Fruit & Veg', 'Meats', 'Pantry', 'Dairy & Fridge', 'Household', 'Personal', 'Other'];
+let collapsed = {};
+let collapsedPast = {};
+
+let workingItems = [];
+let pastItems = [];
+let nextId = 100;
+let draggedId = null;
+let dragSource = null; // 'working' | 'past'
+
+// ── Render ────────────────────────────────────────────────────
+function render() {
+  renderWorking();
+  renderPast();
+}
+
+function renderWorking() {
+  const el = document.getElementById('working-list');
+  if (!workingItems.length) {
+    el.innerHTML = '<p style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">No items — add from past purchases or create new</p>';
+    return;
+  }
+
+  const groups = {};
+  CATEGORIES.forEach(cat => { groups[cat] = []; });
+  workingItems.forEach(item => {
+    const cat = CATEGORIES.includes(item.category) ? item.category : 'Other';
+    groups[cat].push(item);
+  });
+
+  el.innerHTML = CATEGORIES.filter(cat => groups[cat].length > 0).map(cat => {
+    const items = groups[cat];
+    const isCollapsed = collapsed[cat];
+    const itemsHtml = items.map(item => `
+      <div class="s-item${item.got ? ' done' : ''}"
+           draggable="true" data-id="${item.id}" data-src="working"
+           ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
+        <i class="ti ti-grip-vertical drag-handle" aria-hidden="true"></i>
+        <div class="circle${item.got ? ' checked' : ''}" style="flex-shrink:0" onclick="toggleGot(${item.id})">
+          ${item.got ? '<i class="ti ti-check"></i>' : ''}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="s-name">${esc(item.name)}</div>
+        </div>
+        <button class="move-btn rem" title="Archive" onclick="moveToArchive(${item.id})">
+          <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>`).join('');
+    return `
+      <div class="cat-section">
+        <div class="cat-header" onclick="toggleCat('${cat}')">
+          <span class="cat-label">${cat}</span>
+          <span class="cat-line"></span>
+          <span class="cat-count">${items.length}</span>
+          <i class="ti ti-chevron-down cat-chevron${isCollapsed ? ' collapsed' : ''}" aria-hidden="true"></i>
+        </div>
+        <div class="cat-body${isCollapsed ? ' collapsed' : ''}">${itemsHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggleCat(cat) {
+  collapsed[cat] = !collapsed[cat];
+  renderWorking();
+}
+
+function renderPast(query = '') {
+  const el = document.getElementById('past-list');
+  const q = query.toLowerCase();
+  const filtered = q ? pastItems.filter(i => i.name.toLowerCase().includes(q)) : pastItems;
+  if (!filtered.length) {
+    el.innerHTML = '<p style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">No matches</p>';
+    return;
+  }
+
+  if (q) {
+    el.innerHTML = filtered.map(item => pastItemHtml(item)).join('');
+    return;
+  }
+
+  const groups = {};
+  CATEGORIES.forEach(cat => { groups[cat] = []; });
+  filtered.forEach(item => {
+    const cat = CATEGORIES.includes(item.category) ? item.category : 'Other';
+    groups[cat].push(item);
+  });
+
+  el.innerHTML = CATEGORIES.filter(cat => groups[cat].length > 0).map(cat => {
+    const items = groups[cat];
+    const isCollapsed = collapsedPast[cat];
+    return `
+      <div class="cat-section">
+        <div class="cat-header" onclick="togglePastCat('${cat}')">
+          <span class="cat-label">${cat}</span>
+          <span class="cat-line"></span>
+          <span class="cat-count">${items.length}</span>
+          <i class="ti ti-chevron-down cat-chevron${isCollapsed ? ' collapsed' : ''}" aria-hidden="true"></i>
+        </div>
+        <div class="cat-body${isCollapsed ? ' collapsed' : ''}">
+          ${items.map(item => pastItemHtml(item)).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function pastItemHtml(item) {
+  return `
+    <div class="p-item" draggable="true" data-id="${item.id}" data-src="past"
+         ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
+      <i class="ti ti-grip-vertical drag-handle" aria-hidden="true"></i>
+      <div style="flex:1;min-width:0">
+        <div class="p-name">${esc(item.name)}</div>
+      </div>
+      <button class="move-btn add" title="Add to list" onclick="moveToList(${item.id})">
+        <i class="ti ti-arrow-left" aria-hidden="true"></i>
+      </button>
+    </div>`;
+}
+
+function togglePastCat(cat) {
+  collapsedPast[cat] = !collapsedPast[cat];
+  renderPast(document.getElementById('past-search').value);
+}
+
+function filterPast() {
+  renderPast(document.getElementById('past-search').value);
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Move actions ──────────────────────────────────────────────
+function moveToList(id) {
+  const idx = pastItems.findIndex(i => i.id === id);
+  if (idx === -1) return;
+  const item = pastItems.splice(idx, 1)[0];
+  const working = { id: item.id, name: item.name, qty: null, store: item.store, got: false, category: item.category || 'Other' };
+  workingItems.push(working);
+  render();
+  dbDeletePastItem(item.id);
+  dbSaveWorkingItem(working);
+}
+
+function moveToArchive(id) {
+  const idx = workingItems.findIndex(i => i.id === id);
+  if (idx === -1) return;
+  const item = workingItems.splice(idx, 1)[0];
+  dbDeleteWorkingItem(item.id);
+  const existing = pastItems.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+  if (existing) {
+    existing.times++;
+    dbSavePastItem(existing);
+  } else {
+    const past = { id: item.id, name: item.name, store: item.store, times: 1, category: item.category || 'Other' };
+    pastItems.unshift(past);
+    dbSavePastItem(past);
+  }
+  render();
+}
+
+function toggleGot(id) {
+  const item = workingItems.find(i => i.id === id);
+  if (item) { item.got = !item.got; render(); dbSaveWorkingItem(item); }
+}
+
+function addToList() {
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(() => document.getElementById('modal-name').focus(), 50);
+}
+
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('open');
+  document.getElementById('modal-name').value = '';
+  document.getElementById('modal-store').value = '';
+}
+
+function confirmAdd() {
+  const name = document.getElementById('modal-name').value.trim();
+  if (!name) { document.getElementById('modal-name').focus(); return; }
+  const category = document.getElementById('modal-cat').value;
+  const store    = document.getElementById('modal-store').value.trim() || null;
+  const item = { id: nextId++, name, qty: null, store, got: false, category };
+  workingItems.push(item);
+  closeAddModal();
+  render();
+  dbSaveWorkingItem(item);
+}
+
+// ── Drag and drop ─────────────────────────────────────────────
+function onDragStart(e) {
+  draggedId = parseInt(e.currentTarget.dataset.id);
+  dragSource = e.currentTarget.dataset.src;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+
+  const targetZone = dragSource === 'working'
+    ? document.getElementById('past-dropzone')
+    : document.getElementById('working-dropzone');
+  targetZone.classList.add('active');
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.getElementById('working-dropzone').classList.remove('active');
+  document.getElementById('past-dropzone').classList.remove('active');
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+// Set up drop zones on panels
+document.addEventListener('DOMContentLoaded', async () => {
+  setupDropZone(document.getElementById('working-panel'), 'working');
+  setupDropZone(document.getElementById('past-panel'), 'past');
+
+  [workingItems, pastItems] = await Promise.all([dbLoadWorkingItems(), dbLoadPastItems()]);
+  if (workingItems.length || pastItems.length) {
+    const maxId = Math.max(...workingItems.map(i => i.id), ...pastItems.map(i => i.id), nextId - 1);
+    nextId = maxId + 1;
+  }
+  render();
+});
+
+function setupDropZone(panel, target) {
+  panel.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragSource !== target) panel.style.outline = '2px solid var(--accent)';
+  });
+  panel.addEventListener('dragleave', e => {
+    if (!panel.contains(e.relatedTarget)) panel.style.outline = '';
+  });
+  panel.addEventListener('drop', e => {
+    e.preventDefault();
+    panel.style.outline = '';
+    if (dragSource === target || draggedId === null) return;
+    if (target === 'working') moveToList(draggedId);
+    else moveToArchive(draggedId);
+    draggedId = null;
+    dragSource = null;
+  });
+}

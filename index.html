@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Home Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- PIN overlay -->
+<div id="pin-overlay">
+  <div id="pin-box">
+    <div id="pin-title">Home Assistant</div>
+    <div id="pin-sub">Enter your PIN to continue</div>
+    <input id="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off">
+    <div id="pin-error">Incorrect PIN</div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Home Assistant</div>
+      <div class="topbar-date" id="today-label"></div>
+    </div>
+  </div>
+
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab active" id="tab-tasks" onclick="switchTab('tasks')">Tasks</button>
+    <button class="tab" id="tab-shopping" onclick="switchTab('shopping')">Shopping</button>
+    <button class="tab" id="tab-calendar" onclick="switchTab('calendar')">Calendar</button>
+  </div>
+
+  <!-- Tasks panel -->
+  <div class="tab-panel active" id="panel-tasks">
+    <div class="tasks-layout">
+
+        <!-- Daily -->
+        <div class="task-section" id="tsec-daily">
+          <div class="row-label">Daily</div>
+          <div class="person-boxes">
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Ray</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','ray','daily')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-ray-daily"></div>
+            </div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Jazelle</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','jazelle','daily')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-jazelle-daily"></div>
+            </div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Linus</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','linus','daily')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-linus-daily"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly -->
+        <div class="task-section" id="tsec-weekly">
+          <div class="row-label">Weekly</div>
+          <div class="person-boxes">
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Ray</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','ray','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-ray-weekly"></div>
+            </div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Jazelle</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','jazelle','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-jazelle-weekly"></div>
+            </div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Linus</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','linus','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-linus-weekly"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Occasional -->
+        <div class="task-section" id="tsec-occasional">
+          <div class="row-label">Occasional</div>
+          <div class="person-boxes">
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Ray</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','ray','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-ray-occasional"></div>
+            </div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Jazelle</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','jazelle','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-jazelle-occasional"></div>
+            </div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <span class="person-name">Linus</span>
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','linus','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-linus-occasional"></div>
+            </div>
+          </div>
+        </div>
+
+    </div><!-- /tasks-layout -->
+  </div><!-- /panel-tasks -->
+
+  <!-- Shopping panel -->
+  <div class="tab-panel" id="panel-shopping">
+    <div class="col-shopping">
+      <div class="sec-hdr">
+        <span class="sec-title">Shopping</span>
+        <button class="btn btn-primary" onclick="addToList()"><i class="ti ti-plus"></i> Add item</button>
+      </div>
+      <div class="shopping-panels">
+        <div class="shop-panel" id="working-panel">
+          <div class="panel-hdr"><span class="panel-title">Shopping list</span></div>
+          <p class="panel-sub">Drag items out to archive, or click ← to remove</p>
+          <div class="drop-zone" id="working-dropzone">Drop here to add to list</div>
+          <div id="working-list"></div>
+        </div>
+        <div class="shop-panel" id="past-panel">
+          <div class="panel-hdr"><span class="panel-title">Past purchases</span></div>
+          <p class="panel-sub">Click + or drag to add to your list</p>
+          <div class="search-bar">
+            <i class="ti ti-search"></i>
+            <input type="text" placeholder="Search past items..." id="past-search" oninput="filterPast()">
+          </div>
+          <div class="drop-zone" id="past-dropzone">Drop here to archive</div>
+          <div id="past-list"></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /panel-shopping -->
+
+  <!-- Calendar panel -->
+  <div class="tab-panel" id="panel-calendar">
+    <div class="coming-soon">
+      <i class="ti ti-calendar-event"></i>
+      <div class="coming-soon-title">Calendar</div>
+      <div class="coming-soon-sub">Coming soon</div>
+    </div>
+  </div><!-- /panel-calendar -->
+</div>
+
+<!-- Task modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span id="task-modal-title">Add task</span>
+      <button class="modal-x" onclick="closeTaskModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="modal-lbl" for="task-modal-input">Task</label>
+      <input class="modal-input" id="task-modal-input" type="text" placeholder="e.g. Call the plumber">
+    </div>
+    <div id="task-modal-dow-wrap" style="display:none;margin-bottom:4px">
+      <label class="modal-lbl">Day <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></label>
+      <div class="dow-grid" id="task-modal-dow">
+        <button type="button" class="dow-btn" data-dow="0">Mon</button>
+        <button type="button" class="dow-btn" data-dow="1">Tue</button>
+        <button type="button" class="dow-btn" data-dow="2">Wed</button>
+        <button type="button" class="dow-btn" data-dow="3">Thu</button>
+        <button type="button" class="dow-btn" data-dow="4">Fri</button>
+        <button type="button" class="dow-btn" data-dow="5">Sat</button>
+        <button type="button" class="dow-btn" data-dow="6">Sun</button>
+      </div>
+    </div>
+    <div id="task-modal-date-wrap" style="display:none;margin-bottom:4px">
+      <label class="modal-lbl" for="task-modal-date">Due date <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></label>
+      <input class="modal-input" id="task-modal-date" type="date">
+    </div>
+    <div class="modal-ftr">
+      <button class="btn" onclick="closeTaskModal()">Cancel</button>
+      <button class="btn btn-primary" id="task-modal-btn" onclick="confirmTaskModal()"><i class="ti ti-plus"></i> Add task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add item modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span>Add item</span>
+      <button class="modal-x" onclick="closeAddModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="modal-lbl" for="modal-name">Item name</label>
+      <input class="modal-input" id="modal-name" type="text" placeholder="e.g. Cheddar cheese"
+             onkeydown="if(event.key==='Enter')confirmAdd()">
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="modal-lbl" for="modal-cat">Category</label>
+      <select class="modal-input" id="modal-cat" style="cursor:pointer">
+        <option value="Fruit &amp; Veg">Fruit &amp; Veg</option>
+        <option value="Meats">Meats</option>
+        <option value="Pantry">Pantry</option>
+        <option value="Dairy &amp; Fridge">Dairy &amp; Fridge</option>
+        <option value="Household">Household</option>
+        <option value="Personal">Personal</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div style="margin-bottom:4px">
+      <label class="modal-lbl" for="modal-store">Store <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></label>
+      <input class="modal-input" id="modal-store" type="text" placeholder="e.g. Woolworths"
+             onkeydown="if(event.key==='Enter')confirmAdd()">
+    </div>
+    <div class="modal-ftr">
+      <button class="btn" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAdd()"><i class="ti ti-plus"></i> Add to list</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="ui.js"></script>
+<script src="tasks.js"></script>
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
