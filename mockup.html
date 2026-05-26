@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Time Style Mockup</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0d0c;
+  --surface: #1c1c1a;
+  --border: #2e2e2b;
+  --text: #e8e6e1;
+  --text2: #9e9b93;
+  --text3: #6b6960;
+  --accent: #4a8fd4;
+  --accent-t: #7ab3e8;
+}
+body {
+  background: radial-gradient(ellipse at 65% 0%, #10131a 0%, #0e0e0d 45%, #0d0d0c 100%);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+h2 {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 12px;
+}
+
+.topbar {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  padding: 13px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 700px;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 20px; }
+.topbar-title { font-size: 22px; font-weight: 600; }
+.topbar-date-group { text-align: left; }
+.topbar-day  { font-size: 13px; font-weight: 500; color: var(--text); }
+.topbar-date { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* ── Current ── */
+.time-current {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── A: Tabular + spaced + small AM/PM ── */
+.time-a {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.time-a .ampm {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+/* ── B: Light weight ── */
+.time-b {
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.time-b .ampm {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text3);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── C: Accent tint ── */
+.time-c {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent-t);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.time-c .ampm {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+/* ── Calendar Mockup ── */
+.cal-wrap {
+  background: #1c1c1a;
+  border: 1px solid #2e2e2b;
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 860px;
+}
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.cal-nav-btn {
+  background: none;
+  border: 1px solid #2e2e2b;
+  border-radius: 6px;
+  color: #e8e6e1;
+  cursor: pointer;
+  padding: 3px 12px;
+  font-size: 17px;
+  line-height: 1.4;
+}
+.cal-month-label { font-size: 15px; font-weight: 600; color: #e8e6e1; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.cal-day-hdr {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b6960;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding-bottom: 8px;
+}
+.cal-day {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #2e2e2b;
+  border-radius: 7px;
+  padding: 7px 6px 5px;
+  min-height: 62px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: border-color 0.12s, background 0.12s;
+}
+.cal-day:hover { border-color: rgba(255,255,255,0.14); }
+.cal-day.empty { background: none; border-color: transparent; cursor: default; pointer-events: none; }
+.cal-day.today { border-color: #4a8fd4; }
+.cal-day.selected { background: rgba(74,143,212,0.12); border-color: #4a8fd4; }
+.cal-day-num { font-size: 12px; font-weight: 500; color: #9e9b93; line-height: 1; }
+.cal-day.today .cal-day-num { color: #4a8fd4; font-weight: 700; }
+.cal-dots { display: flex; gap: 3px; flex-wrap: wrap; }
+.cal-dot { width: 6px; height: 6px; border-radius: 50%; }
+/* Stacked */
+.cal-stacked .cal-detail { margin-top: 16px; padding-top: 16px; border-top: 1px solid #2e2e2b; }
+/* Side by side */
+.cal-side { display: flex; align-items: flex-start; }
+.cal-side .cal-grid-wrap { flex: 1; min-width: 0; }
+.cal-side .cal-detail { width: 220px; flex-shrink: 0; border-left: 1px solid #2e2e2b; padding-left: 20px; margin-left: 20px; }
+/* Detail */
+.cal-detail-date { font-size: 13px; font-weight: 600; color: #e8e6e1; margin-bottom: 10px; }
+.cal-detail-empty { font-size: 12px; color: #6b6960; }
+.cal-task-row { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-bottom: 1px solid #2e2e2b; }
+.cal-task-row:last-child { border-bottom: none; }
+.cal-task-person-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.cal-task-title { font-size: 13px; color: #e8e6e1; }
+.cal-task-person { font-size: 11px; color: #6b6960; margin-top: 2px; }
+
+/* ── A+C: Recommended ── */
+.time-ac {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent-t);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+.time-ac .ampm {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+</style>
+</head>
+<body>
+
+<div>
+  <h2>Current</h2>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="time-current">9:41 AM</div>
+      <div class="topbar-date-group">
+        <div class="topbar-day">Monday</div>
+        <div class="topbar-date">26 May 2026</div>
+      </div>
+    </div>
+    <div class="topbar-title">Home Assistant</div>
+  </div>
+</div>
+
+<div>
+  <h2>Option A — Tabular + spaced + small AM/PM</h2>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="time-a">9:41<span class="ampm">AM</span></div>
+      <div class="topbar-date-group">
+        <div class="topbar-day">Monday</div>
+        <div class="topbar-date">26 May 2026</div>
+      </div>
+    </div>
+    <div class="topbar-title">Home Assistant</div>
+  </div>
+</div>
+
+<div>
+  <h2>Option B — Light weight</h2>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="time-b">9:41<span class="ampm">AM</span></div>
+      <div class="topbar-date-group">
+        <div class="topbar-day">Monday</div>
+        <div class="topbar-date">26 May 2026</div>
+      </div>
+    </div>
+    <div class="topbar-title">Home Assistant</div>
+  </div>
+</div>
+
+<div>
+  <h2>Option C — Accent tint</h2>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="time-c">9:41<span class="ampm">AM</span></div>
+      <div class="topbar-date-group">
+        <div class="topbar-day">Monday</div>
+        <div class="topbar-date">26 May 2026</div>
+      </div>
+    </div>
+    <div class="topbar-title">Home Assistant</div>
+  </div>
+</div>
+
+<div>
+  <h2>Option A+C — Recommended</h2>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="time-ac">9:41<span class="ampm">AM</span></div>
+      <div class="topbar-date-group">
+        <div class="topbar-day">Monday</div>
+        <div class="topbar-date">26 May 2026</div>
+      </div>
+    </div>
+    <div class="topbar-title">Home Assistant</div>
+  </div>
+</div>
+
+
+<hr style="border:none;border-top:1px solid #2e2e2b;max-width:860px">
+
+<div>
+  <h2>Calendar — Option A: Stacked (detail panel appears below grid)</h2>
+  <div class="cal-wrap" id="cal-mockup-a"></div>
+</div>
+
+<div>
+  <h2>Calendar — Option B: Side by side (detail panel on the right)</h2>
+  <div class="cal-wrap" id="cal-mockup-b"></div>
+</div>
+
+<script>
+(function () {
+  const YEAR = 2026, MONTH = 4;
+  const TODAY_STR = '2026-05-26';
+  const PERSONS = {
+    ray:     { label: 'Ray',     color: '#4a8fd4' },
+    jazelle: { label: 'Jazelle', color: '#c46090' },
+    linus:   { label: 'Linus',   color: '#c9a838' },
+  };
+  const FAKE_TASKS = [
+    { person: 'ray',     title: 'Pay rent',            dueDate: '2026-05-01' },
+    { person: 'ray',     title: 'Weekly review',        dow: 4 },
+    { person: 'ray',     title: 'Call the plumber',     dueDate: '2026-05-28' },
+    { person: 'jazelle', title: 'Book dentist',         dueDate: '2026-05-14' },
+    { person: 'jazelle', title: 'Pick up prescription', dueDate: '2026-05-28' },
+    { person: 'linus',   title: 'Take out bins',        dow: 1 },
+  ];
+  const DAY_HDRS   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const FULL_DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  function monDow(jsDay) { return (jsDay + 6) % 7; }
+
+  function getDowDates(year, month, dow) {
+    const out = [], d = new Date(year, month, 1);
+    while (d.getMonth() === month) {
+      if (monDow(d.getDay()) === dow) out.push(d.toISOString().split('T')[0]);
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+
+  function buildTaskMap(year, month) {
+    const map = {};
+    for (const t of FAKE_TASKS) {
+      if (t.dueDate) {
+        const d = new Date(t.dueDate + 'T00:00:00');
+        if (d.getFullYear() === year && d.getMonth() === month)
+          (map[t.dueDate] = map[t.dueDate] || []).push(t);
+      } else if (t.dow !== undefined) {
+        for (const ds of getDowDates(year, month, t.dow))
+          (map[ds] = map[ds] || []).push(t);
+      }
+    }
+    return map;
+  }
+
+  function fmtDate(ds) {
+    const d = new Date(ds + 'T00:00:00');
+    return `${FULL_DAYS[d.getDay()]}, ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+  }
+
+  function renderDetail(el, ds, taskMap) {
+    if (!ds) { el.innerHTML = '<div class="cal-detail-date" style="color:#6b6960">Select a day</div>'; return; }
+    const tlist = taskMap[ds] || [];
+    const head = `<div class="cal-detail-date">${fmtDate(ds)}</div>`;
+    if (!tlist.length) { el.innerHTML = head + '<div class="cal-detail-empty">No tasks this day</div>'; return; }
+    el.innerHTML = head + tlist.map(t => {
+      const p = PERSONS[t.person];
+      return `<div class="cal-task-row">
+        <div class="cal-task-person-dot" style="background:${p.color}"></div>
+        <div>
+          <div class="cal-task-title">${t.title}</div>
+          <div class="cal-task-person">${p.label}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function buildCalendar(wrapEl, layout) {
+    const taskMap = buildTaskMap(YEAR, MONTH);
+    const firstDay  = new Date(YEAR, MONTH, 1);
+    const startDow  = monDow(firstDay.getDay());
+    const daysInMonth = new Date(YEAR, MONTH + 1, 0).getDate();
+
+    let gridHTML = DAY_HDRS.map(d => `<div class="cal-day-hdr">${d}</div>`).join('');
+    for (let i = 0; i < startDow; i++) gridHTML += '<div class="cal-day empty"></div>';
+    for (let day = 1; day <= daysInMonth; day++) {
+      const ds = `${YEAR}-${String(MONTH+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const persons = [...new Set((taskMap[ds] || []).map(t => t.person))];
+      const dots = persons.map(p => `<div class="cal-dot" style="background:${PERSONS[p].color}"></div>`).join('');
+      gridHTML += `<div class="cal-day${ds === TODAY_STR ? ' today' : ''}" data-date="${ds}">
+        <div class="cal-day-num">${day}</div>
+        ${dots ? `<div class="cal-dots">${dots}</div>` : ''}
+      </div>`;
+    }
+
+    const navHTML = `<div class="cal-nav">
+      <button class="cal-nav-btn" disabled>&#8249;</button>
+      <span class="cal-month-label">${MONTH_NAMES[MONTH]} ${YEAR}</span>
+      <button class="cal-nav-btn" disabled>&#8250;</button>
+    </div>`;
+
+    const detailId = `detail-${wrapEl.id}`;
+    const gridSection = `<div class="cal-grid">${gridHTML}</div>`;
+    const detailSection = `<div class="cal-detail" id="${detailId}"></div>`;
+
+    wrapEl.innerHTML = layout === 'stacked'
+      ? `${navHTML}<div class="cal-stacked">${gridSection}${detailSection}</div>`
+      : `${navHTML}<div class="cal-side"><div class="cal-grid-wrap">${gridSection}</div>${detailSection}</div>`;
+
+    const detailEl = document.getElementById(detailId);
+    const DEFAULT = '2026-05-28';
+    const defaultCell = wrapEl.querySelector(`[data-date="${DEFAULT}"]`);
+    if (defaultCell) defaultCell.classList.add('selected');
+    renderDetail(detailEl, DEFAULT, taskMap);
+
+    wrapEl.querySelectorAll('.cal-day:not(.empty)').forEach(cell => {
+      cell.addEventListener('click', () => {
+        wrapEl.querySelectorAll('.cal-day').forEach(c => c.classList.remove('selected'));
+        cell.classList.add('selected');
+        renderDetail(detailEl, cell.dataset.date, taskMap);
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    buildCalendar(document.getElementById('cal-mockup-a'), 'stacked');
+    buildCalendar(document.getElementById('cal-mockup-b'), 'side');
+  });
+})();
+</script>
+
+</body>
+</html>

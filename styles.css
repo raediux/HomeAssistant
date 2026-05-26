@@ -576,6 +576,32 @@ body {
 .dow-btn:hover { border-color: var(--accent); color: var(--text); }
 .dow-btn.selected { background: var(--accent-l); border-color: var(--accent); color: var(--accent); }
 
+/* ── Calendar ── */
+.cal-container { display: flex; flex-direction: column; gap: 12px; padding: 20px 24px; width: 75%; box-sizing: border-box; margin: 0 auto; }
+.cal-nav { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 4px 0 10px; }
+.cal-month-label { font-size: 18px; font-weight: 600; color: var(--text); text-align: center; }
+.cal-body { display: flex; gap: 0; align-items: flex-start; }
+.cal-grid-wrap { flex: 1; min-width: 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-day-hdr { text-align: center; font-size: 9px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; padding-bottom: 6px; }
+.cal-day { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 5px; padding: 4px 5px 3px; aspect-ratio: 4/3; cursor: pointer; display: flex; flex-direction: column; gap: 3px; transition: border-color 0.12s, background 0.12s; }
+.cal-day:hover { border-color: rgba(255,255,255,0.14); }
+.cal-day.empty { background: none; border-color: transparent; cursor: default; pointer-events: none; }
+.cal-day.today { border-color: var(--accent); }
+.cal-day.selected { background: var(--accent-l); border-color: var(--accent); }
+.cal-day-num { font-size: 11px; font-weight: 500; color: var(--text2); line-height: 1; }
+.cal-day.today .cal-day-num { color: var(--accent); font-weight: 700; }
+.cal-badge { font-size: 9px; font-weight: 500; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+.cal-badge-more { font-size: 9px; font-weight: 500; color: var(--text3); padding-left: 2px; line-height: 1.4; }
+.cal-detail { width: 200px; flex-shrink: 0; border-left: 1px solid var(--border); padding-left: 16px; margin-left: 16px; }
+.cal-detail-date { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.cal-detail-empty { font-size: 12px; color: var(--text3); }
+.cal-task-row { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.cal-task-row:last-child { border-bottom: none; }
+.cal-task-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.cal-task-title { font-size: 13px; color: var(--text); }
+.cal-task-person { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
