@@ -1,6 +1,33 @@
 // ── Task state ────────────────────────────────────────────────
 let tasks = [];
 let nextTaskId = 200;
+
+// ── Auto-reset helpers ────────────────────────────────────────
+function toDateStr(date) {
+  return date.toISOString().split('T')[0];
+}
+
+// Returns the YYYY-MM-DD of the most recent occurrence of dow (0=Mon…6=Sun).
+// If dow is null/undefined, defaults to Monday (0).
+function getWeeklyResetDate(dow) {
+  const target = (dow === null || dow === undefined) ? 0 : dow;
+  // Convert our Mon-based dow to JS Sun-based getDay()
+  const jsTarget = (target + 1) % 7;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysBack = (today.getDay() - jsTarget + 7) % 7;
+  const reset = new Date(today);
+  reset.setDate(today.getDate() - daysBack);
+  return toDateStr(reset);
+}
+
+function isTaskDone(task) {
+  if (task.frequency === 'occasional') return !!task.done;
+  if (!task.lastDoneDate) return false;
+  if (task.frequency === 'daily') return task.lastDoneDate === toDateStr(new Date());
+  if (task.frequency === 'weekly') return task.lastDoneDate >= getWeeklyResetDate(task.dow);
+  return false;
+}
 // ── Render ────────────────────────────────────────────────────
 function renderTasks() {
   ['ray', 'jazelle', 'linus'].forEach(person => {
@@ -14,6 +41,19 @@ function renderTaskList(person, frequency) {
   const el = document.getElementById(`items-${person}-${frequency}`);
   if (!el) return;
   const visible = tasks.filter(t => t.person === person && t.frequency === frequency);
+
+  if (frequency === 'occasional') {
+    visible.sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0;
+    });
+  } else if (frequency === 'weekly') {
+    visible.sort((a, b) => (a.dow ?? 0) - (b.dow ?? 0));
+  } else if (frequency === 'daily') {
+    visible.sort((a, b) => Number(isTaskDone(a)) - Number(isTaskDone(b)));
+  }
 
   if (visible.length === 0) {
     el.innerHTML = '<p style="color:var(--text3);font-size:12px;padding:8px 0">No tasks</p>';
@@ -45,14 +85,15 @@ function getDueBadge(task) {
 }
 
 function taskCardHTML(task) {
+  const done = isTaskDone(task);
   const badge = getDueBadge(task);
   const badgeHTML = badge
     ? `<div class="meta"><span class="badge ${badge.cls}"><i class="ti ${badge.icon}"></i> ${esc(badge.text)}</span></div>`
     : '';
 
   return `
-    <div class="task-card${task.done ? ' done' : ''}" onclick="toggleTaskDone(${task.id})">
-      <div class="circle${task.done ? ' checked' : ''}">${task.done ? '<i class="ti ti-check"></i>' : ''}</div>
+    <div class="task-card${done ? ' done' : ''}" onclick="toggleTaskDone(${task.id})">
+      <div class="circle${done ? ' checked' : ''}">${done ? '<i class="ti ti-check"></i>' : ''}</div>
       <div class="card-body">
         <div class="card-title">${esc(task.title)}</div>
         ${badgeHTML}
@@ -72,7 +113,12 @@ function esc(s) {
 function toggleTaskDone(id) {
   const task = tasks.find(t => t.id === id);
   if (!task) return;
-  task.done = !task.done;
+  if (task.frequency === 'occasional') {
+    task.done = !task.done;
+  } else {
+    const currentlyDone = isTaskDone(task);
+    task.lastDoneDate = currentlyDone ? null : toDateStr(new Date());
+  }
   renderTaskList(task.person, task.frequency);
   dbSaveTask(task);
 }

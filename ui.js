@@ -36,14 +36,16 @@ document.getElementById('add-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeAddModal();
 });
 
-document.getElementById('today-label').textContent = new Date().toLocaleDateString('en-AU', {
-  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-});
+const _now = new Date();
+document.getElementById('day-label').textContent = _now.toLocaleDateString('en-AU', { weekday: 'long' });
+document.getElementById('date-label').textContent = _now.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
 
 function updateTime() {
-  document.getElementById('time-label').textContent = new Date().toLocaleTimeString('en-AU', {
-    hour: 'numeric', minute: '2-digit', hour12: true
-  });
+  const now = new Date();
+  const hm = now.toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', hour12: true });
+  const ampm = hm.slice(-2).toUpperCase();
+  const digits = hm.slice(0, -2).trim();
+  document.getElementById('time-label').innerHTML = `${digits}<span class="ampm">${ampm}</span>`;
 }
 updateTime();
 setInterval(updateTime, 1000);

@@ -8,25 +8,27 @@ async function dbLoadTasks() {
   const { data, error } = await db.from('tasks').select('*').order('id');
   if (error) { console.error('dbLoadTasks:', error); return []; }
   return data.map(row => ({
-    id:        row.id,
-    person:    row.person,
-    frequency: row.frequency,
-    title:     row.title,
-    dueDate:   row.due_date,
-    dow:       row.dow,
-    done:      row.done,
+    id:           row.id,
+    person:       row.person,
+    frequency:    row.frequency,
+    title:        row.title,
+    dueDate:      row.due_date,
+    dow:          row.dow,
+    done:         row.done,
+    lastDoneDate: row.last_done_date || null,
   }));
 }
 
 async function dbSaveTask(task) {
   const row = {
-    id:        task.id,
-    person:    task.person,
-    frequency: task.frequency,
-    title:     task.title,
-    due_date:  task.dueDate || null,
-    dow:       task.dow     ?? null,
-    done:      task.done,
+    id:             task.id,
+    person:         task.person,
+    frequency:      task.frequency,
+    title:          task.title,
+    due_date:       task.dueDate      || null,
+    dow:            task.dow          ?? null,
+    done:           task.done,
+    last_done_date: task.lastDoneDate || null,
   };
   const { error } = await db.from('tasks').upsert(row, { onConflict: 'id' });
   if (error) console.error('dbSaveTask:', error);
