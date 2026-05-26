@@ -105,53 +105,55 @@ body { padding: 0 20px 20px; }
 .tab-panel { display: none; flex: 1; min-height: 0; overflow: hidden; }
 .tab-panel.active { display: flex; flex-direction: column; }
 
-/* ── Tasks names bar ── */
-.names-bar {
-  display: flex;
-  flex-direction: row;
-  flex-shrink: 0;
-  padding: 10px 0 4px;
-  background: var(--bg);
-}
-.names-bar-spacer {
-  width: 42px; /* 1px section border + 40px row-label + 1px row-label border */
-  flex-shrink: 0;
-}
-.names-bar span {
-  flex: 1;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-  padding: 0 22px;
-}
-
 /* ── Tasks layout ── */
 .tasks-layout {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  gap: 8px;
-  padding: 8px 0;
+  gap: 10px;
+  padding: 10px 0;
   background: var(--bg);
+  overflow: hidden;
+}
+.person-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+}
+.person-col-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.person-col-tasks {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 .task-section {
   display: flex;
   flex-direction: row;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
   flex-shrink: 0;
-  overflow: hidden;
-  background: var(--surface);
+  border-top: 1px solid var(--border);
 }
+.task-section:first-child { border-top: none; }
 .row-label {
-  width: 40px;
+  width: 36px;
   flex-shrink: 0;
-  padding: 18px 12px;
-  font-size: 13px;
+  padding: 14px 10px;
+  font-size: 11px;
   font-weight: 500;
-  color: var(--text2);
+  color: var(--text3);
   border-right: 1px solid var(--border);
   writing-mode: vertical-rl;
   transform: rotate(180deg);
@@ -159,24 +161,18 @@ body { padding: 0 20px 20px; }
   align-items: center;
   justify-content: center;
 }
-.person-boxes {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  flex: 1;
-}
 .person-box {
-  border-right: 1px solid var(--border);
-  padding: 18px 22px;
+  flex: 1;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
-.person-box:last-child { border-right: none; }
 
 /* ── Per-person task card accents ── */
-.person-box:nth-child(1) .task-card { border-left-color: var(--accent); }
-.person-box:nth-child(2) .task-card { border-left-color: var(--pink); }
-.person-box:nth-child(3) .task-card { border-left-color: var(--green); }
+.col-ray     .task-card { border-left-color: var(--accent); }
+.col-jazelle .task-card { border-left-color: var(--pink); }
+.col-linus   .task-card { border-left-color: var(--green); }
 .person-hdr {
   display: flex;
   align-items: center;

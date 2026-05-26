@@ -40,18 +40,14 @@
 
   <!-- Tasks panel -->
   <div class="tab-panel active" id="panel-tasks">
-    <div class="names-bar">
-      <div class="names-bar-spacer"></div>
-      <span>Ray</span>
-      <span>Jazelle</span>
-      <span>Linus</span>
-    </div>
     <div class="tasks-layout">
 
-        <!-- Daily -->
-        <div class="task-section" id="tsec-daily">
-          <div class="row-label">Daily</div>
-          <div class="person-boxes">
+      <!-- Ray -->
+      <div class="person-column col-ray">
+        <div class="person-col-name">Ray</div>
+        <div class="person-col-tasks">
+          <div class="task-section">
+            <div class="row-label">Daily</div>
             <div class="person-box">
               <div class="person-hdr">
                 <div style="display:flex;gap:7px;align-items:center">
@@ -61,6 +57,40 @@
               </div>
               <div class="items" id="items-ray-daily"></div>
             </div>
+          </div>
+          <div class="task-section">
+            <div class="row-label">Weekly</div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','ray','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-ray-weekly"></div>
+            </div>
+          </div>
+          <div class="task-section">
+            <div class="row-label">Occasional</div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','ray','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-ray-occasional"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jazelle -->
+      <div class="person-column col-jazelle">
+        <div class="person-col-name">Jazelle</div>
+        <div class="person-col-tasks">
+          <div class="task-section">
+            <div class="row-label">Daily</div>
             <div class="person-box">
               <div class="person-hdr">
                 <div style="display:flex;gap:7px;align-items:center">
@@ -70,6 +100,40 @@
               </div>
               <div class="items" id="items-jazelle-daily"></div>
             </div>
+          </div>
+          <div class="task-section">
+            <div class="row-label">Weekly</div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','jazelle','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-jazelle-weekly"></div>
+            </div>
+          </div>
+          <div class="task-section">
+            <div class="row-label">Occasional</div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','jazelle','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-jazelle-occasional"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linus -->
+      <div class="person-column col-linus">
+        <div class="person-col-name">Linus</div>
+        <div class="person-col-tasks">
+          <div class="task-section">
+            <div class="row-label">Daily</div>
             <div class="person-box">
               <div class="person-hdr">
                 <div style="display:flex;gap:7px;align-items:center">
@@ -80,30 +144,8 @@
               <div class="items" id="items-linus-daily"></div>
             </div>
           </div>
-        </div>
-
-        <!-- Weekly -->
-        <div class="task-section" id="tsec-weekly">
-          <div class="row-label">Weekly</div>
-          <div class="person-boxes">
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','ray','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-ray-weekly"></div>
-            </div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','jazelle','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-jazelle-weekly"></div>
-            </div>
+          <div class="task-section">
+            <div class="row-label">Weekly</div>
             <div class="person-box">
               <div class="person-hdr">
                 <div style="display:flex;gap:7px;align-items:center">
@@ -114,30 +156,8 @@
               <div class="items" id="items-linus-weekly"></div>
             </div>
           </div>
-        </div>
-
-        <!-- Occasional -->
-        <div class="task-section" id="tsec-occasional">
-          <div class="row-label">Occasional</div>
-          <div class="person-boxes">
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','ray','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-ray-occasional"></div>
-            </div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','jazelle','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-jazelle-occasional"></div>
-            </div>
+          <div class="task-section">
+            <div class="row-label">Occasional</div>
             <div class="person-box">
               <div class="person-hdr">
                 <div style="display:flex;gap:7px;align-items:center">
@@ -149,6 +169,7 @@
             </div>
           </div>
         </div>
+      </div>
 
     </div><!-- /tasks-layout -->
   </div><!-- /panel-tasks -->
