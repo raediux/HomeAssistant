@@ -222,20 +222,21 @@
       <div class="mp-col-shopping">
         <div class="sec-hdr">
           <span class="sec-title">Shopping</span>
-          <button class="btn btn-primary" onclick="addToList()"><i class="ti ti-plus"></i> Add item</button>
         </div>
         <div class="shopping-panels">
           <div class="shop-panel" id="working-panel">
-            <div class="panel-hdr"><span class="panel-title">Shopping list</span></div>
-            <p class="panel-sub">Drag items out to archive, or click ← to remove</p>
+            <div class="panel-hdr"><span class="panel-title">Shopping list</span><button class="clear-btn" onclick="clearAll()">Clear All</button></div>
             <div id="working-list"></div>
           </div>
           <div class="shop-panel" id="past-panel">
             <div class="panel-hdr"><span class="panel-title">Past purchases</span></div>
-            <p class="panel-sub">Click + or drag to add to your list</p>
-            <div class="search-bar">
-              <i class="ti ti-search"></i>
-              <input type="text" placeholder="Search past items..." id="past-search" oninput="filterPast()">
+            <p class="panel-sub">Click item to add to list</p>
+            <div class="search-row">
+              <div class="search-bar">
+                <i class="ti ti-search"></i>
+                <input type="text" placeholder="Search past items..." id="past-search" oninput="filterPast()">
+              </div>
+              <button class="btn btn-glass btn-sm" onclick="addToList()"><i class="ti ti-plus"></i> Add</button>
             </div>
             <div id="past-list"></div>
           </div>
@@ -292,7 +293,7 @@
     </div>
     <div class="modal-ftr">
       <button class="btn" onclick="closeTaskModal()">Cancel</button>
-      <button class="btn btn-primary" id="task-modal-btn" onclick="confirmTaskModal()"><i class="ti ti-plus"></i> Add task</button>
+      <button class="btn btn-glass" id="task-modal-btn" onclick="confirmTaskModal()"><i class="ti ti-plus"></i> Add task</button>
     </div>
   </div>
 </div>
@@ -329,7 +330,7 @@
     </div>
     <div class="modal-ftr">
       <button class="btn" onclick="closeAddModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="confirmAdd()"><i class="ti ti-plus"></i> Add to list</button>
+      <button class="btn btn-glass" id="add-modal-btn" onclick="confirmAdd()"><i class="ti ti-plus"></i> Add to list</button>
     </div>
   </div>
 </div>
@@ -348,7 +349,7 @@
     </div>
     <div class="modal-ftr">
       <button class="btn" onclick="closeMealModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="confirmMeal()"><i class="ti ti-check"></i> Save</button>
+      <button class="btn btn-glass" onclick="confirmMeal()"><i class="ti ti-check"></i> Save</button>
     </div>
   </div>
 </div>

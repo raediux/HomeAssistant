@@ -185,7 +185,7 @@ function renderWorking() {
         <div class="circle${item.got ? ' checked' : ''}" style="flex-shrink:0" onclick="toggleGot(${item.id})">
           ${item.got ? '<i class="ti ti-check"></i>' : ''}
         </div>
-        <div class="s-move-zone" onclick="moveToArchive(${item.id})">
+        <div class="s-move-zone" onclick="toggleGot(${item.id})">
           <div class="s-name">${esc(item.name)}</div>
         </div>
         <div class="item-actions">
@@ -337,7 +337,7 @@ function editWorkingItem(id) {
   document.getElementById('modal-name').value = item.name;
   document.getElementById('modal-cat').value = STORES.includes(item.store) ? item.store : 'Others';
   document.querySelector('#add-modal .modal-hdr span').textContent = 'Edit item';
-  document.querySelector('#add-modal .btn-primary').innerHTML = '<i class="ti ti-check"></i> Save';
+  document.getElementById('add-modal-btn').innerHTML = '<i class="ti ti-check"></i> Save';
   document.getElementById('add-modal').classList.add('open');
   setTimeout(() => document.getElementById('modal-name').focus(), 50);
 }
@@ -349,7 +349,7 @@ function editPastItem(id) {
   document.getElementById('modal-name').value = item.name;
   document.getElementById('modal-cat').value = STORES.includes(item.store) ? item.store : 'Others';
   document.querySelector('#add-modal .modal-hdr span').textContent = 'Edit item';
-  document.querySelector('#add-modal .btn-primary').innerHTML = '<i class="ti ti-check"></i> Save';
+  document.getElementById('add-modal-btn').innerHTML = '<i class="ti ti-check"></i> Save';
   document.getElementById('add-modal').classList.add('open');
   setTimeout(() => document.getElementById('modal-name').focus(), 50);
 }
@@ -360,7 +360,7 @@ function closeAddModal() {
   if (editState) {
     editState = null;
     document.querySelector('#add-modal .modal-hdr span').textContent = 'Add item';
-    document.querySelector('#add-modal .btn-primary').innerHTML = '<i class="ti ti-plus"></i> Add to list';
+    document.getElementById('add-modal-btn').innerHTML = '<i class="ti ti-plus"></i> Add to list';
   }
 }
 
@@ -385,6 +385,20 @@ function confirmAdd() {
   closeAddModal();
   render();
   dbSaveWorkingItem(item);
+}
+
+function clearAll() {
+  if (!workingItems.length) return;
+  const items = [...workingItems];
+  workingItems = [];
+  render();
+  items.forEach(item => {
+    dbDeleteWorkingItem(item.id);
+    const existing = pastItems.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+    if (existing) { existing.times++; dbSavePastItem(existing); }
+    else { const past = { id: item.id, name: item.name, store: item.store, times: 1 }; pastItems.unshift(past); dbSavePastItem(past); }
+  });
+  renderPast();
 }
 
 function deleteWorkingItem(id) {
@@ -449,4 +463,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     nextId = maxId + 1;
   }
   render();
+
+  const pastPanel = document.getElementById('past-panel');
+  pastPanel.addEventListener('dragover', e => {
+    if (draggedId === null) return;
+    e.preventDefault();
+    pastPanel.classList.add('drop-target');
+  });
+  pastPanel.addEventListener('dragleave', e => {
+    if (!pastPanel.contains(e.relatedTarget)) pastPanel.classList.remove('drop-target');
+  });
+  pastPanel.addEventListener('drop', e => {
+    e.preventDefault();
+    pastPanel.classList.remove('drop-target');
+    if (draggedId === null) return;
+    moveToArchive(draggedId);
+    draggedId = null;
+  });
 });
