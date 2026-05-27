@@ -8,3 +8,4 @@ We are making a personal dark-mode theme dashboard for household use.
 - Design mockup must be written to the mockup html, css, and js files in `E:\Claude Projects\Home Assistant\'
 - Always use surgical edits (`Edit` tool) on existing files. Never rewrite a file from scratch unless the structure has changed so fundamentally that edits would be more confusing — and always flag this before doing it.
 - Never push to git or offer to push after individual changes. Only push at the end of a session or when explicitly asked.
+- When the user explicitly asks to push (e.g. "push it", "push to git"), you may run `git push` without asking for confirmation.

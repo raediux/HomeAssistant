@@ -48,12 +48,19 @@
 }
 
 html, body {
-  min-width: 1080px;
   height: 100vh;
   overflow: hidden;
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 14px;
   color: var(--text);
+}
+
+@media (min-width: 601px) {
+  html, body { min-width: 1080px; }
+}
+
+@media (max-width: 600px) {
+  html, body { height: auto; min-height: 100vh; overflow-y: auto; }
 }
 
 body {
