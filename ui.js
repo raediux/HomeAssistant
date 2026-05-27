@@ -101,6 +101,12 @@ document.getElementById('add-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeAddModal();
 });
 
+// ── PWA detection ─────────────────────────────────────────────
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+  document.body.classList.add('pwa');
+  document.documentElement.classList.add('pwa');
+}
+
 const _now = new Date();
 document.getElementById('day-label').textContent = _now.toLocaleDateString('en-AU', { weekday: 'long' });
 document.getElementById('date-label').textContent = _now.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });

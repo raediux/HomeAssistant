@@ -64,8 +64,11 @@ html, body {
 }
 
 @media (display-mode: standalone) {
+  html, body { overflow: hidden; height: 100vh; }
   .topbar { display: none; }
 }
+.pwa .topbar { display: none; }
+body.pwa, html.pwa { overflow: hidden; height: 100vh; }
 
 body {
   padding: 0 0 20px;
