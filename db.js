@@ -61,24 +61,30 @@ async function dbDeleteBadge(id) {
 
 // ── Shopping — working list ───────────────────────────────────
 async function dbLoadWorkingItems() {
-  const { data, error } = await db.from('shopping_working').select('*').order('id');
+  const { data, error } = await db.from('shopping_working').select('*').order('sort_order').order('id');
   if (error) { console.error('dbLoadWorkingItems:', error); return []; }
   return data.map(row => ({
-    id:       row.id,
-    name:     row.name,
-    qty:      row.qty,
-    store:    row.store,
-    got:      row.got,
-    category: row.category,
+    id:         row.id,
+    name:       row.name,
+    qty:        row.qty,
+    store:      row.store,
+    got:        row.got,
+    sort_order: row.sort_order ?? 0,
   }));
 }
 
 async function dbSaveWorkingItem(item) {
   const { error } = await db.from('shopping_working').upsert({
     id: item.id, name: item.name, qty: item.qty || null,
-    store: item.store || null, got: item.got, category: item.category,
+    store: item.store || null, got: item.got, sort_order: item.sort_order ?? 0,
   }, { onConflict: 'id' });
   if (error) console.error('dbSaveWorkingItem:', error);
+}
+
+async function dbUpdateSortOrders(items) {
+  const updates = items.map((item, idx) => ({ id: item.id, sort_order: idx }));
+  const { error } = await db.from('shopping_working').upsert(updates, { onConflict: 'id' });
+  if (error) console.error('dbUpdateSortOrders:', error);
 }
 
 async function dbDeleteWorkingItem(id) {

@@ -143,8 +143,9 @@ function switchTab(name) {
 
 
 // ── Shopping data ─────────────────────────────────────────────
-const STORES = ['Woolworths','Coles','Aldi','Asian Grocer','Korean Grocer','Butcher','Big W','Chemist Warehouse','Pharmacy 4 Less','Kmart','Target','Ray Mum','Others'];
+const STORES = ['Aldi','Asian Grocer','Big W','Butcher','Chemist Warehouse','Coles','Kmart','Korean Grocer','Pharmacy 4 Less','Ray Mum','Target','Woolworths','Others'];
 let editState = null; // { id, type: 'working'|'past' }
+let draggedId = null;
 let collapsed = {};
 let collapsedPast = {};
 
@@ -176,7 +177,11 @@ function renderWorking() {
     const items = groups[s];
     const isCollapsed = collapsed[s];
     const itemsHtml = items.map(item => `
-      <div class="s-item${item.got ? ' done' : ''}">
+      <div class="s-item${item.got ? ' done' : ''}"
+           draggable="true" data-id="${item.id}"
+           ondragstart="onDragStart(event)" ondragend="onDragEnd(event)"
+           ondragover="onDragOver(event)" ondrop="onDrop(event)">
+        <i class="ti ti-grip-vertical drag-handle" aria-hidden="true"></i>
         <div class="circle${item.got ? ' checked' : ''}" style="flex-shrink:0" onclick="toggleGot(${item.id})">
           ${item.got ? '<i class="ti ti-check"></i>' : ''}
         </div>
@@ -285,7 +290,7 @@ function moveToList(id) {
   const idx = pastItems.findIndex(i => i.id === id);
   if (idx === -1) return;
   const item = pastItems.splice(idx, 1)[0];
-  const working = { id: item.id, name: item.name, qty: null, store: item.store, got: false };
+  const working = { id: item.id, name: item.name, qty: null, store: item.store, got: false, sort_order: workingItems.length };
   workingItems.push(working);
   render();
   dbDeletePastItem(item.id);
@@ -375,7 +380,7 @@ function confirmAdd() {
     render();
     return;
   }
-  const item = { id: nextId++, name, qty: null, store, got: false };
+  const item = { id: nextId++, name, qty: null, store, got: false, sort_order: workingItems.length };
   workingItems.push(item);
   closeAddModal();
   render();
@@ -396,6 +401,45 @@ function deletePastItem(id) {
   pastItems.splice(idx, 1);
   render();
   dbDeletePastItem(id);
+}
+
+// ── Drag to reorder within group ──────────────────────────────
+function onDragStart(e) {
+  draggedId = parseInt(e.currentTarget.dataset.id);
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.s-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+  draggedId = null;
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  const targetId = parseInt(e.currentTarget.dataset.id);
+  if (targetId === draggedId) return;
+  document.querySelectorAll('.s-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const targetId = parseInt(e.currentTarget.dataset.id);
+  if (targetId === draggedId || draggedId === null) return;
+  const draggedItem = workingItems.find(i => i.id === draggedId);
+  const targetItem  = workingItems.find(i => i.id === targetId);
+  if (!draggedItem || !targetItem) return;
+  const getStore = i => STORES.includes(i.store) ? i.store : 'Others';
+  if (getStore(draggedItem) !== getStore(targetItem)) return;
+  const fromIdx = workingItems.indexOf(draggedItem);
+  const toIdx   = workingItems.indexOf(targetItem);
+  workingItems.splice(fromIdx, 1);
+  workingItems.splice(toIdx, 0, draggedItem);
+  workingItems.forEach((item, idx) => { item.sort_order = idx; });
+  renderWorking();
+  dbUpdateSortOrders(workingItems);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
