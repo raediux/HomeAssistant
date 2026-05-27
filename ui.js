@@ -143,7 +143,7 @@ function switchTab(name) {
 
 
 // ── Shopping data ─────────────────────────────────────────────
-const CATEGORIES = ['Fruit & Veg', 'Meats', 'Pantry', 'Dairy & Fridge', 'Household', 'Personal', 'Other'];
+const STORES = ['Woolworths','Coles','Aldi','Asian Grocer','Korean Grocer','Big W','Chemist Warehouse','Pharmacy 4 Less','Kmart','Target','Ray Mum','Others'];
 let collapsed = {};
 let collapsedPast = {};
 
@@ -167,15 +167,15 @@ function renderWorking() {
   }
 
   const groups = {};
-  CATEGORIES.forEach(cat => { groups[cat] = []; });
+  STORES.forEach(s => { groups[s] = []; });
   workingItems.forEach(item => {
-    const cat = CATEGORIES.includes(item.category) ? item.category : 'Other';
-    groups[cat].push(item);
+    const s = STORES.includes(item.store) ? item.store : 'Others';
+    groups[s].push(item);
   });
 
-  el.innerHTML = CATEGORIES.filter(cat => groups[cat].length > 0).map(cat => {
-    const items = groups[cat];
-    const isCollapsed = collapsed[cat];
+  el.innerHTML = STORES.filter(s => groups[s].length > 0).map(s => {
+    const items = groups[s];
+    const isCollapsed = collapsed[s];
     const itemsHtml = items.map(item => `
       <div class="s-item${item.got ? ' done' : ''}"
            draggable="true" data-id="${item.id}" data-src="working"
@@ -187,14 +187,17 @@ function renderWorking() {
         <div style="flex:1;min-width:0">
           <div class="s-name">${esc(item.name)}</div>
         </div>
+        <button class="move-btn del" title="Delete" onclick="deleteWorkingItem(${item.id})">
+          <i class="ti ti-trash" aria-hidden="true"></i>
+        </button>
         <button class="move-btn rem" title="Archive" onclick="moveToArchive(${item.id})">
           <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>`).join('');
     return `
       <div class="cat-section">
-        <div class="cat-header" onclick="toggleCat('${cat}')">
-          <span class="cat-label">${cat}</span>
+        <div class="cat-header" onclick="toggleCat('${s}')">
+          <span class="cat-label">${s}</span>
           <span class="cat-line"></span>
           <span class="cat-count">${items.length}</span>
           <i class="ti ti-chevron-down cat-chevron${isCollapsed ? ' collapsed' : ''}" aria-hidden="true"></i>
@@ -204,8 +207,8 @@ function renderWorking() {
   }).join('');
 }
 
-function toggleCat(cat) {
-  collapsed[cat] = !collapsed[cat];
+function toggleCat(s) {
+  collapsed[s] = !collapsed[s];
   renderWorking();
 }
 
@@ -224,19 +227,19 @@ function renderPast(query = '') {
   }
 
   const groups = {};
-  CATEGORIES.forEach(cat => { groups[cat] = []; });
+  STORES.forEach(s => { groups[s] = []; });
   filtered.forEach(item => {
-    const cat = CATEGORIES.includes(item.category) ? item.category : 'Other';
-    groups[cat].push(item);
+    const s = STORES.includes(item.store) ? item.store : 'Others';
+    groups[s].push(item);
   });
 
-  el.innerHTML = CATEGORIES.filter(cat => groups[cat].length > 0).map(cat => {
-    const items = groups[cat];
-    const isCollapsed = collapsedPast[cat];
+  el.innerHTML = STORES.filter(s => groups[s].length > 0).map(s => {
+    const items = groups[s];
+    const isCollapsed = collapsedPast[s];
     return `
       <div class="cat-section">
-        <div class="cat-header" onclick="togglePastCat('${cat}')">
-          <span class="cat-label">${cat}</span>
+        <div class="cat-header" onclick="togglePastCat('${s}')">
+          <span class="cat-label">${s}</span>
           <span class="cat-line"></span>
           <span class="cat-count">${items.length}</span>
           <i class="ti ti-chevron-down cat-chevron${isCollapsed ? ' collapsed' : ''}" aria-hidden="true"></i>
@@ -259,11 +262,14 @@ function pastItemHtml(item) {
       <button class="move-btn add" title="Add to list" onclick="moveToList(${item.id})">
         <i class="ti ti-arrow-left" aria-hidden="true"></i>
       </button>
+      <button class="move-btn del" title="Delete" onclick="deletePastItem(${item.id})">
+        <i class="ti ti-trash" aria-hidden="true"></i>
+      </button>
     </div>`;
 }
 
-function togglePastCat(cat) {
-  collapsedPast[cat] = !collapsedPast[cat];
+function togglePastCat(s) {
+  collapsedPast[s] = !collapsedPast[s];
   renderPast(document.getElementById('past-search').value);
 }
 
@@ -280,7 +286,7 @@ function moveToList(id) {
   const idx = pastItems.findIndex(i => i.id === id);
   if (idx === -1) return;
   const item = pastItems.splice(idx, 1)[0];
-  const working = { id: item.id, name: item.name, qty: null, store: item.store, got: false, category: item.category || 'Other' };
+  const working = { id: item.id, name: item.name, qty: null, store: item.store, got: false };
   workingItems.push(working);
   render();
   dbDeletePastItem(item.id);
@@ -297,7 +303,7 @@ function moveToArchive(id) {
     existing.times++;
     dbSavePastItem(existing);
   } else {
-    const past = { id: item.id, name: item.name, store: item.store, times: 1, category: item.category || 'Other' };
+    const past = { id: item.id, name: item.name, store: item.store, times: 1 };
     pastItems.unshift(past);
     dbSavePastItem(past);
   }
@@ -317,19 +323,33 @@ function addToList() {
 function closeAddModal() {
   document.getElementById('add-modal').classList.remove('open');
   document.getElementById('modal-name').value = '';
-  document.getElementById('modal-store').value = '';
 }
 
 function confirmAdd() {
   const name = document.getElementById('modal-name').value.trim();
   if (!name) { document.getElementById('modal-name').focus(); return; }
-  const category = document.getElementById('modal-cat').value;
-  const store    = document.getElementById('modal-store').value.trim() || null;
-  const item = { id: nextId++, name, qty: null, store, got: false, category };
+  const store = document.getElementById('modal-cat').value;
+  const item = { id: nextId++, name, qty: null, store, got: false };
   workingItems.push(item);
   closeAddModal();
   render();
   dbSaveWorkingItem(item);
+}
+
+function deleteWorkingItem(id) {
+  const idx = workingItems.findIndex(i => i.id === id);
+  if (idx === -1) return;
+  workingItems.splice(idx, 1);
+  render();
+  dbDeleteWorkingItem(id);
+}
+
+function deletePastItem(id) {
+  const idx = pastItems.findIndex(i => i.id === id);
+  if (idx === -1) return;
+  pastItems.splice(idx, 1);
+  render();
+  dbDeletePastItem(id);
 }
 
 // ── Drag and drop ─────────────────────────────────────────────

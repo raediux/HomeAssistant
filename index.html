@@ -311,22 +311,22 @@
       <input class="modal-input" id="modal-name" type="text" placeholder="e.g. Cheddar cheese"
              onkeydown="if(event.key==='Enter')confirmAdd()">
     </div>
-    <div style="margin-bottom:12px">
-      <label class="modal-lbl" for="modal-cat">Category</label>
-      <select class="modal-input" id="modal-cat" style="cursor:pointer">
-        <option value="Fruit &amp; Veg">Fruit &amp; Veg</option>
-        <option value="Meats">Meats</option>
-        <option value="Pantry">Pantry</option>
-        <option value="Dairy &amp; Fridge">Dairy &amp; Fridge</option>
-        <option value="Household">Household</option>
-        <option value="Personal">Personal</option>
-        <option value="Other">Other</option>
-      </select>
-    </div>
     <div style="margin-bottom:4px">
-      <label class="modal-lbl" for="modal-store">Store <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></label>
-      <input class="modal-input" id="modal-store" type="text" placeholder="e.g. Woolworths"
-             onkeydown="if(event.key==='Enter')confirmAdd()">
+      <label class="modal-lbl" for="modal-cat">Store</label>
+      <select class="modal-input" id="modal-cat" style="cursor:pointer">
+        <option value="Woolworths">Woolworths</option>
+        <option value="Coles">Coles</option>
+        <option value="Aldi">Aldi</option>
+        <option value="Asian Grocer">Asian Grocer</option>
+        <option value="Korean Grocer">Korean Grocer</option>
+        <option value="Big W">Big W</option>
+        <option value="Chemist Warehouse">Chemist Warehouse</option>
+        <option value="Pharmacy 4 Less">Pharmacy 4 Less</option>
+        <option value="Kmart">Kmart</option>
+        <option value="Target">Target</option>
+        <option value="Ray Mum">Ray Mum</option>
+        <option value="Others">Others</option>
+      </select>
     </div>
     <div class="modal-ftr">
       <button class="btn" onclick="closeAddModal()">Cancel</button>

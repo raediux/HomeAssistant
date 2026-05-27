@@ -556,6 +556,7 @@ body {
 }
 .move-btn.add:hover  { background: var(--green-l);  border-color: var(--green);  color: var(--green);  }
 .move-btn.rem:hover  { background: var(--amber-l);  border-color: var(--amber);  color: var(--amber);  }
+.move-btn.del:hover  { background: rgba(220,60,60,0.12); border-color: #dc3c3c; color: #dc3c3c; }
 
 /* Drop zone indicator */
 .drop-zone {
