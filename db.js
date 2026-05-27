@@ -111,3 +111,23 @@ async function dbDeletePastItem(id) {
   const { error } = await db.from('shopping_past').delete().eq('id', id);
   if (error) console.error('dbDeletePastItem:', error);
 }
+
+// ── Meal plans ────────────────────────────────────────────────
+async function dbLoadMeals() {
+  const { data, error } = await db.from('meal_plans').select('*');
+  if (error) { console.error('dbLoadMeals:', error); return []; }
+  return data;
+}
+
+async function dbSaveMeal(date, person, slot, meal) {
+  const { error } = await db.from('meal_plans').upsert(
+    { date, person, slot, meal }, { onConflict: 'date,person,slot' }
+  );
+  if (error) console.error('dbSaveMeal:', error);
+}
+
+async function dbDeleteMeal(date, person, slot) {
+  const { error } = await db.from('meal_plans')
+    .delete().eq('date', date).eq('person', person).eq('slot', slot);
+  if (error) console.error('dbDeleteMeal:', error);
+}

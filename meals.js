@@ -2,18 +2,23 @@ let mpWeekStart = null;
 let mpMeals = {};
 let mpPending = null;
 
-const MP_KEY = 'mp-meals';
 const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function mpInit() {
+async function mpInit() {
   const today = new Date();
   today.setHours(0,0,0,0);
   const dow = today.getDay();
   const diff = dow === 0 ? -6 : 1 - dow;
   mpWeekStart = new Date(today);
   mpWeekStart.setDate(today.getDate() + diff);
-  try { mpMeals = JSON.parse(localStorage.getItem(MP_KEY) || '{}'); } catch(e) { mpMeals = {}; }
+  const rows = await dbLoadMeals();
+  mpMeals = {};
+  for (const r of rows) {
+    if (!mpMeals[r.date]) mpMeals[r.date] = {};
+    if (!mpMeals[r.date][r.person]) mpMeals[r.date][r.person] = {};
+    mpMeals[r.date][r.person][r.slot] = r.meal;
+  }
   mpRender();
 }
 
@@ -69,9 +74,9 @@ function mpRender() {
 
 function mpCell(key, person, slot, meal) {
   const body = meal
-    ? `<div class="mp-cell-filled">
+    ? `<div class="mp-cell-filled" onclick="mpOpen('${key}','${person}','${slot}')">
         <span class="mp-cell-name">${mpLinkify(meal)}</span>
-        <button class="mp-cell-rm" onclick="mpRemove('${key}','${person}','${slot}')" title="Remove"><i class="ti ti-x"></i></button>
+        <button class="mp-cell-rm" onclick="event.stopPropagation();mpRemove('${key}','${person}','${slot}')" title="Remove"><i class="ti ti-x"></i></button>
        </div>`
     : `<button class="mp-cell-add" onclick="mpOpen('${key}','${person}','${slot}')"><i class="ti ti-plus" style="font-size:11px"></i> Add</button>`;
   return `<div class="mp-cell"><div class="mp-cell-body">${body}</div></div>`;
@@ -113,26 +118,26 @@ function closeMealModal() {
   mpPending = null;
 }
 
-function confirmMeal() {
+async function confirmMeal() {
   const val = document.getElementById('meal-modal-input').value.trim();
   if (!val || !mpPending) return;
   const { dateKey, person, slot } = mpPending;
   if (!mpMeals[dateKey]) mpMeals[dateKey] = {};
   if (!mpMeals[dateKey][person]) mpMeals[dateKey][person] = {};
   mpMeals[dateKey][person][slot] = val;
-  localStorage.setItem(MP_KEY, JSON.stringify(mpMeals));
   closeMealModal();
   mpRender();
+  await dbSaveMeal(dateKey, person, slot, val);
 }
 
-function mpRemove(dateKey, person, slot) {
+async function mpRemove(dateKey, person, slot) {
   if (!mpMeals[dateKey]?.[person]) return;
   delete mpMeals[dateKey][person][slot];
   const p = mpMeals[dateKey][person];
   if (!p.lunch && !p.dinner) delete mpMeals[dateKey][person];
   if (!PEOPLE.some(p => mpMeals[dateKey]?.[p])) delete mpMeals[dateKey];
-  localStorage.setItem(MP_KEY, JSON.stringify(mpMeals));
   mpRender();
+  await dbDeleteMeal(dateKey, person, slot);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -141,3 +146,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === document.getElementById('meal-modal')) closeMealModal();
   });
 });
+
