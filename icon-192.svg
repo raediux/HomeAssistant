@@ -9,25 +9,29 @@
       <stop offset="50%" stop-color="rgba(255,255,255,0.02)"/>
       <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
     </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="46%" r="52%">
-      <stop offset="0%" stop-color="rgba(74,143,212,0.58)"/>
-      <stop offset="55%" stop-color="rgba(74,143,212,0.22)"/>
+    <radialGradient id="glow" cx="50%" cy="46%" r="55%">
+      <stop offset="0%" stop-color="rgba(74,143,212,0.65)"/>
+      <stop offset="55%" stop-color="rgba(74,143,212,0.25)"/>
       <stop offset="100%" stop-color="rgba(74,143,212,0)"/>
     </radialGradient>
   </defs>
   <!-- Background -->
   <rect width="192" height="192" rx="38" fill="url(#bg)"/>
   <!-- Prominent blue glow -->
-  <ellipse cx="96" cy="86" rx="88" ry="74" fill="url(#glow)"/>
+  <ellipse cx="96" cy="84" rx="90" ry="76" fill="url(#glow)"/>
   <!-- Glass sheen -->
   <rect width="192" height="192" rx="38" fill="url(#sheen)"/>
-  <!-- House outline -->
-  <path d="M56,86 L96,38 L136,86 L136,130 L56,130 Z" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="2.5" stroke-linejoin="round"/>
-  <!-- Door -->
-  <rect x="84" y="109" width="24" height="21" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8"/>
+  <!--
+    House outline with chimney on left slope.
+    Roof peak: (96,36)  Left eave: (34,90)  Right eave: (158,90)
+    Walls: x=46–146, bottom y=142
+    Chimney: x=63–77, top y=30; intersects left slope at (63,65) and (77,53)
+  -->
+  <path d="M63,30 L77,30 L77,53 L96,36 L158,90 L146,90 L146,142 L46,142 L46,90 L34,90 L63,65 Z"
+        fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
   <!-- Text -->
-  <text x="96" y="152" font-family="system-ui,-apple-system,sans-serif" font-size="17" font-weight="600" fill="rgba(255,255,255,0.90)" text-anchor="middle" letter-spacing="-0.2">Home</text>
-  <text x="96" y="172" font-family="system-ui,-apple-system,sans-serif" font-size="17" font-weight="600" fill="rgba(255,255,255,0.90)" text-anchor="middle" letter-spacing="-0.2">Assistant</text>
+  <text x="96" y="158" font-family="system-ui,-apple-system,sans-serif" font-size="16" font-weight="600" fill="rgba(255,255,255,0.90)" text-anchor="middle" letter-spacing="-0.2">Home</text>
+  <text x="96" y="177" font-family="system-ui,-apple-system,sans-serif" font-size="16" font-weight="600" fill="rgba(255,255,255,0.90)" text-anchor="middle" letter-spacing="-0.2">Assistant</text>
   <!-- Border -->
   <rect x="0.5" y="0.5" width="191" height="191" rx="37.5" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
 </svg>
