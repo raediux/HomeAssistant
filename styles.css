@@ -781,6 +781,7 @@ body {
   .mobile-person-tab[data-person="jazelle"].active { background: rgba(196,96,144,0.18); color: var(--pink);    border-color: rgba(196,96,144,0.3); }
   .mobile-person-tab[data-person="linus"].active  { background: rgba(201,168,56,0.18);  color: var(--yellow);  border-color: rgba(201,168,56,0.3); }
 
+  .topbar { display: none; }
   .tasks-layout { padding: 0 0 10px; flex-direction: column; align-items: stretch; overflow: hidden; }
   .col-glow-wrap { display: none; }
   .col-glow-wrap.mobile-active { display: flex; flex: 1; min-height: 0; }
