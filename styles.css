@@ -737,3 +737,37 @@ body {
   flex-shrink: 0; transition: color .12s;
 }
 .mp-cell-rm:hover { color: var(--red); }
+
+/* ── Mobile: Tasks tab ── */
+.mobile-person-tabs { display: none; }
+
+@media (max-width: 600px) {
+  .tab-panel { padding: 0 12px; }
+
+  .mobile-person-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 12px 0 8px;
+    flex-shrink: 0;
+  }
+  .mobile-person-tab {
+    flex: 1;
+    padding: 7px 0;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .mobile-person-tab[data-person="ray"].active    { background: rgba(74,143,212,0.18);  color: var(--accent);  border-color: rgba(74,143,212,0.3); }
+  .mobile-person-tab[data-person="jazelle"].active { background: rgba(196,96,144,0.18); color: var(--pink);    border-color: rgba(196,96,144,0.3); }
+  .mobile-person-tab[data-person="linus"].active  { background: rgba(201,168,56,0.18);  color: var(--yellow);  border-color: rgba(201,168,56,0.3); }
+
+  .tasks-layout { padding: 0 0 10px; align-items: stretch; }
+  .col-glow-wrap { display: none; }
+  .col-glow-wrap.mobile-active { display: flex; flex: 1; }
+}

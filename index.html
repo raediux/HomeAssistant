@@ -47,10 +47,15 @@
 
   <!-- Tasks panel -->
   <div class="tab-panel active" id="panel-tasks">
+    <div class="mobile-person-tabs">
+      <button class="mobile-person-tab active" data-person="ray" onclick="switchPersonTab('ray')">Ray</button>
+      <button class="mobile-person-tab" data-person="jazelle" onclick="switchPersonTab('jazelle')">Jazelle</button>
+      <button class="mobile-person-tab" data-person="linus" onclick="switchPersonTab('linus')">Linus</button>
+    </div>
     <div class="tasks-layout">
 
       <!-- Ray -->
-      <div class="col-glow-wrap col-glow-ray">
+      <div class="col-glow-wrap col-glow-ray mobile-active">
       <div class="person-column col-ray">
         <div class="person-col-name">Ray</div>
         <div class="person-col-tasks">

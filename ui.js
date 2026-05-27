@@ -116,6 +116,12 @@ updateTime();
 setInterval(updateTime, 1000);
 
 // ── Tab switching ─────────────────────────────────────────────
+function switchPersonTab(person) {
+  document.querySelectorAll('.mobile-person-tab').forEach(b => b.classList.toggle('active', b.dataset.person === person));
+  document.querySelectorAll('.col-glow-wrap').forEach(w => w.classList.remove('mobile-active'));
+  document.querySelector(`.col-glow-${person}`).classList.add('mobile-active');
+}
+
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
