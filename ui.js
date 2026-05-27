@@ -143,15 +143,14 @@ function switchTab(name) {
 
 
 // ── Shopping data ─────────────────────────────────────────────
-const STORES = ['Woolworths','Coles','Aldi','Asian Grocer','Korean Grocer','Big W','Chemist Warehouse','Pharmacy 4 Less','Kmart','Target','Ray Mum','Others'];
+const STORES = ['Woolworths','Coles','Aldi','Asian Grocer','Korean Grocer','Butcher','Big W','Chemist Warehouse','Pharmacy 4 Less','Kmart','Target','Ray Mum','Others'];
+let editState = null; // { id, type: 'working'|'past' }
 let collapsed = {};
 let collapsedPast = {};
 
 let workingItems = [];
 let pastItems = [];
 let nextId = 100;
-let draggedId = null;
-let dragSource = null; // 'working' | 'past'
 
 // ── Render ────────────────────────────────────────────────────
 function render() {
@@ -177,22 +176,21 @@ function renderWorking() {
     const items = groups[s];
     const isCollapsed = collapsed[s];
     const itemsHtml = items.map(item => `
-      <div class="s-item${item.got ? ' done' : ''}"
-           draggable="true" data-id="${item.id}" data-src="working"
-           ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
-        <i class="ti ti-grip-vertical drag-handle" aria-hidden="true"></i>
+      <div class="s-item${item.got ? ' done' : ''}">
         <div class="circle${item.got ? ' checked' : ''}" style="flex-shrink:0" onclick="toggleGot(${item.id})">
           ${item.got ? '<i class="ti ti-check"></i>' : ''}
         </div>
-        <div style="flex:1;min-width:0">
+        <div class="s-move-zone" onclick="moveToArchive(${item.id})">
           <div class="s-name">${esc(item.name)}</div>
         </div>
-        <button class="move-btn del" title="Delete" onclick="deleteWorkingItem(${item.id})">
-          <i class="ti ti-trash" aria-hidden="true"></i>
-        </button>
-        <button class="move-btn rem" title="Archive" onclick="moveToArchive(${item.id})">
-          <i class="ti ti-arrow-right" aria-hidden="true"></i>
-        </button>
+        <div class="item-actions">
+          <button class="move-btn edt" title="Edit" onclick="editWorkingItem(${item.id})">
+            <i class="ti ti-pencil" aria-hidden="true"></i>
+          </button>
+          <button class="move-btn del" title="Delete" onclick="deleteWorkingItem(${item.id})">
+            <i class="ti ti-trash" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>`).join('');
     return `
       <div class="cat-section">
@@ -200,6 +198,7 @@ function renderWorking() {
           <span class="cat-label">${s}</span>
           <span class="cat-line"></span>
           <span class="cat-count">${items.length}</span>
+          <button class="cat-add-btn" title="Add to ${s}" onclick="event.stopPropagation();addToStore('${s}')"><i class="ti ti-plus"></i></button>
           <i class="ti ti-chevron-down cat-chevron${isCollapsed ? ' collapsed' : ''}" aria-hidden="true"></i>
         </div>
         <div class="cat-body${isCollapsed ? ' collapsed' : ''}">${itemsHtml}</div>
@@ -253,18 +252,18 @@ function renderPast(query = '') {
 
 function pastItemHtml(item) {
   return `
-    <div class="p-item" draggable="true" data-id="${item.id}" data-src="past"
-         ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
-      <i class="ti ti-grip-vertical drag-handle" aria-hidden="true"></i>
-      <div style="flex:1;min-width:0">
+    <div class="p-item">
+      <div class="p-move-zone" onclick="moveToList(${item.id})">
         <div class="p-name">${esc(item.name)}</div>
       </div>
-      <button class="move-btn add" title="Add to list" onclick="moveToList(${item.id})">
-        <i class="ti ti-arrow-left" aria-hidden="true"></i>
-      </button>
-      <button class="move-btn del" title="Delete" onclick="deletePastItem(${item.id})">
-        <i class="ti ti-trash" aria-hidden="true"></i>
-      </button>
+      <div class="item-actions">
+        <button class="move-btn edt" title="Edit" onclick="editPastItem(${item.id})">
+          <i class="ti ti-pencil" aria-hidden="true"></i>
+        </button>
+        <button class="move-btn del" title="Delete" onclick="deletePastItem(${item.id})">
+          <i class="ti ti-trash" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>`;
 }
 
@@ -320,15 +319,62 @@ function addToList() {
   setTimeout(() => document.getElementById('modal-name').focus(), 50);
 }
 
+function addToStore(store) {
+  document.getElementById('modal-cat').value = store;
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(() => document.getElementById('modal-name').focus(), 50);
+}
+
+function editWorkingItem(id) {
+  const item = workingItems.find(i => i.id === id);
+  if (!item) return;
+  editState = { id, type: 'working' };
+  document.getElementById('modal-name').value = item.name;
+  document.getElementById('modal-cat').value = STORES.includes(item.store) ? item.store : 'Others';
+  document.querySelector('#add-modal .modal-hdr span').textContent = 'Edit item';
+  document.querySelector('#add-modal .btn-primary').innerHTML = '<i class="ti ti-check"></i> Save';
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(() => document.getElementById('modal-name').focus(), 50);
+}
+
+function editPastItem(id) {
+  const item = pastItems.find(i => i.id === id);
+  if (!item) return;
+  editState = { id, type: 'past' };
+  document.getElementById('modal-name').value = item.name;
+  document.getElementById('modal-cat').value = STORES.includes(item.store) ? item.store : 'Others';
+  document.querySelector('#add-modal .modal-hdr span').textContent = 'Edit item';
+  document.querySelector('#add-modal .btn-primary').innerHTML = '<i class="ti ti-check"></i> Save';
+  document.getElementById('add-modal').classList.add('open');
+  setTimeout(() => document.getElementById('modal-name').focus(), 50);
+}
+
 function closeAddModal() {
   document.getElementById('add-modal').classList.remove('open');
   document.getElementById('modal-name').value = '';
+  if (editState) {
+    editState = null;
+    document.querySelector('#add-modal .modal-hdr span').textContent = 'Add item';
+    document.querySelector('#add-modal .btn-primary').innerHTML = '<i class="ti ti-plus"></i> Add to list';
+  }
 }
 
 function confirmAdd() {
   const name = document.getElementById('modal-name').value.trim();
   if (!name) { document.getElementById('modal-name').focus(); return; }
   const store = document.getElementById('modal-cat').value;
+  if (editState) {
+    if (editState.type === 'working') {
+      const item = workingItems.find(i => i.id === editState.id);
+      if (item) { item.name = name; item.store = store; dbSaveWorkingItem(item); }
+    } else {
+      const item = pastItems.find(i => i.id === editState.id);
+      if (item) { item.name = name; item.store = store; dbSavePastItem(item); }
+    }
+    closeAddModal();
+    render();
+    return;
+  }
   const item = { id: nextId++, name, qty: null, store, got: false };
   workingItems.push(item);
   closeAddModal();
@@ -352,31 +398,7 @@ function deletePastItem(id) {
   dbDeletePastItem(id);
 }
 
-// ── Drag and drop ─────────────────────────────────────────────
-function onDragStart(e) {
-  draggedId = parseInt(e.currentTarget.dataset.id);
-  dragSource = e.currentTarget.dataset.src;
-  e.currentTarget.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-
-  const targetZone = dragSource === 'working'
-    ? document.getElementById('past-dropzone')
-    : document.getElementById('working-dropzone');
-  targetZone.classList.add('active');
-}
-
-function onDragEnd(e) {
-  e.currentTarget.classList.remove('dragging');
-  document.getElementById('working-dropzone').classList.remove('active');
-  document.getElementById('past-dropzone').classList.remove('active');
-  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-}
-
-// Set up drop zones on panels
 document.addEventListener('DOMContentLoaded', async () => {
-  setupDropZone(document.getElementById('working-panel'), 'working');
-  setupDropZone(document.getElementById('past-panel'), 'past');
-
   [workingItems, pastItems] = await Promise.all([dbLoadWorkingItems(), dbLoadPastItems()]);
   if (workingItems.length || pastItems.length) {
     const maxId = Math.max(...workingItems.map(i => i.id), ...pastItems.map(i => i.id), nextId - 1);
@@ -384,23 +406,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   render();
 });
-
-function setupDropZone(panel, target) {
-  panel.addEventListener('dragover', e => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (dragSource !== target) panel.style.outline = '2px solid var(--accent)';
-  });
-  panel.addEventListener('dragleave', e => {
-    if (!panel.contains(e.relatedTarget)) panel.style.outline = '';
-  });
-  panel.addEventListener('drop', e => {
-    e.preventDefault();
-    panel.style.outline = '';
-    if (dragSource === target || draggedId === null) return;
-    if (target === 'working') moveToList(draggedId);
-    else moveToArchive(draggedId);
-    draggedId = null;
-    dragSource = null;
-  });
-}
