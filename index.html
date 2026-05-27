@@ -41,7 +41,7 @@
   <!-- Tab bar -->
   <div class="tab-bar">
     <button class="tab active" id="tab-tasks" onclick="switchTab('tasks')">Tasks</button>
-    <button class="tab" id="tab-shopping" onclick="switchTab('shopping')">Shopping</button>
+    <button class="tab" id="tab-shopping" onclick="switchTab('shopping')">Meal Planner</button>
     <button class="tab" id="tab-calendar" onclick="switchTab('calendar')">Calendar</button>
   </div>
 
@@ -187,31 +187,48 @@
     </div><!-- /tasks-layout -->
   </div><!-- /panel-tasks -->
 
-  <!-- Shopping panel -->
+  <!-- Meal Planner panel -->
   <div class="tab-panel" id="panel-shopping">
-    <div class="col-shopping">
-      <div class="sec-hdr">
-        <span class="sec-title">Shopping</span>
-        <button class="btn btn-primary" onclick="addToList()"><i class="ti ti-plus"></i> Add item</button>
-      </div>
-      <div class="shopping-panels">
-        <div class="shop-panel" id="working-panel">
-          <div class="panel-hdr"><span class="panel-title">Shopping list</span></div>
-          <p class="panel-sub">Drag items out to archive, or click ← to remove</p>
-          <div class="drop-zone" id="working-dropzone">Drop here to add to list</div>
-          <div id="working-list"></div>
-        </div>
-        <div class="shop-panel" id="past-panel">
-          <div class="panel-hdr"><span class="panel-title">Past purchases</span></div>
-          <p class="panel-sub">Click + or drag to add to your list</p>
-          <div class="search-bar">
-            <i class="ti ti-search"></i>
-            <input type="text" placeholder="Search past items..." id="past-search" oninput="filterPast()">
+    <div class="mp-layout">
+
+      <!-- Left: Meal Planner -->
+      <div class="mp-col-planner">
+        <div class="sec-hdr">
+          <div class="mp-week-nav">
+            <button class="ib" onclick="mpPrevWeek()"><i class="ti ti-chevron-left"></i></button>
+            <span id="mp-week-label" class="mp-week-label"></span>
+            <button class="ib" onclick="mpNextWeek()"><i class="ti ti-chevron-right"></i></button>
           </div>
-          <div class="drop-zone" id="past-dropzone">Drop here to archive</div>
-          <div id="past-list"></div>
+        </div>
+        <div class="mp-grid" id="mp-grid"></div>
+      </div>
+
+      <!-- Right: Shopping list -->
+      <div class="mp-col-shopping">
+        <div class="sec-hdr">
+          <span class="sec-title">Shopping</span>
+          <button class="btn btn-primary" onclick="addToList()"><i class="ti ti-plus"></i> Add item</button>
+        </div>
+        <div class="shopping-panels">
+          <div class="shop-panel" id="working-panel">
+            <div class="panel-hdr"><span class="panel-title">Shopping list</span></div>
+            <p class="panel-sub">Drag items out to archive, or click ← to remove</p>
+            <div class="drop-zone" id="working-dropzone">Drop here to add to list</div>
+            <div id="working-list"></div>
+          </div>
+          <div class="shop-panel" id="past-panel">
+            <div class="panel-hdr"><span class="panel-title">Past purchases</span></div>
+            <p class="panel-sub">Click + or drag to add to your list</p>
+            <div class="search-bar">
+              <i class="ti ti-search"></i>
+              <input type="text" placeholder="Search past items..." id="past-search" oninput="filterPast()">
+            </div>
+            <div class="drop-zone" id="past-dropzone">Drop here to archive</div>
+            <div id="past-list"></div>
+          </div>
         </div>
       </div>
+
     </div>
   </div><!-- /panel-shopping -->
 
@@ -303,6 +320,25 @@
   </div>
 </div>
 
+<!-- Meal modal -->
+<div class="modal-overlay" id="meal-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span id="meal-modal-title">Add meal</span>
+      <button class="modal-x" onclick="closeMealModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="margin-bottom:4px">
+      <label class="modal-lbl" for="meal-modal-input">Meal</label>
+      <input class="modal-input" id="meal-modal-input" type="text" placeholder="e.g. Spaghetti Bolognese"
+             onkeydown="if(event.key==='Enter')confirmMeal()">
+    </div>
+    <div class="modal-ftr">
+      <button class="btn" onclick="closeMealModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmMeal()"><i class="ti ti-check"></i> Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
@@ -310,6 +346,7 @@
 <script src="ui.js"></script>
 <script src="tasks.js"></script>
 <script src="calendar.js"></script>
+<script src="meals.js"></script>
 </body>
 </html>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  color-scheme: dark;
+  --bg:      #111110;
+  --surface: #1c1c1a;
+  --surface2:#242422;
+  --border:  #2e2e2b;
+  --border2: #3a3a36;
+  --text:    #e8e6e1;
+  --text2:   #9e9b93;
+  --text3:   #6b6960;
+  --accent:  #4a8fd4;
+  --accent-l:#1a2d42;
+  --accent-t:#7ab3e8;
+  --green:   #5a9e5a;
+  --green-l: #1a2e1a;
+  --amber:   #c4903a;
+  --amber-l: #2e2010;
+  --red:     #c46060;
+  --red-l:   #2e1a1a;
+  --pink:    #c46090;
+  --pink-l:  #2e1a28;
+  --yellow:  #c9a838;
+  --yellow-l:#2e2710;
+  --r:  8px;
+  --rl: 12px;
+}
+
+html, body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 65% 0%, #10131a 0%, #0d0e12 45%, #0c0d10 100%);
+  min-height: 100vh;
+  padding: 48px 0 80px;
+}
+
+/* ── Guide layout ── */
+.guide { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+.guide-header { margin-bottom: 56px; }
+.guide-header h1 { font-size: 32px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.guide-header p  { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+.section { margin-bottom: 60px; }
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text3);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.row    { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.col    { display: flex; flex-direction: column; gap: 10px; }
+.label  { font-size: 10px; color: var(--text3); font-weight: 500; margin-top: 6px; }
+.token  { font-size: 9px; color: var(--text3); font-family: monospace; }
+.note   { font-size: 12px; color: var(--text2); line-height: 1.6; margin-top: 10px; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ────────────────────────────────────────
+   COLOR SWATCHES
+──────────────────────────────────────── */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+.swatch-item { display: flex; flex-direction: column; gap: 6px; }
+.swatch-block {
+  height: 48px;
+  border-radius: var(--r);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.swatch-name { font-size: 11px; font-weight: 500; color: var(--text2); }
+.swatch-hex  { font-size: 10px; color: var(--text3); font-family: monospace; }
+
+.pair-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 4px; }
+.pair-item {
+  border-radius: var(--r);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.pair-fill { height: 36px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+.pair-label { padding: 7px 10px; font-size: 10px; color: var(--text3); font-family: monospace; background: var(--surface); }
+
+/* ────────────────────────────────────────
+   TYPOGRAPHY
+──────────────────────────────────────── */
+.type-grid { display: flex; flex-direction: column; gap: 16px; }
+.type-row  { display: flex; align-items: baseline; gap: 24px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.type-row:last-child { border-bottom: none; }
+.type-spec { width: 120px; flex-shrink: 0; }
+.type-spec-size   { font-size: 10px; color: var(--text3); font-family: monospace; }
+.type-spec-weight { font-size: 10px; color: var(--text3); font-family: monospace; }
+.type-sample { flex: 1; }
+
+/* ────────────────────────────────────────
+   BUTTONS
+──────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 13px;
+  border-radius: var(--r);
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .12s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--surface2); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: #3a7abf; }
+.btn-ghost {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 4px 11px;
+  font-size: 11px;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .12s, color .12s;
+}
+.btn-ghost:hover { border-color: var(--text3); color: var(--text); }
+.ib {
+  background: none; border: none; cursor: pointer;
+  padding: 3px 5px; border-radius: 5px;
+  font-size: 14px; color: var(--text2);
+  transition: background .12s, color .12s;
+}
+.ib:hover { background: var(--surface2); color: var(--text); }
+.ib.active { color: var(--accent); background: var(--accent-l); }
+.ib.del:hover { background: var(--red-l); color: var(--red); }
+
+/* ────────────────────────────────────────
+   BADGES
+──────────────────────────────────────── */
+.badge {
+  font-size: 10px; font-weight: 500;
+  padding: 2px 8px; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: 3px;
+  white-space: nowrap;
+}
+.badge i { font-size: 10px; }
+.b-blue { background: var(--accent-l); color: var(--accent-t); }
+.b-red  { background: var(--red-l);    color: var(--red);    }
+.b-amb  { background: var(--amber-l);  color: var(--amber);  }
+.b-grn  { background: var(--green-l);  color: var(--green);  }
+.b-pink { background: var(--pink-l);   color: var(--pink);   }
+.b-yel  { background: var(--yellow-l); color: var(--yellow); }
+.b-gray { background: var(--surface2); color: var(--text2);  border: 1px solid var(--border); }
+
+/* ────────────────────────────────────────
+   FILTER PILLS
+──────────────────────────────────────── */
+.filter-bar { display: flex; gap: 5px; flex-wrap: wrap; }
+.fp {
+  padding: 4px 12px; border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface); color: var(--text2);
+  font-size: 11px; cursor: pointer; font-family: inherit;
+  transition: all .12s;
+}
+.fp:hover  { background: var(--surface2); color: var(--text); }
+.fp.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.fp-sep    { width: 1px; background: var(--border); align-self: stretch; margin: 0 2px; }
+
+/* ────────────────────────────────────────
+   TASK CARD
+──────────────────────────────────────── */
+.task-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-left: 2px solid rgba(255,255,255,0.15);
+  border-radius: var(--r);
+  padding: 10px 13px;
+  display: flex; align-items: flex-start; gap: 10px;
+  transition: border-color .12s;
+  cursor: pointer; user-select: none;
+  min-height: 56px;
+}
+.task-card:hover { border-color: var(--border2); }
+.task-card.done  { opacity: .35; }
+.task-card.done .card-title { text-decoration: line-through; }
+.task-card.bl { border-left-color: var(--accent); }
+.task-card.pk { border-left-color: var(--pink); }
+.task-card.yl { border-left-color: var(--yellow); }
+
+.circle {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1.5px solid var(--border2); flex-shrink: 0;
+  margin-top: 2px; display: flex; align-items: center;
+  justify-content: center; font-size: 9px; cursor: pointer;
+  transition: border-color .12s;
+}
+.circle:hover  { border-color: var(--accent); }
+.circle.checked { background: var(--green-l); border-color: var(--green); color: var(--green); }
+
+.card-body { flex: 1; min-width: 0; }
+.card-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* ────────────────────────────────────────
+   GLASS PANELS
+──────────────────────────────────────── */
+.glass-panel {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid rgba(255,255,255,0.13);
+  border-radius: var(--r);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  padding: 16px 18px;
+}
+.glass-modal {
+  background: rgba(28,28,26,0.88);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--rl);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  padding: 24px;
+}
+.glass-topbar {
+  background: rgba(255,255,255,0.025);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 13px 22px;
+  border-radius: var(--r);
+}
+
+/* ────────────────────────────────────────
+   GLOW DEMO
+──────────────────────────────────────── */
+.glow-demo { display: flex; gap: 12px; }
+.glow-wrap {
+  flex: 1; position: relative;
+}
+.glow-wrap::before {
+  content: '';
+  position: absolute;
+  width: 240px; height: 240px;
+  top: -60px; left: -40px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(60px);
+  z-index: 0;
+}
+.glow-blue::before  { background: radial-gradient(circle, rgba(74,143,212,0.22) 0%, transparent 70%); }
+.glow-pink::before  { background: radial-gradient(circle, rgba(196,96,144,0.15) 0%, transparent 70%); }
+.glow-yel::before   { background: radial-gradient(circle, rgba(201,168,56,0.11) 0%, transparent 70%); }
+.glow-inner {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-top: 4px solid;
+  border-radius: var(--r);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  padding: 14px 16px;
+  min-height: 100px;
+}
+.glow-blue .glow-inner { border-top-color: rgba(74,143,212,0.5); }
+.glow-pink .glow-inner { border-top-color: rgba(196,96,144,0.5); }
+.glow-yel  .glow-inner { border-top-color: rgba(201,168,56,0.45); }
+.glow-name { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+
+/* ────────────────────────────────────────
+   MODAL DEMO (inline)
+──────────────────────────────────────── */
+.modal-lbl {
+  display: block; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--text2); margin-bottom: 5px;
+}
+.modal-input {
+  width: 100%; background: var(--bg);
+  border: 1px solid var(--border2); border-radius: var(--r);
+  padding: 8px 11px; font-size: 13px; color: var(--text);
+  font-family: inherit; outline: none; transition: border-color .12s;
+}
+.modal-input:focus { border-color: var(--accent); }
+.modal-ftr {
+  display: flex; justify-content: flex-end; gap: 8px;
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
+}
+.modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.modal-hdr span { font-size: 14px; font-weight: 600; }
+.modal-x { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 18px; display: flex; padding: 2px; }
+.modal-x:hover { color: var(--text); }
+
+/* ────────────────────────────────────────
+   SEARCH BAR
+──────────────────────────────────────── */
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 7px 11px;
+}
+.search-bar i { color: var(--text3); font-size: 15px; flex-shrink: 0; }
+.search-bar input {
+  background: none; border: none; outline: none;
+  font-size: 13px; color: var(--text); flex: 1; font-family: inherit;
+}
+.search-bar input::placeholder { color: var(--text3); }
+
+/* ────────────────────────────────────────
+   SHOPPING ITEM ROWS
+──────────────────────────────────────── */
+.s-item {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 6px 10px;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 1px; cursor: grab;
+  transition: border-color .12s;
+  user-select: none;
+}
+.s-item:hover { border-color: var(--border2); }
+.s-name   { font-size: 12px; font-weight: 500; flex: 1; min-width: 0; }
+.s-meta   { font-size: 11px; color: var(--text3); }
+.move-btn {
+  background: none; border: 1px solid var(--border2);
+  border-radius: 5px; padding: 3px 6px;
+  cursor: pointer; color: var(--text3); font-size: 13px;
+  flex-shrink: 0; transition: all .12s;
+  display: flex; align-items: center;
+}
+.move-btn.rem:hover { background: var(--amber-l); border-color: var(--amber); color: var(--amber); }
+
+/* ────────────────────────────────────────
+   CALENDAR CELLS
+──────────────────────────────────────── */
+.cal-mini-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+}
+.cal-day-hdr {
+  text-align: center; font-size: 9px; font-weight: 600;
+  color: var(--text3); text-transform: uppercase;
+  letter-spacing: .06em; padding-bottom: 6px;
+}
+.cal-day {
+  background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+  border-radius: 5px; padding: 4px 5px 3px;
+  aspect-ratio: 4/3; cursor: pointer;
+  display: flex; flex-direction: column; gap: 3px;
+  transition: border-color .12s;
+}
+.cal-day:hover { border-color: rgba(255,255,255,0.14); }
+.cal-day.today { border-color: var(--accent); }
+.cal-day.selected { background: var(--accent-l); border-color: var(--accent); }
+.cal-day-num { font-size: 11px; font-weight: 500; color: var(--text2); line-height: 1; }
+.cal-day.today .cal-day-num { color: var(--accent); font-weight: 700; }
+.cal-badge { font-size: 9px; font-weight: 500; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+
+/* ────────────────────────────────────────
+   VERTICAL SIDEBAR LABEL
+──────────────────────────────────────── */
+.row-label-demo {
+  width: 28px; padding: 14px 8px;
+  font-size: 11px; font-weight: 500; color: var(--text3);
+  background: rgba(0,0,0,0.2);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 0;
+}
+
+/* ────────────────────────────────────────
+   TOPBAR DEMO
+──────────────────────────────────────── */
+.demo-topbar {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 13px 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-radius: var(--r) var(--r) 0 0;
+}
+.demo-tabbar {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-top: none;
+  backdrop-filter: blur(8px);
+  padding: 0 22px;
+  display: flex;
+  border-radius: 0 0 var(--r) var(--r);
+}
+.demo-tab {
+  background: none; border: none;
+  border-bottom: 2px solid transparent;
+  padding: 11px 18px; font-size: 13px; font-weight: 500;
+  color: var(--text2); cursor: pointer; font-family: inherit;
+  transition: color .12s, border-color .12s;
+  margin-bottom: -1px;
+}
+.demo-tab:hover { color: var(--text); }
+.demo-tab.active { color: var(--text); border-bottom-color: var(--text2); }
+
+/* ────────────────────────────────────────
+   CAT SECTION
+──────────────────────────────────────── */
+.cat-header { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 7px 0; }
+.cat-label  { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); white-space: nowrap; }
+.cat-line   { flex: 1; height: 1px; background: var(--border); }
+.cat-count  { font-size: 10px; color: var(--text3); }
+.cat-chevron { color: var(--text3); font-size: 13px; flex-shrink: 0; }
+
+/* ────────────────────────────────────────
+   SURFACE LEVEL DEMO
+──────────────────────────────────────── */
+.surface-stack { display: flex; gap: 2px; }
+.surf {
+  flex: 1; height: 60px; display: flex; align-items: flex-end;
+  padding: 8px 10px; font-size: 10px; font-family: monospace;
+  color: var(--text3); border-radius: var(--r);
+}
+
+/* ────────────────────────────────────────
+   PIN BOX DEMO
+──────────────────────────────────────── */
+.pin-demo {
+  background: var(--bg); padding: 32px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  border: 1px solid var(--border); border-radius: var(--rl);
+}
+.pin-title { font-size: 22px; font-weight: 600; }
+.pin-sub   { font-size: 13px; color: var(--text2); }
+.pin-input {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 12px 16px;
+  font-size: 20px; letter-spacing: .3em; color: var(--text);
+  text-align: center; width: 180px; outline: none;
+  transition: border-color .12s; margin-top: 8px;
+  font-family: inherit;
+}
+.pin-input:focus { border-color: var(--accent); }
+.pin-remember {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--text3); cursor: pointer;
+}
+.pin-remember input { accent-color: var(--accent); width: 13px; height: 13px; }
+
+/* ────────────────────────────────────────
+   DIVIDER
+──────────────────────────────────────── */
+.divider { height: 1px; background: var(--border); margin: 8px 0; }
+
+/* ────────────────────────────────────────
+   DEMO CONTAINER
+──────────────────────────────────────── */
+.demo-box {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 20px 22px;
+  overflow: hidden;
+}
+.demo-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text3); margin-bottom: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="guide">
+
+  <!-- ── Header ── -->
+  <div class="guide-header">
+    <h1>Design Guide</h1>
+    <p>Visual reference for the dark household dashboard design system.<br>All tokens, components, and patterns in one place.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       1. BACKGROUNDS & SURFACES
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Backgrounds &amp; Surfaces</div>
+
+    <div class="demo-box">
+      <div class="demo-label">Surface stack — three levels of lightness</div>
+      <div class="surface-stack">
+        <div class="surf" style="background:#0c0d10">body bg</div>
+        <div class="surf" style="background:var(--bg)">--bg</div>
+        <div class="surf" style="background:var(--surface)">--surface</div>
+        <div class="surf" style="background:var(--surface2)">--surface2</div>
+        <div class="surf" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); backdrop-filter:blur(16px)">glass panel</div>
+        <div class="surf" style="background:rgba(28,28,26,0.88); border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(16px)">glass modal</div>
+      </div>
+    </div>
+
+    <p class="note">Body gradient: radial from top-right, cool blue-black. Card surfaces use warm near-black (--bg). The warmth contrast between body and cards adds depth.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       2. COLOR TOKENS
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Color Tokens</div>
+
+    <div class="demo-box" style="margin-bottom:14px">
+      <div class="demo-label">Core palette</div>
+      <div class="swatch-grid">
+        <div class="swatch-item">
+          <div class="swatch-block" style="background:#111110"></div>
+          <div class="swatch-name">--bg</div>
+          <div class="swatch-hex">#111110</div>
+        </div>
+        <div class="swatch-item">
+          <div class="swatch-block" style="background:#1c1c1a"></div>
+          <div class="swatch-name">--surface</div>
+          <div class="swatch-hex">#1c1c1a</div>
+        </div>
+        <div class="swatch-item">
+          <div class="swatch-block" style="background:#242422"></div>
+          <div class="swatch-name">--surface2</div>
+          <div class="swatch-hex">#242422</div>
+        </div>
+        <div class="swatch-item">
+          <div class="swatch-block" style="background:#2e2e2b"></div>
+          <div class="swatch-name">--border</div>
+          <div class="swatch-hex">#2e2e2b</div>
+        </div>
+        <div class="swatch-item">
+          <div class="swatch-block" style="background:#3a3a36"></div>
+          <div class="swatch-name">--border2</div>
+          <div class="swatch-hex">#3a3a36</div>
+        </div>
+        <div class="swatch-item">
+          <div class="swatch-block" style="background:#e8e6e1"></div>
+          <div class="swatch-name">--text</div>
+          <div class="swatch-hex">#e8e6e1</div>
+        </div>
+        <div class="swatch-item">
+          <div class="swatch-block" style="background:#9e9b93"></div>
+          <div class="swatch-name">--text2</div>
+          <div class="swatch-hex">#9e9b93</div>
+        </div>
+        <div class="swatch-item">
+          <div class="swatch-block" style="background:#6b6960"></div>
+          <div class="swatch-name">--text3</div>
+          <div class="swatch-hex">#6b6960</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-box">
+      <div class="demo-label">Semantic color pairs (fill + text)</div>
+      <div class="pair-grid">
+        <div class="pair-item">
+          <div class="pair-fill" style="background:var(--accent-l); color:var(--accent-t)"><span class="badge b-blue">Accent</span></div>
+          <div class="pair-label">--accent-l / --accent-t<br>--accent: #4a8fd4</div>
+        </div>
+        <div class="pair-item">
+          <div class="pair-fill" style="background:var(--green-l); color:var(--green)"><span class="badge b-grn">Complete</span></div>
+          <div class="pair-label">--green-l / --green<br>#5a9e5a</div>
+        </div>
+        <div class="pair-item">
+          <div class="pair-fill" style="background:var(--amber-l); color:var(--amber)"><span class="badge b-amb">Warning</span></div>
+          <div class="pair-label">--amber-l / --amber<br>#c4903a</div>
+        </div>
+        <div class="pair-item">
+          <div class="pair-fill" style="background:var(--red-l); color:var(--red)"><span class="badge b-red">Delete</span></div>
+          <div class="pair-label">--red-l / --red<br>#c46060</div>
+        </div>
+        <div class="pair-item">
+          <div class="pair-fill" style="background:var(--pink-l); color:var(--pink)"><span class="badge b-pink">Pink</span></div>
+          <div class="pair-label">--pink-l / --pink<br>#c46090</div>
+        </div>
+        <div class="pair-item">
+          <div class="pair-fill" style="background:var(--yellow-l); color:var(--yellow)"><span class="badge b-yel">Yellow</span></div>
+          <div class="pair-label">--yellow-l / --yellow<br>#c9a838</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       3. TYPOGRAPHY
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Typography — DM Sans</div>
+    <div class="demo-box">
+      <div class="type-grid">
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">32px / 600</div><div class="type-spec-weight">tabular-nums</div></div>
+          <div class="type-sample" style="font-size:32px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.05em;">10:42 <span style="font-size:15px;font-weight:500;color:var(--text3);letter-spacing:.08em">PM</span></div>
+        </div>
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">22px / 600</div></div>
+          <div class="type-sample" style="font-size:22px;font-weight:600">App Title</div>
+        </div>
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">18px / 600</div></div>
+          <div class="type-sample" style="font-size:18px;font-weight:600">Section Heading</div>
+        </div>
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">14px / 600</div></div>
+          <div class="type-sample" style="font-size:14px;font-weight:600">Modal Title / Column Header</div>
+        </div>
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">13px / 500</div></div>
+          <div class="type-sample" style="font-size:13px;font-weight:500">Body / Card title text</div>
+        </div>
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">13px / 400</div><div class="type-spec-weight" style="color:var(--text3)">--text2</div></div>
+          <div class="type-sample" style="font-size:13px;color:var(--text2)">Secondary body, descriptions</div>
+        </div>
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">12px / 400</div><div class="type-spec-weight" style="color:var(--text3)">--text3</div></div>
+          <div class="type-sample" style="font-size:12px;color:var(--text3)">Helper text, subtitles, hints</div>
+        </div>
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">11px / 600</div><div class="type-spec-weight">UPPERCASE</div></div>
+          <div class="type-sample" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)">Category Label / Form Label</div>
+        </div>
+        <div class="type-row">
+          <div class="type-spec"><div class="type-spec-size">10px / 600</div><div class="type-spec-weight">UPPERCASE</div></div>
+          <div class="type-sample" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Section Divider Label</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       4. BUTTONS
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Buttons</div>
+    <div class="demo-box">
+      <div class="row" style="align-items:center; flex-wrap:wrap; gap:16px;">
+        <div class="col">
+          <div class="demo-label">Standard</div>
+          <button class="btn"><i class="ti ti-plus"></i> Add item</button>
+        </div>
+        <div class="col">
+          <div class="demo-label">Primary</div>
+          <button class="btn btn-primary"><i class="ti ti-plus"></i> Add task</button>
+        </div>
+        <div class="col">
+          <div class="demo-label">Ghost (pill)</div>
+          <button class="btn-ghost">View all</button>
+        </div>
+        <div class="col">
+          <div class="demo-label">Icon (ib)</div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <button class="ib"><i class="ti ti-pencil"></i></button>
+            <button class="ib"><i class="ti ti-plus"></i></button>
+            <button class="ib active"><i class="ti ti-pencil"></i></button>
+            <button class="ib del"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:16px">Transitions: <code style="font-size:11px;color:var(--accent-t)">background .12s</code> — applies to all interactive states. Icon button (.ib) is the smallest interactive element; never add a border to it.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       5. BADGES
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Badges</div>
+    <div class="demo-box">
+      <div class="row" style="flex-wrap:wrap; gap:8px; align-items:center">
+        <span class="badge b-blue"><i class="ti ti-clock"></i> Due Wed</span>
+        <span class="badge b-red"><i class="ti ti-alert-circle"></i> Overdue</span>
+        <span class="badge b-amb">Weekly</span>
+        <span class="badge b-grn"><i class="ti ti-check"></i> Done</span>
+        <span class="badge b-pink">Jazelle</span>
+        <span class="badge b-yel">Linus</span>
+        <span class="badge b-gray">Occasional</span>
+      </div>
+      <p class="note" style="margin-top:14px">All badges: 10px / 500 weight / 20px border-radius. Always use the color pair — never put a saturated color directly on a dark background.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       6. FILTER PILLS
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Filter Pills</div>
+    <div class="demo-box">
+      <div class="filter-bar">
+        <button class="fp active">All</button>
+        <button class="fp">Daily</button>
+        <button class="fp">Weekly</button>
+        <div class="fp-sep"></div>
+        <button class="fp">Ray</button>
+        <button class="fp">Jazelle</button>
+        <button class="fp">Linus</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       7. TASK CARDS
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Task Cards</div>
+    <div class="demo-box">
+      <div class="demo-label">Normal / done / accent variants</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div class="task-card bl">
+          <div class="circle"></div>
+          <div class="card-body">
+            <div class="card-title">Take out bins</div>
+            <div class="meta"><span class="badge b-blue"><i class="ti ti-clock"></i> Mon</span></div>
+          </div>
+        </div>
+        <div class="task-card done bl">
+          <div class="circle checked"><i class="ti ti-check"></i></div>
+          <div class="card-body">
+            <div class="card-title">Do laundry</div>
+            <div class="meta"><span class="badge b-grn"><i class="ti ti-check"></i> Done</span></div>
+          </div>
+        </div>
+        <div class="task-card pk">
+          <div class="circle"></div>
+          <div class="card-body">
+            <div class="card-title">Groceries</div>
+            <div class="meta"><span class="badge b-amb">Weekly</span></div>
+          </div>
+        </div>
+        <div class="task-card yl">
+          <div class="circle"></div>
+          <div class="card-body">
+            <div class="card-title">Clean room</div>
+            <div class="meta"><span class="badge b-gray">Occasional</span></div>
+          </div>
+        </div>
+        <div class="task-card bl">
+          <div class="circle"></div>
+          <div class="card-body">
+            <div class="card-title">Pay electricity bill — a long title that truncates</div>
+            <div class="meta"><span class="badge b-red"><i class="ti ti-alert-circle"></i> Overdue</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:14px">Done state: opacity 0.35 + line-through. Left border accent matches the person's color. Min-height 56px ensures uniform row height even for short titles.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       8. GLASS PANELS
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Glassmorphism</div>
+    <div class="row" style="align-items:stretch">
+      <div style="flex:1">
+        <div class="demo-label">Column panel (blur 16px)</div>
+        <div class="glass-panel" style="height:100px;display:flex;align-items:flex-start;flex-direction:column;gap:6px">
+          <div style="font-size:13px;font-weight:600">Ray</div>
+          <div style="font-size:11px;color:var(--text3)">background: rgba(255,255,255,0.04)<br>border-top: brighter (0.13)</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div class="demo-label">Topbar / tab bar (blur 8px)</div>
+        <div class="glass-topbar" style="height:100px;display:flex;align-items:flex-start;flex-direction:column;gap:6px;justify-content:center">
+          <div style="font-size:13px;font-weight:600">Home Assistant</div>
+          <div style="font-size:11px;color:var(--text3)">background: rgba(255,255,255,0.025)<br>border: rgba(255,255,255,0.07)</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div class="demo-label">Modal (blur 16px, opaque base)</div>
+        <div class="glass-modal" style="height:100px;display:flex;align-items:flex-start;flex-direction:column;gap:6px;justify-content:center">
+          <div style="font-size:13px;font-weight:600">Add task</div>
+          <div style="font-size:11px;color:var(--text3)">background: rgba(28,28,26,0.88)<br>border-top: rgba(255,255,255,0.15)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       9. AMBIENT GLOW
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Ambient Glow</div>
+    <div class="demo-box">
+      <div class="demo-label">Blurred radial orb behind each column (::before, blur 60–70px)</div>
+      <div class="glow-demo">
+        <div class="glow-wrap glow-blue">
+          <div class="glow-inner">
+            <div class="glow-name">Ray</div>
+            <div style="font-size:11px;color:var(--text3)">rgba(74,143,212,0.22)</div>
+          </div>
+        </div>
+        <div class="glow-wrap glow-pink">
+          <div class="glow-inner">
+            <div class="glow-name">Jazelle</div>
+            <div style="font-size:11px;color:var(--text3)">rgba(196,96,144,0.15)</div>
+          </div>
+        </div>
+        <div class="glow-wrap glow-yel">
+          <div class="glow-inner">
+            <div class="glow-name">Linus</div>
+            <div style="font-size:11px;color:var(--text3)">rgba(201,168,56,0.11)</div>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:14px">Keep glow opacity below 0.25 and blur above 60px. Higher = neon. The glow wrapper is a separate div; the column is z-index:1 above it.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       10. APP SHELL — TOPBAR + TABS
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">App Shell — Topbar &amp; Tab Bar</div>
+    <div class="demo-box" style="padding:0;overflow:hidden">
+      <div class="demo-topbar">
+        <div style="display:flex;align-items:center;gap:20px">
+          <div style="font-size:32px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.05em">10:42 <span style="font-size:15px;font-weight:500;color:var(--text3)">PM</span></div>
+          <div>
+            <div style="font-size:13px;font-weight:500">Tuesday</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">27 May 2026</div>
+          </div>
+        </div>
+        <div style="font-size:22px;font-weight:600">Home Assistant</div>
+      </div>
+      <div class="demo-tabbar">
+        <button class="demo-tab active">Tasks</button>
+        <button class="demo-tab">Shopping</button>
+        <button class="demo-tab">Calendar</button>
+      </div>
+    </div>
+    <p class="note">Tab active state: `border-bottom: 2px solid var(--text2)` with `margin-bottom: -1px` to overlap the panel border — creates a seamless underline that blends into the content below.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       11. MODAL
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Modal</div>
+    <div class="demo-box">
+      <div style="max-width:380px">
+        <div class="glass-modal">
+          <div class="modal-hdr">
+            <span>Add task</span>
+            <button class="modal-x"><i class="ti ti-x"></i></button>
+          </div>
+          <div style="margin-bottom:12px">
+            <label class="modal-lbl">Task</label>
+            <input class="modal-input" type="text" placeholder="e.g. Call the plumber">
+          </div>
+          <div style="margin-bottom:4px">
+            <label class="modal-lbl">Due date <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(optional)</span></label>
+            <input class="modal-input" type="date">
+          </div>
+          <div class="modal-ftr">
+            <button class="btn">Cancel</button>
+            <button class="btn btn-primary"><i class="ti ti-plus"></i> Add task</button>
+          </div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:14px">Overlay: <code style="font-size:11px;color:var(--accent-t)">rgba(0,0,0,0.55)</code> + <code style="font-size:11px;color:var(--accent-t)">backdrop-filter: blur(4px)</code>. Width 380px. Footer divider: <code style="font-size:11px;color:var(--accent-t)">border-top: 1px solid var(--border)</code>.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       12. SEARCH BAR
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Search Bar</div>
+    <div class="demo-box">
+      <div style="max-width:340px">
+        <div class="search-bar">
+          <i class="ti ti-search"></i>
+          <input type="text" placeholder="Search past items...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       13. SHOPPING ITEMS
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Shopping Item Rows</div>
+    <div class="demo-box">
+      <div class="cat-header">
+        <span class="cat-label">Fruit &amp; Veg</span>
+        <div class="cat-line"></div>
+        <span class="cat-count">3</span>
+        <i class="ti ti-chevron-down cat-chevron"></i>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <div class="s-item">
+          <i class="ti ti-grip-vertical" style="color:var(--text3)"></i>
+          <span class="s-name">Cheddar cheese</span>
+          <span class="s-meta">Woolworths</span>
+          <button class="move-btn rem"><i class="ti ti-arrow-left"></i></button>
+        </div>
+        <div class="s-item">
+          <i class="ti ti-grip-vertical" style="color:var(--text3)"></i>
+          <span class="s-name">Broccoli</span>
+          <span class="s-meta">Any store</span>
+          <button class="move-btn rem"><i class="ti ti-arrow-left"></i></button>
+        </div>
+        <div class="s-item" style="opacity:.35">
+          <i class="ti ti-grip-vertical" style="color:var(--text3)"></i>
+          <span class="s-name" style="text-decoration:line-through">Yoghurt</span>
+          <button class="move-btn rem"><i class="ti ti-arrow-left"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       14. CALENDAR CELLS
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Calendar Grid</div>
+    <div class="demo-box">
+      <div style="max-width:420px">
+        <div class="cal-mini-grid">
+          <div class="cal-day-hdr">Mon</div>
+          <div class="cal-day-hdr">Tue</div>
+          <div class="cal-day-hdr">Wed</div>
+          <div class="cal-day-hdr">Thu</div>
+          <div class="cal-day-hdr">Fri</div>
+          <div class="cal-day-hdr">Sat</div>
+          <div class="cal-day-hdr">Sun</div>
+          <div class="cal-day"><div class="cal-day-num">26</div></div>
+          <div class="cal-day today"><div class="cal-day-num">27</div><div class="cal-badge b-blue">Call plumber</div></div>
+          <div class="cal-day selected"><div class="cal-day-num">28</div><div class="cal-badge b-grn">Dentist</div></div>
+          <div class="cal-day"><div class="cal-day-num">29</div></div>
+          <div class="cal-day"><div class="cal-day-num">30</div><div class="cal-badge b-pink">Dinner</div></div>
+          <div class="cal-day"><div class="cal-day-num">31</div></div>
+          <div class="cal-day"><div class="cal-day-num">1</div></div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:14px">Today: accent border. Selected: accent-l fill. Event badges are 9px, cropped with overflow:hidden. Cells use aspect-ratio 4/3.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       15. VERTICAL SIDEBAR LABEL
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Vertical Sidebar Label</div>
+    <div class="demo-box">
+      <div style="display:flex;height:100px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;width:200px">
+        <div class="row-label-demo">Daily</div>
+        <div style="flex:1;padding:12px 14px;font-size:12px;color:var(--text3)">Task content area</div>
+      </div>
+      <p class="note" style="margin-top:14px">Width 28px. <code style="font-size:11px;color:var(--accent-t)">writing-mode: vertical-rl; transform: rotate(180deg)</code>. Dark background (rgba 0,0,0,0.2) differentiates it from the content area.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       16. PIN OVERLAY
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">PIN Overlay</div>
+    <div class="demo-box">
+      <div class="pin-demo">
+        <div class="pin-title">Home Assistant</div>
+        <div class="pin-sub">Enter your PIN to continue</div>
+        <input class="pin-input" type="password" placeholder="••••" readonly>
+        <label class="pin-remember">
+          <input type="checkbox"> Remember this device
+        </label>
+      </div>
+      <p class="note" style="margin-top:14px">Full-screen fixed overlay, z-index 9999, background matches --bg. Shake animation on wrong PIN: 3 oscillations over 350ms, ±8px.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       17. INTERACTION STATES
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Interaction States</div>
+    <div class="demo-box">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div class="demo-label">Hover — surface lightens</div>
+          <div style="display:flex;gap:6px">
+            <div style="height:36px;flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text2)">default</div>
+            <div style="height:36px;flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text)">hover</div>
+          </div>
+        </div>
+        <div>
+          <div class="demo-label">Focus — accent border</div>
+          <div style="display:flex;gap:6px">
+            <div style="height:36px;flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);display:flex;align-items:center;padding:0 10px;font-size:11px;color:var(--text3)">blurred</div>
+            <div style="height:36px;flex:1;background:var(--bg);border:1px solid var(--accent);border-radius:var(--r);display:flex;align-items:center;padding:0 10px;font-size:11px;color:var(--text2)">focused</div>
+          </div>
+        </div>
+        <div>
+          <div class="demo-label">Selected — accent tint</div>
+          <div style="display:flex;gap:6px">
+            <div style="height:36px;flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text2)">inactive pill</div>
+            <div style="height:36px;flex:1;background:var(--accent);border:1px solid var(--accent);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">active pill</div>
+          </div>
+        </div>
+        <div>
+          <div class="demo-label">Destructive hover</div>
+          <div style="display:flex;gap:6px">
+            <button class="ib"><i class="ti ti-trash"></i> Delete</button>
+            <button class="ib del"><i class="ti ti-trash"></i> (on hover)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════
+       18. SCROLLBAR
+  ══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Scrollbar</div>
+    <div class="demo-box">
+      <div style="height:80px;overflow-y:scroll;padding-right:8px">
+        <div style="font-size:12px;color:var(--text2);line-height:2">Line 1 — scroll me</div>
+        <div style="font-size:12px;color:var(--text2);line-height:2">Line 2</div>
+        <div style="font-size:12px;color:var(--text2);line-height:2">Line 3</div>
+        <div style="font-size:12px;color:var(--text2);line-height:2">Line 4</div>
+        <div style="font-size:12px;color:var(--text2);line-height:2">Line 5</div>
+        <div style="font-size:12px;color:var(--text2);line-height:2">Line 6</div>
+      </div>
+      <p class="note" style="margin-top:10px">5px wide, no track background, thumb is --border2, 3px radius.</p>
+    </div>
+  </div>
+
+</div><!-- /guide -->
+</body>
+</html>

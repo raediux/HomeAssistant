@@ -344,5 +344,102 @@ h2 {
   </div>
 
 </div>
+
+<!-- ── Today highlight options ── -->
+<style>
+.today-section { margin-top: 64px; }
+.today-options { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; margin-top: 0; }
+.today-option { display: flex; flex-direction: column; gap: 12px; }
+.today-option-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text3);
+}
+.day-row { display: flex; gap: 6px; align-items: center; }
+
+/* Base day label */
+.dl {
+  width: 44px; display: flex; flex-direction: column;
+  align-items: center; gap: 2px; padding: 4px 0;
+  border-radius: 6px;
+}
+.dl-name { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; line-height: 1; }
+.dl-date { font-size: 16px; font-weight: 600; color: var(--text2); line-height: 1; }
+
+/* Option 1 — background chip (align-self: center fix) */
+.dl.opt1-today { background: rgba(255,255,255,0.07); }
+.dl.opt1-today .dl-name { color: var(--text); }
+.dl.opt1-today .dl-date { color: var(--text2); }
+
+/* Option 2 — dot under date */
+.dl.opt2-today { position: relative; }
+.dl.opt2-today .dl-name { color: var(--text); }
+.dl.opt2-today .dl-date { color: var(--text); }
+.dl.opt2-today::after {
+  content: ''; display: block; width: 4px; height: 4px;
+  border-radius: 50%; background: var(--text2);
+  margin: 2px auto 0;
+}
+
+/* Option 3 — border chip */
+.dl.opt3-today { border: 1px solid rgba(255,255,255,0.22); }
+.dl.opt3-today .dl-name { color: var(--text); }
+.dl.opt3-today .dl-date { color: var(--text); }
+
+/* Option 4 — bold text only */
+.dl.opt4-today .dl-name { color: var(--text); font-weight: 700; font-size: 11px; }
+.dl.opt4-today .dl-date { color: var(--text); font-weight: 700; }
+</style>
+
+<div class="today-section">
+  <h1>Today highlight — options</h1>
+  <div class="today-options">
+
+    <div class="today-option">
+      <div class="today-option-label">1 — Background chip</div>
+      <div class="day-row">
+        <div class="dl"><div class="dl-name">Mon</div><div class="dl-date">25</div></div>
+        <div class="dl"><div class="dl-name">Tue</div><div class="dl-date">26</div></div>
+        <div class="dl opt1-today"><div class="dl-name">Wed</div><div class="dl-date">27</div></div>
+        <div class="dl"><div class="dl-name">Thu</div><div class="dl-date">28</div></div>
+        <div class="dl"><div class="dl-name">Fri</div><div class="dl-date">29</div></div>
+      </div>
+    </div>
+
+    <div class="today-option">
+      <div class="today-option-label">2 — Dot under date</div>
+      <div class="day-row">
+        <div class="dl"><div class="dl-name">Mon</div><div class="dl-date">25</div></div>
+        <div class="dl"><div class="dl-name">Tue</div><div class="dl-date">26</div></div>
+        <div class="dl opt2-today"><div class="dl-name">Wed</div><div class="dl-date">27</div></div>
+        <div class="dl"><div class="dl-name">Thu</div><div class="dl-date">28</div></div>
+        <div class="dl"><div class="dl-name">Fri</div><div class="dl-date">29</div></div>
+      </div>
+    </div>
+
+    <div class="today-option">
+      <div class="today-option-label">3 — Border chip</div>
+      <div class="day-row">
+        <div class="dl"><div class="dl-name">Mon</div><div class="dl-date">25</div></div>
+        <div class="dl"><div class="dl-name">Tue</div><div class="dl-date">26</div></div>
+        <div class="dl opt3-today"><div class="dl-name">Wed</div><div class="dl-date">27</div></div>
+        <div class="dl"><div class="dl-name">Thu</div><div class="dl-date">28</div></div>
+        <div class="dl"><div class="dl-name">Fri</div><div class="dl-date">29</div></div>
+      </div>
+    </div>
+
+    <div class="today-option">
+      <div class="today-option-label">4 — Bold text only</div>
+      <div class="day-row">
+        <div class="dl"><div class="dl-name">Mon</div><div class="dl-date">25</div></div>
+        <div class="dl"><div class="dl-name">Tue</div><div class="dl-date">26</div></div>
+        <div class="dl opt4-today"><div class="dl-name">Wed</div><div class="dl-date">27</div></div>
+        <div class="dl"><div class="dl-name">Thu</div><div class="dl-date">28</div></div>
+        <div class="dl"><div class="dl-name">Fri</div><div class="dl-date">29</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
