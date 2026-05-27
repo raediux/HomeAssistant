@@ -97,7 +97,9 @@ body {
   justify-content: space-between;
   flex-shrink: 0;
 }
+.topbar-center { display: flex; flex-direction: column; align-items: center; }
 .topbar-title { font-size: 22px; font-weight: 600; }
+.topbar-version { font-size: 9px; color: rgba(255,255,255,0.15); letter-spacing: 0.04em; }
 .topbar-left {
   display: flex;
   align-items: center;

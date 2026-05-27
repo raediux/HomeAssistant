@@ -107,6 +107,8 @@ if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.
   document.documentElement.classList.add('pwa');
 }
 
+document.getElementById('version-label').textContent = 'v' + APP_VERSION;
+
 const _now = new Date();
 document.getElementById('day-label').textContent = _now.toLocaleDateString('en-AU', { weekday: 'long' });
 document.getElementById('date-label').textContent = _now.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
