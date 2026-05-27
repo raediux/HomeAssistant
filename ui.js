@@ -95,7 +95,9 @@
   }
 
   input.addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
-  document.getElementById('pin-submit').addEventListener('click', checkPin);
+  const submitBtn = document.getElementById('pin-submit');
+  submitBtn.addEventListener('click', checkPin);
+  submitBtn.addEventListener('touchend', e => { e.preventDefault(); checkPin(); });
 })();
 
 document.getElementById('add-modal').addEventListener('click', e => {
