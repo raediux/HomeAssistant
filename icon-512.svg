@@ -1,4 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#111110"/>
-  <text x="256" y="312" font-family="system-ui, sans-serif" font-size="192" font-weight="600" fill="#4a8fd4" text-anchor="middle" letter-spacing="-4">HA</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141619"/>
+      <stop offset="100%" stop-color="#0c0d10"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.10)"/>
+      <stop offset="50%" stop-color="rgba(255,255,255,0.02)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(74,143,212,0.28)"/>
+      <stop offset="100%" stop-color="rgba(74,143,212,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="192" height="192" rx="38" fill="url(#bg)"/>
+  <!-- Blue ambient glow -->
+  <ellipse cx="96" cy="96" rx="72" ry="44" fill="url(#glow)"/>
+  <!-- Glass sheen overlay -->
+  <rect width="192" height="192" rx="38" fill="url(#sheen)"/>
+  <!-- Glass border -->
+  <rect x="0.5" y="0.5" width="191" height="191" rx="37.5" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+  <!-- Text -->
+  <text x="96" y="88" font-family="system-ui,-apple-system,sans-serif" font-size="24" font-weight="600" fill="#e8e6e1" text-anchor="middle" letter-spacing="-0.3">Home</text>
+  <text x="96" y="116" font-family="system-ui,-apple-system,sans-serif" font-size="24" font-weight="600" fill="#e8e6e1" text-anchor="middle" letter-spacing="-0.3">Assistant</text>
 </svg>

@@ -60,7 +60,11 @@ html, body {
 }
 
 @media (max-width: 600px) {
-  html, body { height: auto; min-height: 100vh; overflow-y: auto; }
+  html, body { height: 100vh; overflow: hidden; }
+}
+
+@media (display-mode: standalone) {
+  .topbar { display: none; }
 }
 
 body {
