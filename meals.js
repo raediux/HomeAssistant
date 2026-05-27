@@ -2,14 +2,14 @@ let mpWeekStart = null;
 let mpMeals = {};
 let mpPending = null;
 
-const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 async function mpInit() {
   const today = new Date();
   today.setHours(0,0,0,0);
   const dow = today.getDay();
-  const diff = dow === 0 ? -6 : 1 - dow;
+  const diff = -dow;
   mpWeekStart = new Date(today);
   mpWeekStart.setDate(today.getDate() + diff);
   const rows = await dbLoadMeals();
@@ -32,7 +32,7 @@ function mpWeekLabel() {
   const s = mpWeekStart, e = end;
   const crossMonth = s.getMonth() !== e.getMonth();
   const sStr = crossMonth ? `${s.getDate()} ${MONTH_NAMES[s.getMonth()]}` : `${s.getDate()}`;
-  return `Mon ${sStr} – Sun ${e.getDate()} ${MONTH_NAMES[e.getMonth()]}`;
+  return `Sun ${sStr} – Sat ${e.getDate()} ${MONTH_NAMES[e.getMonth()]}`;
 }
 
 const PEOPLE = ['couple', 'linus'];
