@@ -457,7 +457,7 @@ body {
 }
 
 .shop-panel {
-  padding: 16px 22px;
+  padding: 16px 18px;
   overflow-y: auto;
 }
 .shop-panel + .shop-panel {
@@ -675,8 +675,9 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-right: 22px;
 }
-.mp-col-shopping .sec-hdr { padding: 18px 22px 0; flex-shrink: 0; }
+.mp-col-shopping .sec-hdr { padding: 18px 0 0; flex-shrink: 0; }
 .mp-col-shopping .shopping-panels { flex: 1; min-height: 0; overflow: hidden; }
 .mp-col-shopping .shop-panel { overflow-y: auto; height: 100%; }
 
