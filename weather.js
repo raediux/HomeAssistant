@@ -73,12 +73,9 @@ function wxSaveCache(data) {
 function wxRender(data) {
   const { cur, days } = data;
 
-  // Chip
+  // Current conditions
   document.getElementById('weather-icon').className = `ti ${wxIcon(cur.weather[0].icon)}`;
-  document.getElementById('weather-temp').textContent = `${Math.round(cur.main.temp)}°`;
-
-  // Panel — current conditions
-  document.getElementById('wp-temp').textContent      = Math.round(cur.main.temp);
+  document.getElementById('weather-temp').textContent = Math.round(cur.main.temp);
   document.getElementById('wp-condition').textContent =
     cur.weather[0].description.replace(/\b\w/g, c => c.toUpperCase());
   document.getElementById('wp-feels').textContent     = Math.round(cur.main.feels_like);
@@ -107,31 +104,9 @@ async function wxRefresh() {
   }
 }
 
-let _wxOpen = false;
-
-function toggleWeatherPanel() {
-  _wxOpen = !_wxOpen;
-  document.getElementById('weather-panel').classList.toggle('open', _wxOpen);
-}
-
 function initWeather() {
-  // Position panel flush against the bottom of the topbar
-  const topbar = document.querySelector('.topbar');
-  if (topbar) {
-    document.getElementById('weather-panel').style.top =
-      topbar.getBoundingClientRect().bottom + 'px';
-  }
-
   wxRefresh();
   setInterval(wxRefresh, WX_TTL);
-
-  // Close on outside click
-  document.addEventListener('click', e => {
-    if (_wxOpen && !e.target.closest('#weather-chip') && !e.target.closest('#weather-panel')) {
-      _wxOpen = false;
-      document.getElementById('weather-panel').classList.remove('open');
-    }
-  });
 }
 
 initWeather();
