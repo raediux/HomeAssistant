@@ -39,32 +39,15 @@
 <!-- Onboarding overlay -->
 <div id="onboarding-overlay" class="hidden">
   <div id="onboarding-box">
-    <div class="ob-title">Who are you?</div>
-    <div class="ob-sub">Claim your spot in the household</div>
-
-    <!-- Claim existing slot -->
-    <div id="ob-claim-section">
-      <div class="ob-names">
-        <button class="ob-name-btn" onclick="claimMember('Ray')">Ray</button>
-        <button class="ob-name-btn" onclick="claimMember('Jazelle')">Jazelle</button>
-        <button class="ob-name-btn" onclick="claimMember('Linus')">Linus</button>
-      </div>
-      <div class="ob-or">or</div>
-      <button class="ob-create-link" onclick="showCreateHousehold()">Create new household →</button>
+    <div class="ob-title">Create your household</div>
+    <div class="ob-sub">Set up your space — invite others after</div>
+    <input id="ob-hname" type="text" placeholder="Household name" value="Home" class="auth-input">
+    <input id="ob-mname" type="text" placeholder="Your name"                   class="auth-input">
+    <div class="ob-tier-row">
+      <button class="ob-tier-btn active" data-tier="free"   onclick="setObTier('free')">Free · 1 member</button>
+      <button class="ob-tier-btn"        data-tier="family" onclick="setObTier('family')">Family · $4.95/mo</button>
     </div>
-
-    <!-- Create new household form (hidden initially) -->
-    <div id="ob-create-section" style="display:none">
-      <input id="ob-hname" type="text" placeholder="Household name" value="Home" class="auth-input">
-      <input id="ob-mname" type="text" placeholder="Your name"                   class="auth-input">
-      <div class="ob-tier-row">
-        <button class="ob-tier-btn active" data-tier="free"   onclick="setObTier('free')">Free · 1 member</button>
-        <button class="ob-tier-btn"        data-tier="family" onclick="setObTier('family')">Family · $4.95/mo</button>
-      </div>
-      <button class="auth-btn" onclick="submitCreateHousehold()">Create household</button>
-      <button class="ob-back-link" onclick="showClaimSection()">← Back</button>
-    </div>
-
+    <button class="auth-btn" onclick="submitCreateHousehold()">Create household</button>
     <div id="ob-error" class="auth-error" style="display:none"></div>
   </div>
 </div>
@@ -450,15 +433,15 @@
 
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=1.0.29"></script>
-<script src="db.js?v=1.0.29"></script>
-<script src="onboarding.js?v=1.0.29"></script>
-<script src="ui.js?v=1.0.29"></script>
-<script src="tasks.js?v=1.0.29"></script>
-<script src="calendar.js?v=1.0.29"></script>
-<script src="meals.js?v=1.0.29"></script>
-<script src="weather.js?v=1.0.29"></script>
-<script src="billing.js?v=1.0.29"></script>
+<script src="config.js?v=1.0.30"></script>
+<script src="db.js?v=1.0.30"></script>
+<script src="onboarding.js?v=1.0.30"></script>
+<script src="ui.js?v=1.0.30"></script>
+<script src="tasks.js?v=1.0.30"></script>
+<script src="calendar.js?v=1.0.30"></script>
+<script src="meals.js?v=1.0.30"></script>
+<script src="weather.js?v=1.0.30"></script>
+<script src="billing.js?v=1.0.30"></script>
 </body>
 </html>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

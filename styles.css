@@ -24,13 +24,6 @@
 #onboarding-box { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; max-width: 320px; padding: 0 24px; }
 .ob-title { font-size: 22px; font-weight: 600; color: var(--text); }
 .ob-sub   { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
-.ob-names { display: flex; gap: 10px; width: 100%; }
-.ob-name-btn { flex: 1; padding: 14px 8px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--rl); color: var(--text); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .12s, border-color .12s; }
-.ob-name-btn:hover { background: var(--surface2); border-color: var(--accent); }
-.ob-name-btn:disabled { opacity: 0.5; cursor: default; }
-.ob-or { font-size: 12px; color: var(--text3); }
-.ob-create-link, .ob-back-link { background: none; border: none; color: var(--accent-t); font-size: 13px; font-family: inherit; cursor: pointer; padding: 0; text-decoration: underline; text-decoration-color: transparent; transition: text-decoration-color .12s; }
-.ob-create-link:hover, .ob-back-link:hover { text-decoration-color: var(--accent-t); }
 .ob-tier-row { display: flex; gap: 8px; width: 100%; }
 .ob-tier-btn { flex: 1; padding: 9px 6px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); color: var(--text2); font-size: 12px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .12s, border-color .12s, color .12s; }
 .ob-tier-btn.active { background: var(--accent-l); border-color: var(--accent); color: var(--accent-t); }

@@ -18,56 +18,11 @@ function _obBusy(busy) {
   document.querySelectorAll('#onboarding-box button').forEach(b => b.disabled = busy);
 }
 
-// ── Section toggle ────────────────────────────────────────────
-function showCreateHousehold() {
-  document.getElementById('ob-claim-section').style.display = 'none';
-  document.getElementById('ob-create-section').style.display = '';
-  _obError('');
-  setTimeout(() => document.getElementById('ob-mname').focus(), 50);
-}
-
-function showClaimSection() {
-  document.getElementById('ob-create-section').style.display = 'none';
-  document.getElementById('ob-claim-section').style.display = '';
-  _obError('');
-}
-
 function setObTier(tier) {
   _obTier = tier;
   document.querySelectorAll('.ob-tier-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.tier === tier);
   });
-}
-
-// ── Claim a pre-seeded member slot ────────────────────────────
-async function claimMember(name) {
-  _obError('');
-  _obBusy(true);
-  try {
-    const { data: { session } } = await db.auth.getSession();
-    if (!session) throw new Error('No active session — please sign in again.');
-
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/claim-member`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ name }),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok || json.error) throw new Error(json.error || json.message || `Server error (${res.status})`);
-
-    setHouseholdId(json.household_id);
-    document.getElementById('onboarding-overlay').classList.add('hidden');
-    document.dispatchEvent(new Event('ha:authed'));
-    populateProfileMenu();
-    location.reload();
-  } catch (e) {
-    console.error('claimMember:', e);
-    _obError(e.message || 'Could not claim slot — it may already be taken.');
-    _obBusy(false);
-  }
 }
 
 // ── Create a brand-new household ─────────────────────────────
