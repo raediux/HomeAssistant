@@ -9,8 +9,14 @@ let _householdId = null;
 
 async function getMyHouseholdId() {
   if (_householdId) return _householdId;
-  // RLS allows: user_id = auth.uid() → returns the caller's member row
-  const { data } = await db.from('household_members').select('household_id').maybeSingle();
+  // Use session.user.id to avoid returning multiple rows when all household
+  // members become visible after claiming (RLS expands to the whole household).
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) return null;
+  const { data } = await db.from('household_members')
+    .select('household_id')
+    .eq('user_id', session.user.id)
+    .maybeSingle();
   _householdId = data?.household_id ?? null;
   return _householdId;
 }
