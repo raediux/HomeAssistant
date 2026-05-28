@@ -13,3 +13,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 //
 // Default PIN is: 1234  (change this before going live)
 const PIN_HASH = '07f462860f43a53170feef6adc63c67dbf1f6725ae35789afd02c57fc6a22e1b';
+
+// ── Weather ──────────────────────────────────────────────────
+const WEATHER_KEY = '04fa365af38c4ba472cd335ebef90ce1';
+const WEATHER_LAT = -33.8154;
+const WEATHER_LON = 151.0285;

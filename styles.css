@@ -754,6 +754,93 @@ body {
 }
 .mp-cell-rm:hover { color: var(--red); }
 
+/* ── Weather ── */
+.weather-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.09);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  transition: background .15s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.weather-chip:hover { background: rgba(255,255,255,0.11); }
+.weather-chip .ti { font-size: 15px; color: var(--text2); }
+
+.weather-panel {
+  position: fixed;
+  left: 0; right: 0;
+  top: 0; /* set by JS */
+  background: rgba(14,14,12,0.93);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  z-index: 500;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: max-height .28s ease, opacity .2s;
+}
+.weather-panel.open {
+  max-height: 280px;
+  opacity: 1;
+  pointer-events: auto;
+}
+.weather-panel-inner {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  padding: 18px 26px 20px;
+}
+.weather-current {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+.weather-big {
+  font-size: 52px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1;
+  display: flex;
+  align-items: flex-start;
+}
+.weather-unit { font-size: 22px; color: var(--text3); margin-top: 6px; }
+.weather-info { display: flex; flex-direction: column; gap: 5px; }
+.wp-condition { font-size: 15px; font-weight: 500; color: var(--text); }
+.wp-meta { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--text2); }
+.wp-meta span { display: flex; align-items: center; gap: 5px; }
+.wp-meta b { color: var(--text); font-weight: 500; }
+.wp-meta .ti { font-size: 13px; }
+
+.forecast-strip { display: flex; gap: 10px; }
+.forecast-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 12px;
+  border-radius: var(--rl);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  min-width: 72px;
+}
+.fc-day { font-size: 11px; color: var(--text3); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+.fc-icon { font-size: 22px; color: var(--text2); }
+.fc-temps { display: flex; gap: 6px; font-size: 12px; }
+.fc-hi { color: var(--text); font-weight: 500; }
+.fc-lo { color: var(--text3); }
+
 /* ── Mobile: Tasks tab ── */
 .mobile-person-tabs { display: none; }
 
