@@ -14,6 +14,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Default PIN is: 1234  (change this before going live)
 const PIN_HASH = '07f462860f43a53170feef6adc63c67dbf1f6725ae35789afd02c57fc6a22e1b';
 
+// ── Stripe ───────────────────────────────────────────────────
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51Tc2AtBSJcZcyzY1tW5UCyI19ETm83ZXqERvHGEH6j5seMdEhAqsGC8zdKqKp8IYJrVV24bR2jvN04LtJmqJ6H9L00EtAcDsqP';
+
 // ── Weather ──────────────────────────────────────────────────
 const WEATHER_KEY = '04fa365af38c4ba472cd335ebef90ce1';
 const WEATHER_LAT = -33.8154;

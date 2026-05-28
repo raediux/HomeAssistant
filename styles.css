@@ -22,6 +22,27 @@
   60%      { transform: translateX(-6px); }
   80%      { transform: translateX(6px); }
 }
+
+/* ── Billing overlay ── */
+#billing-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 8000; display: flex; align-items: center; justify-content: center; }
+#billing-overlay.hidden { display: none; }
+#billing-box { display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 340px; width: 100%; padding: 0 24px; }
+.billing-icon { font-size: 36px; color: var(--accent); margin-bottom: 4px; }
+.billing-title { font-size: 22px; font-weight: 600; color: var(--text); }
+.billing-price { font-size: 34px; font-weight: 700; color: var(--text); line-height: 1; }
+.billing-price span { font-size: 13px; font-weight: 400; color: var(--text3); }
+.billing-desc { font-size: 13px; color: var(--text2); text-align: center; line-height: 1.65; margin-bottom: 4px; }
+.billing-form { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.billing-input { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 11px 14px; font-size: 14px; color: var(--text); outline: none; transition: border-color .12s; font-family: inherit; width: 100%; }
+.billing-input:focus { border-color: var(--accent); }
+.billing-input::placeholder { color: var(--text3); }
+.billing-btn { background: var(--accent); border: none; border-radius: var(--r); color: #fff; font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; transition: opacity .15s; font-family: inherit; width: 100%; -webkit-appearance: none; }
+.billing-btn:hover { opacity: 0.88; }
+.billing-btn:disabled { opacity: 0.5; cursor: default; }
+.billing-error { font-size: 12px; color: var(--red); text-align: center; line-height: 1.5; }
+.billing-spinner { width: 28px; height: 28px; border: 3px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 :root {
   color-scheme: dark;
   --bg:      #111110;
