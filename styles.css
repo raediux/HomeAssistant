@@ -133,8 +133,22 @@ body {
   flex-shrink: 0;
 }
 .topbar-title { font-size: 22px; font-weight: 600; }
-.topbar-signout { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 6px; border-radius: 6px; transition: color .12s, background .12s; display: flex; align-items: center; }
-.topbar-signout:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+
+/* ── Profile menu ── */
+.profile-menu { position: relative; flex-shrink: 0; }
+.profile-btn { background: none; border: none; color: var(--text3); font-size: 24px; cursor: pointer; padding: 4px; border-radius: 8px; display: flex; align-items: center; transition: color .12s, background .12s; }
+.profile-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+.profile-dropdown {
+  position: absolute; top: calc(100% + 10px); left: 0;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: var(--rl); padding: 8px; min-width: 170px;
+  display: none; flex-direction: column; gap: 2px;
+  z-index: 5000; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.profile-dropdown.open { display: flex; }
+.profile-display-name { font-size: 12px; font-weight: 600; color: var(--text2); padding: 6px 10px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.profile-signout-btn { background: none; border: none; color: var(--text2); font-size: 13px; font-family: inherit; cursor: pointer; padding: 8px 10px; border-radius: 6px; display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; transition: background .12s, color .12s; }
+.profile-signout-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
 .topbar-version { font-size: 9px; color: rgba(255,255,255,0.28); letter-spacing: 0.04em; margin-left: auto; align-self: center; }
 .topbar-left {
   display: flex;

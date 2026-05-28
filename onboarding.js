@@ -61,6 +61,7 @@ async function claimMember(name) {
     setHouseholdId(json.household_id);
     document.getElementById('onboarding-overlay').classList.add('hidden');
     document.dispatchEvent(new Event('ha:authed'));
+    populateProfileMenu();
     location.reload();
   } catch (e) {
     console.error('claimMember:', e);

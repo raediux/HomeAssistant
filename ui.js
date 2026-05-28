@@ -9,6 +9,7 @@ let _authMode = 'signin';
     if (hid) {
       document.getElementById('auth-overlay').classList.add('hidden');
       document.dispatchEvent(new Event('ha:authed'));
+      populateProfileMenu();
     } else {
       showOnboarding();
     }
@@ -72,6 +73,7 @@ async function authSubmit() {
     if (hid) {
       document.getElementById('auth-overlay').classList.add('hidden');
       document.dispatchEvent(new Event('ha:authed'));
+      populateProfileMenu();
       location.reload();
     } else {
       showOnboarding();
@@ -86,6 +88,30 @@ async function authSubmit() {
 function authSignOut() {
   db.auth.signOut();
 }
+
+// ── Profile menu ───────────────────────────────────────────────
+function toggleProfileMenu() {
+  document.getElementById('profile-dropdown').classList.toggle('open');
+}
+
+async function populateProfileMenu() {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) return;
+  const { data } = await db.from('household_members')
+    .select('name')
+    .eq('user_id', session.user.id)
+    .maybeSingle();
+  const el = document.getElementById('profile-display-name');
+  if (el) el.textContent = data?.name || session.user.email || '—';
+}
+
+// Close profile dropdown when clicking outside it
+document.addEventListener('click', e => {
+  const menu = document.getElementById('profile-menu');
+  if (menu && !menu.contains(e.target)) {
+    document.getElementById('profile-dropdown')?.classList.remove('open');
+  }
+});
 
 document.getElementById('add-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeAddModal();
