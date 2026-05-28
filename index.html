@@ -128,151 +128,10 @@
     <div class="topbar-version" id="version-label"></div>
   </div>
 
-  <!-- Tasks panel -->
+  <!-- Tasks panel — columns built dynamically by buildTaskColumns() in tasks.js -->
   <div class="tab-panel active" id="panel-tasks">
-    <div class="mobile-person-tabs">
-      <button class="mobile-person-tab active" data-person="ray" onclick="switchPersonTab('ray')">Ray</button>
-      <button class="mobile-person-tab" data-person="jazelle" onclick="switchPersonTab('jazelle')">Jazelle</button>
-      <button class="mobile-person-tab" data-person="linus" onclick="switchPersonTab('linus')">Linus</button>
-    </div>
-    <div class="tasks-layout">
-
-      <!-- Ray -->
-      <div class="col-glow-wrap col-glow-ray mobile-active">
-      <div class="person-column col-ray">
-        <div class="person-col-name">Ray</div>
-        <div class="person-col-tasks">
-          <div class="task-section">
-            <div class="row-label">Daily</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','ray','daily')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-ray-daily"></div>
-            </div>
-          </div>
-          <div class="task-section">
-            <div class="row-label">Weekly</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','ray','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-ray-weekly"></div>
-            </div>
-          </div>
-          <div class="task-section">
-            <div class="row-label">Occasional</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','ray','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-ray-occasional"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      </div><!-- /col-glow-wrap ray -->
-
-      <!-- Jazelle -->
-      <div class="col-glow-wrap col-glow-jazelle">
-      <div class="person-column col-jazelle">
-        <div class="person-col-name">Jazelle</div>
-        <div class="person-col-tasks">
-          <div class="task-section">
-            <div class="row-label">Daily</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','jazelle','daily')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-jazelle-daily"></div>
-            </div>
-          </div>
-          <div class="task-section">
-            <div class="row-label">Weekly</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','jazelle','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-jazelle-weekly"></div>
-            </div>
-          </div>
-          <div class="task-section">
-            <div class="row-label">Occasional</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','jazelle','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-jazelle-occasional"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      </div><!-- /col-glow-wrap jazelle -->
-
-      <!-- Linus -->
-      <div class="col-glow-wrap col-glow-linus">
-      <div class="person-column col-linus">
-        <div class="person-col-name">Linus</div>
-        <div class="person-col-tasks">
-          <div class="task-section">
-            <div class="row-label">Daily</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','linus','daily')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-linus-daily"></div>
-            </div>
-          </div>
-          <div class="task-section">
-            <div class="row-label">Weekly</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','linus','weekly')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-linus-weekly"></div>
-            </div>
-          </div>
-          <div class="task-section">
-            <div class="row-label">Occasional</div>
-            <div class="person-box">
-              <div class="person-hdr">
-                <div style="display:flex;gap:7px;align-items:center">
-                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
-                  <button class="ib" onclick="openTaskModal('add','linus','occasional')" title="Add task"><i class="ti ti-plus"></i></button>
-                </div>
-              </div>
-              <div class="items" id="items-linus-occasional"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      </div><!-- /col-glow-wrap linus -->
-
-    </div><!-- /tasks-layout -->
+    <div class="mobile-person-tabs" id="mobile-person-tabs"></div>
+    <div class="tasks-layout" id="tasks-layout"></div>
   </div><!-- /panel-tasks -->
 
   <!-- Meal Planner panel -->
@@ -433,15 +292,15 @@
 
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=1.0.30"></script>
-<script src="db.js?v=1.0.30"></script>
-<script src="onboarding.js?v=1.0.30"></script>
-<script src="ui.js?v=1.0.30"></script>
-<script src="tasks.js?v=1.0.30"></script>
-<script src="calendar.js?v=1.0.30"></script>
-<script src="meals.js?v=1.0.30"></script>
-<script src="weather.js?v=1.0.30"></script>
-<script src="billing.js?v=1.0.30"></script>
+<script src="config.js?v=1.0.31"></script>
+<script src="db.js?v=1.0.31"></script>
+<script src="onboarding.js?v=1.0.31"></script>
+<script src="ui.js?v=1.0.31"></script>
+<script src="tasks.js?v=1.0.31"></script>
+<script src="calendar.js?v=1.0.31"></script>
+<script src="meals.js?v=1.0.31"></script>
+<script src="weather.js?v=1.0.31"></script>
+<script src="billing.js?v=1.0.31"></script>
 </body>
 </html>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

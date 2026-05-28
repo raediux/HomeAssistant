@@ -8,6 +8,7 @@ let _authMode = 'signin';
     const hid = await getMyHouseholdId();
     if (hid) {
       document.getElementById('auth-overlay').classList.add('hidden');
+      await initApp();
       document.dispatchEvent(new Event('ha:authed'));
       populateProfileMenu();
     } else {
@@ -152,7 +153,8 @@ setInterval(updateTime, 1000);
 function switchPersonTab(person) {
   document.querySelectorAll('.mobile-person-tab').forEach(b => b.classList.toggle('active', b.dataset.person === person));
   document.querySelectorAll('.col-glow-wrap').forEach(w => w.classList.remove('mobile-active'));
-  document.querySelector(`.col-glow-${person}`).classList.add('mobile-active');
+  const wrap = document.querySelector(`.col-glow-wrap[data-person="${person}"]`);
+  if (wrap) wrap.classList.add('mobile-active');
 }
 
 function switchTab(name) {
@@ -163,6 +165,19 @@ function switchTab(name) {
   if (name === 'calendar') renderCalendar();
 }
 
+// ── App initialisation (runs post-auth, before ha:authed fires) ─
+async function initApp() {
+  const hid = await getMyHouseholdId();
+  let tier = 'free';
+  if (hid) {
+    const { data: sub } = await db.from('subscriptions').select('tier').eq('household_id', hid).maybeSingle();
+    tier = sub?.tier || 'free';
+    setHouseholdTier(tier);
+  }
+  await dbLoadMembers();
+  buildTaskColumns(tier);
+  await Promise.all([initTasks(), mpInit()]);
+}
 
 // ── Shopping data ─────────────────────────────────────────────
 const STORES = ['Aldi','Asian Grocer','Big W','Butcher','Chemist Warehouse','Coles','Kmart','Korean Grocer','Pharmacy 4 Less','Ray Mum','Target','Woolworths','Others'];

@@ -238,9 +238,10 @@ body {
   filter: blur(70px);
   z-index: 0;
 }
-.col-glow-ray::before    { background: radial-gradient(circle, rgba(74,143,212,0.22) 0%, transparent 70%); }
-.col-glow-jazelle::before { background: radial-gradient(circle, rgba(196,96,144,0.15) 0%, transparent 70%); }
-.col-glow-linus::before  { background: radial-gradient(circle, rgba(201,168,56,0.11) 0%, transparent 70%); }
+.col-glow-0::before { background: radial-gradient(circle, rgba(74,143,212,0.22) 0%, transparent 70%); }
+.col-glow-1::before { background: radial-gradient(circle, rgba(196,96,144,0.15) 0%, transparent 70%); }
+.col-glow-2::before { background: radial-gradient(circle, rgba(201,168,56,0.11) 0%, transparent 70%); }
+.col-glow-3::before { background: radial-gradient(circle, rgba(100,200,130,0.13) 0%, transparent 70%); }
 
 .person-column {
   position: relative;
@@ -304,16 +305,24 @@ body {
   min-height: 246px; /* room for 3 rows of task cards */
 }
 
-/* ── Per-person task card accents ── */
-.col-ray     .task-card { border-left-color: var(--accent); }
-.col-jazelle .task-card { border-left-color: var(--pink); }
-.col-linus   .task-card { border-left-color: var(--yellow); }
+/* ── Per-member task card accents ── */
+.col-0 .task-card { border-left-color: var(--accent); }
+.col-1 .task-card { border-left-color: var(--pink); }
+.col-2 .task-card { border-left-color: var(--yellow); }
+.col-3 .task-card { border-left-color: #5cb85c; }
 
+/* ── Per-member column top-border accent ── */
+.col-0 { border-top-color: rgba(74,143,212,0.5); }
+.col-1 { border-top-color: rgba(196,96,144,0.5); }
+.col-2 { border-top-color: rgba(201,168,56,0.45); }
+.col-3 { border-top-color: rgba(100,200,130,0.4); }
 
-/* ── Per-person card top-border accent ── */
-.col-ray     { border-top-color: rgba(74,143,212,0.5); }
-.col-jazelle { border-top-color: rgba(196,96,144,0.5); }
-.col-linus   { border-top-color: rgba(201,168,56,0.45); }
+/* ── Add member slot ── */
+.col-add-member-wrap { flex: 0 0 auto; width: 160px; min-width: 120px; }
+.col-add-member { height: 100%; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px dashed rgba(255,255,255,0.12); border-radius: var(--r); color: var(--text3); font-size: 13px; cursor: default; padding: 20px; text-align: center; }
+.col-add-member i { font-size: 22px; }
+.col-add-sub { font-size: 11px; color: var(--text3); opacity: 0.7; }
+.col-add-locked i { opacity: 0.4; }
 .person-hdr {
   display: flex;
   align-items: center;

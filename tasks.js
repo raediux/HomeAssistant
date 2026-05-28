@@ -30,9 +30,10 @@ function isTaskDone(task) {
 }
 // ── Render ────────────────────────────────────────────────────
 function renderTasks() {
-  ['ray', 'jazelle', 'linus'].forEach(person => {
+  getMembers().forEach(member => {
+    const slug = memberSlug(member.name);
     ['daily', 'weekly', 'occasional'].forEach(frequency => {
-      renderTaskList(person, frequency);
+      renderTaskList(slug, frequency);
     });
   });
 }
@@ -159,7 +160,6 @@ function toggleEditMode(btn) {
 }
 
 // ── Task modal ────────────────────────────────────────────────
-const PERSON_LABELS    = { ray: 'Ray', jazelle: 'Jazelle', linus: 'Linus' };
 const FREQUENCY_LABELS = { daily: 'Daily', weekly: 'Weekly', occasional: 'Occasional' };
 
 let _modal = { mode: 'add', person: null, frequency: null, id: null };
@@ -167,8 +167,9 @@ let _modal = { mode: 'add', person: null, frequency: null, id: null };
 function openTaskModal(mode, personOrId, frequency) {
   if (mode === 'add') {
     _modal = { mode: 'add', person: personOrId, frequency, id: null };
+    const memberName = getMembers().find(m => memberSlug(m.name) === personOrId)?.name || personOrId;
     document.getElementById('task-modal-title').textContent =
-      `Add ${FREQUENCY_LABELS[frequency]} task — ${PERSON_LABELS[personOrId]}`;
+      `Add ${FREQUENCY_LABELS[frequency]} task — ${memberName}`;
     document.getElementById('task-modal-input').value = '';
     document.getElementById('task-modal-btn').textContent = 'Add task';
     _modalSetFrequencyFields(frequency, null, null);
@@ -233,8 +234,68 @@ function confirmTaskModal() {
   closeTaskModal();
 }
 
-// ── Init ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
+// ── Build columns (called from ui.js initApp after members load) ─
+function buildTaskColumns(tier) {
+  const layout = document.getElementById('tasks-layout');
+  const tabs   = document.getElementById('mobile-person-tabs');
+  if (!layout || !tabs) return;
+  layout.innerHTML = '';
+  tabs.innerHTML   = '';
+
+  getMembers().forEach((member, idx) => {
+    const slug = memberSlug(member.name);
+    const ci   = idx % 4;
+
+    const tab = document.createElement('button');
+    tab.className = `mobile-person-tab${idx === 0 ? ' active' : ''}`;
+    tab.dataset.person = slug;
+    tab.textContent = member.name;
+    tab.addEventListener('click', () => switchPersonTab(slug));
+    tabs.appendChild(tab);
+
+    const wrap = document.createElement('div');
+    wrap.className = `col-glow-wrap col-glow-${ci}${idx === 0 ? ' mobile-active' : ''}`;
+    wrap.dataset.person = slug;
+    wrap.innerHTML = `
+      <div class="person-column col-${ci}">
+        <div class="person-col-name">${esc(member.name)}</div>
+        <div class="person-col-tasks">
+          ${['daily','weekly','occasional'].map(freq => `
+          <div class="task-section">
+            <div class="row-label">${freq.charAt(0).toUpperCase() + freq.slice(1)}</div>
+            <div class="person-box">
+              <div class="person-hdr">
+                <div style="display:flex;gap:7px;align-items:center">
+                  <button class="ib" onclick="toggleEditMode(this)" title="Edit tasks"><i class="ti ti-pencil"></i></button>
+                  <button class="ib" onclick="openTaskModal('add','${slug}','${freq}')" title="Add task"><i class="ti ti-plus"></i></button>
+                </div>
+              </div>
+              <div class="items" id="items-${slug}-${freq}"></div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    layout.appendChild(wrap);
+  });
+
+  // Add member slot
+  const addWrap = document.createElement('div');
+  addWrap.className = 'col-glow-wrap col-add-member-wrap';
+  addWrap.innerHTML = tier === 'family'
+    ? `<div class="col-add-member"><i class="ti ti-user-plus"></i><span>Add member</span><span class="col-add-sub">Invite links coming soon</span></div>`
+    : `<div class="col-add-member col-add-locked"><i class="ti ti-lock"></i><span>Add member</span><span class="col-add-sub">Family plan required</span></div>`;
+  layout.appendChild(addWrap);
+}
+
+// ── Init (called from ui.js initApp) ─────────────────────────
+async function initTasks() {
+  tasks = await dbLoadTasks();
+  if (tasks.length) nextTaskId = Math.max(...tasks.map(t => t.id)) + 1;
+  renderTasks();
+}
+
+// ── Modal event listeners (run on DOM ready) ──────────────────
+document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('task-modal').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeTaskModal();
   });
@@ -248,9 +309,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('#task-modal-dow .dow-btn').forEach(b => b.classList.remove('selected'));
     if (!wasSelected) btn.classList.add('selected');
   });
-
-  tasks = await dbLoadTasks();
-  // Ensure nextTaskId is above any existing ids
-  if (tasks.length) nextTaskId = Math.max(...tasks.map(t => t.id)) + 1;
-  renderTasks();
 });

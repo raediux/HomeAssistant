@@ -57,8 +57,6 @@ function mpWeekLabel() {
   return `Sun ${sStr} – Sat ${e.getDate()} ${MONTH_NAMES[e.getMonth()]}`;
 }
 
-const PEOPLE = ['couple', 'linus'];
-const PEOPLE_LABELS = { couple: 'Ray & Jazelle', linus: 'Linus' };
 
 function mpRender() {
   document.getElementById('mp-week-label').textContent = mpWeekLabel();
@@ -76,10 +74,11 @@ function mpRender() {
     const dayData = mpMeals[key] || {};
     const row = document.createElement('div');
     row.className = 'mp-row';
-    const personRows = PEOPLE.map(p => {
+    const personRows = getMembers().map(m => {
+      const p     = memberSlug(m.name);
       const pData = dayData[p] || {};
-      return `<div class="mp-person-row ${p}">
-        <div class="mp-person-name">${PEOPLE_LABELS[p]}</div>
+      return `<div class="mp-person-row">
+        <div class="mp-person-name">${esc(m.name)}</div>
         ${mpCell(key, p, 'lunch', pData.lunch)}
         ${mpCell(key, p, 'dinner', pData.dinner)}
       </div>`;
@@ -157,13 +156,14 @@ async function mpRemove(dateKey, person, slot) {
   delete mpMeals[dateKey][person][slot];
   const p = mpMeals[dateKey][person];
   if (!p.lunch && !p.dinner) delete mpMeals[dateKey][person];
-  if (!PEOPLE.some(p => mpMeals[dateKey]?.[p])) delete mpMeals[dateKey];
+  const _slugs = getMembers().map(m => memberSlug(m.name));
+  if (!_slugs.some(p => mpMeals[dateKey]?.[p])) delete mpMeals[dateKey];
   mpRender();
   await dbDeleteMeal(dateKey, person, slot);
 }
 
+// mpInit() is called from ui.js initApp() after members are loaded
 document.addEventListener('DOMContentLoaded', () => {
-  mpInit();
   document.getElementById('meal-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('meal-modal')) closeMealModal();
   });

@@ -167,3 +167,23 @@ async function dbDeleteMeal(date, person, slot) {
     .delete().eq('date', date).eq('person', person).eq('slot', slot);
   if (error) console.error('dbDeleteMeal:', error);
 }
+
+// ── Household members ─────────────────────────────────────────
+let _members = [];
+let _householdTier = 'free';
+
+function memberSlug(name) {
+  return name.toLowerCase().replace(/\s+/g, '_');
+}
+
+async function dbLoadMembers() {
+  const { data, error } = await db.from('household_members')
+    .select('id, name, role').order('created_at');
+  if (error) { console.error('dbLoadMembers:', error); return []; }
+  _members = data || [];
+  return _members;
+}
+
+function getMembers()        { return _members; }
+function getHouseholdTier()  { return _householdTier; }
+function setHouseholdTier(t) { _householdTier = t; }
