@@ -55,7 +55,10 @@ async function authSubmit() {
       const { error } = await db.auth.signInWithPassword({ email, password });
       if (error) throw error;
     } else {
-      const { data, error } = await db.auth.signUp({ email, password });
+      const { data, error } = await db.auth.signUp({
+        email, password,
+        options: { emailRedirectTo: 'https://raediux.github.io/HomeAssistant' },
+      });
       if (error) throw error;
       if (!data.session) {
         // Email confirmation required
