@@ -782,6 +782,9 @@ body {
 .fc-hi { color: var(--text); font-weight: 500; }
 .fc-lo { color: var(--text3); }
 
+/* ── Mobile: Meal Planner shopping tabs ── */
+.mp-shop-tabs { display: none; }
+
 /* ── Mobile: Tasks tab ── */
 .mobile-person-tabs { display: none; }
 
@@ -815,4 +818,52 @@ body {
   .tasks-layout { padding: 0 0 10px; flex-direction: column; align-items: stretch; overflow: hidden; }
   .col-glow-wrap { display: none; }
   .col-glow-wrap.mobile-active { display: flex; flex: 1; min-height: 0; }
+
+  /* ── Mobile: Meal Planner ── */
+  #panel-shopping { padding: 0 12px; }
+  .mp-layout { flex-direction: column; }
+  .mp-col-planner { display: none; }
+  .mp-col-shopping { flex: 1; min-height: 0; padding: 0; }
+  .mp-col-shopping .sec-hdr { padding: 12px 0 0; }
+
+  .mp-shop-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 8px 0;
+    flex-shrink: 0;
+  }
+  .mp-shop-tab {
+    flex: 1;
+    padding: 7px 0;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .mp-shop-tab.active {
+    background: rgba(74,143,212,0.18);
+    color: var(--accent);
+    border-color: rgba(74,143,212,0.3);
+  }
+
+  .mp-col-shopping .shopping-panels {
+    display: flex;
+    flex-direction: row;
+    overflow-x: scroll;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mp-col-shopping .shopping-panels::-webkit-scrollbar { display: none; }
+  .mp-col-shopping .shop-panel {
+    flex: 0 0 100%;
+    height: auto;
+    overflow-y: auto;
+    scroll-snap-align: start;
+  }
 }

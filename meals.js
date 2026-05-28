@@ -2,6 +2,27 @@ let mpWeekStart = null;
 let mpMeals = {};
 let mpPending = null;
 
+function mpShopTab(btn) {
+  const panels = document.querySelector('.mp-col-shopping .shopping-panels');
+  const target = document.getElementById(btn.dataset.panel);
+  panels.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
+}
+
+function mpInitShopTabs() {
+  const panels = document.querySelector('.mp-col-shopping .shopping-panels');
+  if (!panels) return;
+  panels.addEventListener('scroll', () => {
+    const tabs = document.querySelectorAll('.mp-shop-tab');
+    const mid = panels.scrollLeft + panels.clientWidth / 2;
+    tabs.forEach(t => {
+      const el = document.getElementById(t.dataset.panel);
+      const active = el && el.offsetLeft <= mid && el.offsetLeft + el.offsetWidth > mid;
+      t.classList.toggle('active', active);
+    });
+  }, { passive: true });
+}
+
+
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -20,6 +41,7 @@ async function mpInit() {
     mpMeals[r.date][r.person][r.slot] = r.meal;
   }
   mpRender();
+  mpInitShopTabs();
 }
 
 function mpDateKey(d) {
