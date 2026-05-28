@@ -69,17 +69,23 @@ function getDueBadge(task) {
     if (task.dow === null || task.dow === undefined) return null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const jsTarget  = (task.dow + 1) % 7;
-    const daysBack  = (today.getDay() - jsTarget + 7) % 7;
-    const daysUntil = daysBack === 0 ? 0 : 7 - daysBack;
-    const dayShort  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][task.dow];
-    if (daysBack === 0) return { text: 'Due today', cls: 'b-red', icon: 'ti-alert-circle' };
-    if (!isTaskDone(task)) {
-      if (daysBack === 1) return { text: 'Yesterday',       cls: 'b-red', icon: 'ti-alert-circle' };
-      return                     { text: `${daysBack}d overdue`, cls: 'b-red', icon: 'ti-alert-circle' };
+    // Mon-first week: Mon=0 … Sun=6 (matches our dow encoding)
+    const todayMF  = (today.getDay() + 6) % 7;
+    const diff     = task.dow - todayMF; // +ve = ahead this week, 0 = today, -ve = past
+    const dayShort = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][task.dow];
+    if (diff === 0) return { text: 'Due today', cls: 'b-red', icon: 'ti-alert-circle' };
+    if (diff > 0) {
+      if (diff === 1) return { text: `${dayShort} · Tomorrow`,  cls: 'b-amb',  icon: 'ti-clock'    };
+      return                 { text: `${dayShort} · ${diff}d`,  cls: 'b-blue', icon: 'ti-calendar' };
     }
-    if (daysUntil === 1) return  { text: `${dayShort} · Tomorrow`, cls: 'b-amb', icon: 'ti-clock' };
-    return                       { text: `${dayShort} · ${daysUntil}d`, cls: 'b-blue', icon: 'ti-calendar' };
+    // diff < 0: DOW already passed this week
+    if (!isTaskDone(task)) {
+      if (diff === -1) return { text: 'Yesterday',           cls: 'b-red', icon: 'ti-alert-circle' };
+      return                  { text: `${-diff}d overdue`,   cls: 'b-red', icon: 'ti-alert-circle' };
+    }
+    const nextIn = 7 + diff; // days until next occurrence
+    if (nextIn === 1) return  { text: `${dayShort} · Tomorrow`, cls: 'b-amb',  icon: 'ti-clock'    };
+    return                    { text: `${dayShort} · ${nextIn}d`, cls: 'b-blue', icon: 'ti-calendar' };
   }
   const dueDate = task.dueDate;
   if (!dueDate) return null;
