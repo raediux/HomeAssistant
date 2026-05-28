@@ -97,12 +97,21 @@ function toggleProfileMenu() {
 async function populateProfileMenu() {
   const { data: { session } } = await db.auth.getSession();
   if (!session) return;
-  const { data } = await db.from('household_members')
-    .select('name')
-    .eq('user_id', session.user.id)
-    .maybeSingle();
-  const el = document.getElementById('profile-display-name');
-  if (el) el.textContent = data?.name || session.user.email || '—';
+  const [{ data: member }, hid] = await Promise.all([
+    db.from('household_members').select('name').eq('user_id', session.user.id).maybeSingle(),
+    getMyHouseholdId(),
+  ]);
+  const nameEl = document.getElementById('profile-display-name');
+  if (nameEl) nameEl.textContent = member?.name || session.user.email || '—';
+  if (hid) {
+    const { data: sub } = await db.from('subscriptions').select('tier').eq('household_id', hid).maybeSingle();
+    const tierEl = document.getElementById('profile-tier');
+    if (tierEl) {
+      const tier = sub?.tier || 'free';
+      tierEl.textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+      tierEl.dataset.tier = tier;
+    }
+  }
 }
 
 // Close profile dropdown when clicking outside it

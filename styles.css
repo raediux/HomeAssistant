@@ -142,13 +142,17 @@ body {
 .profile-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
 .profile-dropdown {
   position: absolute; top: calc(100% + 10px); left: 0;
-  background: #2a2a27; border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(18,18,20,0.95); border: 1px solid rgba(255,255,255,0.14);
   border-radius: var(--rl); padding: 8px; min-width: 170px;
   display: none; flex-direction: column; gap: 2px;
-  z-index: 5000; box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+  z-index: 5000; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
 }
 .profile-dropdown.open { display: flex; }
 .profile-display-name { font-size: 13px; font-weight: 600; color: var(--text); padding: 6px 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 4px; }
+.profile-tier { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin: 0 6px 4px; width: fit-content; }
+.profile-tier[data-tier="free"]   { color: var(--text3); background: rgba(255,255,255,0.07); }
+.profile-tier[data-tier="family"] { color: var(--accent-t); background: rgba(74,143,212,0.18); }
 .profile-signout-btn { background: none; border: none; color: var(--text2); font-size: 13px; font-family: inherit; cursor: pointer; padding: 8px 10px; border-radius: 6px; display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; transition: background .12s, color .12s; }
 .profile-signout-btn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
 .topbar-version { font-size: 9px; color: rgba(255,255,255,0.28); letter-spacing: 0.04em; margin-left: auto; align-self: center; }
