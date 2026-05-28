@@ -18,17 +18,54 @@
 </head>
 <body>
 
-<!-- PIN overlay -->
-<div id="pin-overlay">
-  <div id="pin-box">
-    <div id="pin-title">Home Assistant</div>
-    <div id="pin-sub">Enter your PIN to continue</div>
-    <input id="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off">
-    <button id="pin-submit">Unlock</button>
-    <div id="pin-error">Incorrect PIN</div>
-    <label id="pin-remember">
-      <input type="checkbox" id="pin-remember-check"> Remember this device
-    </label>
+<!-- Auth overlay -->
+<div id="auth-overlay">
+  <div id="auth-box">
+    <div class="auth-logo"><i class="ti ti-home-2"></i></div>
+    <div class="auth-title">Home Assistant</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-mode="signin" onclick="setAuthMode('signin')">Sign in</button>
+      <button class="auth-tab" data-mode="signup" onclick="setAuthMode('signup')">Sign up</button>
+    </div>
+    <input id="auth-email"    type="email"    placeholder="Email address"  autocomplete="email"            class="auth-input">
+    <input id="auth-password" type="password" placeholder="Password"       autocomplete="current-password" class="auth-input"
+           onkeydown="if(event.key==='Enter')authSubmit()">
+    <button id="auth-submit" class="auth-btn" onclick="authSubmit()">Sign in</button>
+    <div id="auth-error"   class="auth-error"></div>
+    <div id="auth-message" class="auth-message"></div>
+  </div>
+</div>
+
+<!-- Onboarding overlay -->
+<div id="onboarding-overlay" class="hidden">
+  <div id="onboarding-box">
+    <div class="ob-title">Who are you?</div>
+    <div class="ob-sub">Claim your spot in the household</div>
+
+    <!-- Claim existing slot -->
+    <div id="ob-claim-section">
+      <div class="ob-names">
+        <button class="ob-name-btn" onclick="claimMember('Ray')">Ray</button>
+        <button class="ob-name-btn" onclick="claimMember('Jazelle')">Jazelle</button>
+        <button class="ob-name-btn" onclick="claimMember('Linus')">Linus</button>
+      </div>
+      <div class="ob-or">or</div>
+      <button class="ob-create-link" onclick="showCreateHousehold()">Create new household →</button>
+    </div>
+
+    <!-- Create new household form (hidden initially) -->
+    <div id="ob-create-section" style="display:none">
+      <input id="ob-hname" type="text" placeholder="Household name" value="Home" class="auth-input">
+      <input id="ob-mname" type="text" placeholder="Your name"                   class="auth-input">
+      <div class="ob-tier-row">
+        <button class="ob-tier-btn active" data-tier="free"   onclick="setObTier('free')">Free · 1 member</button>
+        <button class="ob-tier-btn"        data-tier="family" onclick="setObTier('family')">Family · $4.95/mo</button>
+      </div>
+      <button class="auth-btn" onclick="submitCreateHousehold()">Create household</button>
+      <button class="ob-back-link" onclick="showClaimSection()">← Back</button>
+    </div>
+
+    <div id="ob-error" class="auth-error" style="display:none"></div>
   </div>
 </div>
 
@@ -84,6 +121,7 @@
       </div>
     </div>
     <div class="topbar-title">Home Assistant</div>
+    <button class="topbar-signout" onclick="authSignOut()" title="Sign out"><i class="ti ti-logout"></i></button>
   </div>
 
 
@@ -400,14 +438,15 @@
 
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=1.0.22"></script>
-<script src="db.js?v=1.0.22"></script>
-<script src="ui.js?v=1.0.22"></script>
-<script src="tasks.js?v=1.0.22"></script>
-<script src="calendar.js?v=1.0.22"></script>
-<script src="meals.js?v=1.0.22"></script>
-<script src="weather.js?v=1.0.22"></script>
-<script src="billing.js"></script>
+<script src="config.js?v=1.0.23"></script>
+<script src="db.js?v=1.0.23"></script>
+<script src="onboarding.js?v=1.0.23"></script>
+<script src="ui.js?v=1.0.23"></script>
+<script src="tasks.js?v=1.0.23"></script>
+<script src="calendar.js?v=1.0.23"></script>
+<script src="meals.js?v=1.0.23"></script>
+<script src="weather.js?v=1.0.23"></script>
+<script src="billing.js?v=1.0.23"></script>
 </body>
 </html>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

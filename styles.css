@@ -1,27 +1,39 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── PIN overlay ── */
-#pin-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-#pin-overlay.hidden { display: none; }
-#pin-box { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-#pin-title { font-size: 22px; font-weight: 600; color: var(--text); }
-#pin-sub { font-size: 13px; color: var(--text2); }
-#pin-input { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px 16px; font-size: 20px; letter-spacing: .3em; color: var(--text); text-align: center; width: 180px; outline: none; transition: border-color .12s; margin-top: 8px; }
-#pin-input:focus { border-color: var(--accent); }
-#pin-input.shake { animation: pin-shake .35s ease; }
-#pin-submit { -webkit-appearance: none; appearance: none; background: var(--accent); border: none; border-radius: 20px; color: #fff; font-size: 13px; font-weight: 600; padding: 7px 22px; cursor: pointer; opacity: 0.9; transition: opacity .15s; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-#pin-submit:hover { opacity: 1; }
-#pin-error { font-size: 12px; color: #e05c5c; opacity: 0; transition: opacity .2s; text-align: center; }
-#pin-error.visible { opacity: 1; }
-#pin-remember { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text3); cursor: pointer; user-select: none; }
-#pin-remember input[type="checkbox"] { accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; }
-@keyframes pin-shake {
-  0%,100% { transform: translateX(0); }
-  20%      { transform: translateX(-8px); }
-  40%      { transform: translateX(8px); }
-  60%      { transform: translateX(-6px); }
-  80%      { transform: translateX(6px); }
-}
+/* ── Auth overlay ── */
+#auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+#auth-overlay.hidden { display: none; }
+#auth-box { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 320px; padding: 0 24px; }
+.auth-logo { font-size: 36px; color: var(--accent); margin-bottom: 2px; }
+.auth-title { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.auth-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 20px; padding: 3px; width: 100%; }
+.auth-tab { flex: 1; padding: 6px 0; border: none; border-radius: 17px; background: transparent; color: var(--text3); font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .12s, color .12s; }
+.auth-tab.active { background: var(--surface2); color: var(--text); }
+.auth-input { width: 100%; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); padding: 11px 14px; font-size: 14px; color: var(--text); outline: none; transition: border-color .12s; font-family: inherit; }
+.auth-input:focus { border-color: var(--accent); }
+.auth-input::placeholder { color: var(--text3); }
+.auth-btn { width: 100%; background: var(--accent); border: none; border-radius: var(--r); color: #fff; font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; transition: opacity .15s; font-family: inherit; -webkit-appearance: none; }
+.auth-btn:hover { opacity: 0.88; }
+.auth-btn:disabled { opacity: 0.5; cursor: default; }
+.auth-error   { font-size: 12px; color: var(--red);   text-align: center; min-height: 16px; line-height: 1.5; }
+.auth-message { font-size: 12px; color: var(--text2); text-align: center; min-height: 16px; line-height: 1.5; }
+
+/* ── Onboarding overlay ── */
+#onboarding-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9998; display: flex; align-items: center; justify-content: center; }
+#onboarding-overlay.hidden { display: none; }
+#onboarding-box { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; max-width: 320px; padding: 0 24px; }
+.ob-title { font-size: 22px; font-weight: 600; color: var(--text); }
+.ob-sub   { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+.ob-names { display: flex; gap: 10px; width: 100%; }
+.ob-name-btn { flex: 1; padding: 14px 8px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--rl); color: var(--text); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .12s, border-color .12s; }
+.ob-name-btn:hover { background: var(--surface2); border-color: var(--accent); }
+.ob-name-btn:disabled { opacity: 0.5; cursor: default; }
+.ob-or { font-size: 12px; color: var(--text3); }
+.ob-create-link, .ob-back-link { background: none; border: none; color: var(--accent-t); font-size: 13px; font-family: inherit; cursor: pointer; padding: 0; text-decoration: underline; text-decoration-color: transparent; transition: text-decoration-color .12s; }
+.ob-create-link:hover, .ob-back-link:hover { text-decoration-color: var(--accent-t); }
+.ob-tier-row { display: flex; gap: 8px; width: 100%; }
+.ob-tier-btn { flex: 1; padding: 9px 6px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r); color: var(--text2); font-size: 12px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .12s, border-color .12s, color .12s; }
+.ob-tier-btn.active { background: var(--accent-l); border-color: var(--accent); color: var(--accent-t); }
 
 /* ── Billing overlay ── */
 #billing-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 8000; display: flex; align-items: center; justify-content: center; }
@@ -121,6 +133,8 @@ body {
   flex-shrink: 0;
 }
 .topbar-title { font-size: 22px; font-weight: 600; }
+.topbar-signout { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 6px; border-radius: 6px; transition: color .12s, background .12s; display: flex; align-items: center; }
+.topbar-signout:hover { color: var(--text); background: rgba(255,255,255,0.07); }
 .topbar-version { font-size: 9px; color: rgba(255,255,255,0.28); letter-spacing: 0.04em; margin-left: auto; align-self: center; }
 .topbar-left {
   display: flex;

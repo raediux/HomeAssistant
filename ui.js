@@ -1,104 +1,88 @@
-// ── PIN auth ──────────────────────────────────────────────────
+// ── Supabase Auth ──────────────────────────────────────────────
+let _authMode = 'signin';
+
+// On load: check existing session; if authed + has household, proceed immediately.
 (async () => {
-  const overlay  = document.getElementById('pin-overlay');
-  const input    = document.getElementById('pin-input');
-  const errMsg   = document.getElementById('pin-error');
-  const remember = document.getElementById('pin-remember-check');
-
-  const LOCKOUT_MS   = 10 * 60 * 1000; // 10 minutes
-  const MAX_ATTEMPTS = 2;
-
-  // Trusted device — skip PIN entirely
-  if (localStorage.getItem('ha_trusted') === '1') {
-    overlay.classList.add('hidden');
-    return;
-  }
-
-  // Session already authenticated
-  if (sessionStorage.getItem('ha_auth') === '1') {
-    overlay.classList.add('hidden');
-    return;
-  }
-
-  // Check if currently locked out
-  function getLockoutRemaining() {
-    const until = parseInt(localStorage.getItem('ha_lockout_until') || '0', 10);
-    return Math.max(0, until - Date.now());
-  }
-
-  function applyLockout() {
-    const remaining = getLockoutRemaining();
-    if (remaining <= 0) return false;
-    input.disabled = true;
-    const mins = Math.floor(remaining / 60000);
-    const secs = Math.ceil((remaining % 60000) / 1000);
-    errMsg.textContent = `Too many attempts. Try again in ${mins}:${String(secs).padStart(2, '0')}`;
-    errMsg.classList.add('visible');
-    return true;
-  }
-
-  // Countdown ticker during lockout
-  function startCountdown() {
-    const timer = setInterval(() => {
-      const remaining = getLockoutRemaining();
-      if (remaining <= 0) {
-        clearInterval(timer);
-        input.disabled = false;
-        input.value = '';
-        errMsg.classList.remove('visible');
-        errMsg.textContent = 'Incorrect PIN';
-        localStorage.removeItem('ha_fail_count');
-        input.focus();
-      } else {
-        const mins = Math.floor(remaining / 60000);
-        const secs = Math.ceil((remaining % 60000) / 1000);
-        errMsg.textContent = `Too many attempts. Try again in ${mins}:${String(secs).padStart(2, '0')}`;
-      }
-    }, 1000);
-  }
-
-  if (applyLockout()) startCountdown();
-  else input.focus();
-
-  async function hashPin(pin) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
-    return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
-  }
-
-  async function checkPin() {
-    if (getLockoutRemaining() > 0) return;
-    const hash = await hashPin(input.value);
-    if (hash === PIN_HASH) {
-      localStorage.removeItem('ha_fail_count');
-      localStorage.removeItem('ha_lockout_until');
-      sessionStorage.setItem('ha_auth', '1');
-      if (remember.checked) localStorage.setItem('ha_trusted', '1');
-      overlay.classList.add('hidden');
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    const hid = await getMyHouseholdId();
+    if (hid) {
+      document.getElementById('auth-overlay').classList.add('hidden');
+      document.dispatchEvent(new Event('ha:authed'));
     } else {
-      input.classList.add('shake');
-      input.value = '';
-      setTimeout(() => input.classList.remove('shake'), 1200);
-
-      const fails = parseInt(localStorage.getItem('ha_fail_count') || '0', 10) + 1;
-      localStorage.setItem('ha_fail_count', fails);
-
-      if (fails >= MAX_ATTEMPTS) {
-        localStorage.setItem('ha_lockout_until', Date.now() + LOCKOUT_MS);
-        applyLockout();
-        startCountdown();
-      } else {
-        errMsg.textContent = `Incorrect PIN — ${MAX_ATTEMPTS - fails} attempt${MAX_ATTEMPTS - fails === 1 ? '' : 's'} remaining`;
-        errMsg.classList.add('visible');
-        setTimeout(() => errMsg.classList.remove('visible'), 2000);
-      }
+      showOnboarding();
     }
   }
+  // else: no session → auth-overlay stays visible (it has no `hidden` class by default)
 
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
-  const submitBtn = document.getElementById('pin-submit');
-  submitBtn.addEventListener('click', checkPin);
-  submitBtn.addEventListener('touchend', e => { e.preventDefault(); checkPin(); });
+  db.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+      clearHouseholdId();
+      location.reload();
+    }
+  });
 })();
+
+function setAuthMode(mode) {
+  _authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode)
+  );
+  const btn = document.getElementById('auth-submit');
+  if (btn) btn.textContent = mode === 'signin' ? 'Sign in' : 'Sign up';
+  const pw = document.getElementById('auth-password');
+  if (pw) pw.autocomplete = mode === 'signin' ? 'current-password' : 'new-password';
+  document.getElementById('auth-error').textContent   = '';
+  document.getElementById('auth-message').textContent = '';
+}
+
+async function authSubmit() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl    = document.getElementById('auth-error');
+  const msgEl    = document.getElementById('auth-message');
+  const btn      = document.getElementById('auth-submit');
+
+  errEl.textContent = '';
+  msgEl.textContent = '';
+  if (!email || !password) { errEl.textContent = 'Email and password are required.'; return; }
+
+  btn.disabled    = true;
+  btn.textContent = _authMode === 'signin' ? 'Signing in…' : 'Creating account…';
+
+  try {
+    if (_authMode === 'signin') {
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    } else {
+      const { data, error } = await db.auth.signUp({ email, password });
+      if (error) throw error;
+      if (!data.session) {
+        // Email confirmation required
+        msgEl.textContent = 'Check your email to confirm your account, then sign in.';
+        setAuthMode('signin');
+        return;
+      }
+    }
+    // Session now exists
+    const hid = await getMyHouseholdId();
+    if (hid) {
+      document.getElementById('auth-overlay').classList.add('hidden');
+      document.dispatchEvent(new Event('ha:authed'));
+      location.reload();
+    } else {
+      showOnboarding();
+    }
+  } catch (e) {
+    errEl.textContent = e.message || 'Authentication failed.';
+    btn.disabled    = false;
+    btn.textContent = _authMode === 'signin' ? 'Sign in' : 'Sign up';
+  }
+}
+
+function authSignOut() {
+  db.auth.signOut();
+}
 
 document.getElementById('add-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeAddModal();

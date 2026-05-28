@@ -3,6 +3,20 @@
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ── Household context ──────────────────────────────────────────
+// Cached after first resolution; cleared on sign-out.
+let _householdId = null;
+
+async function getMyHouseholdId() {
+  if (_householdId) return _householdId;
+  // RLS allows: user_id = auth.uid() → returns the caller's member row
+  const { data } = await db.from('household_members').select('household_id').maybeSingle();
+  _householdId = data?.household_id ?? null;
+  return _householdId;
+}
+function setHouseholdId(hid) { _householdId = hid; }
+function clearHouseholdId()  { _householdId = null; }
+
 // ── Tasks ─────────────────────────────────────────────────────
 async function dbLoadTasks() {
   const { data, error } = await db.from('tasks').select('*').order('id');
@@ -20,6 +34,7 @@ async function dbLoadTasks() {
 }
 
 async function dbSaveTask(task) {
+  const hid = await getMyHouseholdId();
   const row = {
     id:             task.id,
     person:         task.person,
@@ -29,6 +44,7 @@ async function dbSaveTask(task) {
     dow:            task.dow          ?? null,
     done:           task.done,
     last_done_date: task.lastDoneDate || null,
+    household_id:   hid,
   };
   const { error } = await db.from('tasks').upsert(row, { onConflict: 'id' });
   if (error) console.error('dbSaveTask:', error);
@@ -47,8 +63,9 @@ async function dbLoadBadges() {
 }
 
 async function dbSaveBadge(badge) {
+  const hid = await getMyHouseholdId();
   const { data, error } = await db.from('calendar_badges').insert(
-    { date: badge.date, label: badge.label, color: badge.color }
+    { date: badge.date, label: badge.label, color: badge.color, household_id: hid }
   ).select().single();
   if (error) { console.error('dbSaveBadge:', error); return null; }
   return data.id;
@@ -74,15 +91,18 @@ async function dbLoadWorkingItems() {
 }
 
 async function dbSaveWorkingItem(item) {
+  const hid = await getMyHouseholdId();
   const { error } = await db.from('shopping_working').upsert({
     id: item.id, name: item.name, qty: item.qty || null,
     store: item.store || null, got: item.got, sort_order: item.sort_order ?? 0,
+    household_id: hid,
   }, { onConflict: 'id' });
   if (error) console.error('dbSaveWorkingItem:', error);
 }
 
 async function dbUpdateSortOrders(items) {
-  const updates = items.map((item, idx) => ({ id: item.id, sort_order: idx }));
+  const hid = await getMyHouseholdId();
+  const updates = items.map((item, idx) => ({ id: item.id, sort_order: idx, household_id: hid }));
   const { error } = await db.from('shopping_working').upsert(updates, { onConflict: 'id' });
   if (error) console.error('dbUpdateSortOrders:', error);
 }
@@ -106,9 +126,11 @@ async function dbLoadPastItems() {
 }
 
 async function dbSavePastItem(item) {
+  const hid = await getMyHouseholdId();
   const { error } = await db.from('shopping_past').upsert({
     id: item.id, name: item.name, store: item.store || null,
     times: item.times, category: item.category || 'Other',
+    household_id: hid,
   }, { onConflict: 'id' });
   if (error) console.error('dbSavePastItem:', error);
 }
@@ -126,8 +148,10 @@ async function dbLoadMeals() {
 }
 
 async function dbSaveMeal(date, person, slot, meal) {
+  const hid = await getMyHouseholdId();
   const { error } = await db.from('meal_plans').upsert(
-    { date, person, slot, meal }, { onConflict: 'date,person,slot' }
+    { date, person, slot, meal, household_id: hid },
+    { onConflict: 'household_id,date,person,slot' }
   );
   if (error) console.error('dbSaveMeal:', error);
 }

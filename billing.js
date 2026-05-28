@@ -5,15 +5,16 @@
 const BILLING_CACHE_KEY = 'ha_billing';
 const BILLING_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-// ── Wait for PIN overlay to clear ─────────────────────────────
-function waitForPinDismiss() {
+// ── Wait for auth + onboarding to complete ────────────────────
+// ha:authed may already have fired (microtask) before DOMContentLoaded (macrotask),
+// so also check overlay visibility as a fallback.
+function waitForAuth() {
   return new Promise(resolve => {
-    const overlay = document.getElementById('pin-overlay');
-    if (!overlay || overlay.classList.contains('hidden')) { resolve(); return; }
-    const obs = new MutationObserver(() => {
-      if (overlay.classList.contains('hidden')) { obs.disconnect(); resolve(); }
-    });
-    obs.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+    const authEl = document.getElementById('auth-overlay');
+    const obEl   = document.getElementById('onboarding-overlay');
+    const done   = () => authEl?.classList.contains('hidden') && obEl?.classList.contains('hidden');
+    if (done()) { resolve(); return; }
+    document.addEventListener('ha:authed', () => resolve(), { once: true });
   });
 }
 
@@ -41,7 +42,13 @@ async function billingIsActive() {
 // ── Start Stripe Checkout ─────────────────────────────────────
 async function billingSubscribe() {
   const emailInput = document.getElementById('billing-email');
-  const email = emailInput ? emailInput.value.trim() : '';
+  // Fall back to the authenticated user's email if input is empty
+  let email = emailInput ? emailInput.value.trim() : '';
+  if (!email) {
+    const { data: { session } } = await db.auth.getSession();
+    email = session?.user?.email ?? '';
+    if (emailInput) emailInput.value = email;
+  }
   if (!email || !email.includes('@')) {
     if (emailInput) emailInput.focus();
     return;
@@ -53,13 +60,15 @@ async function billingSubscribe() {
   if (errEl) errEl.style.display = 'none';
 
   try {
+    const { data: { session } } = await db.auth.getSession();
+    const hid = await getMyHouseholdId();
     const res = await fetch(`${SUPABASE_URL}/functions/v1/stripe-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Authorization': `Bearer ${session?.access_token ?? SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, household_id: hid }),
     });
     const json = await res.json();
     if (json.error) throw new Error(json.error);
@@ -93,7 +102,7 @@ function billingShowProcessing() {
 
 // ── Init ──────────────────────────────────────────────────────
 async function initBilling() {
-  await waitForPinDismiss();
+  await waitForAuth();
 
   const params        = new URLSearchParams(window.location.search);
   const checkoutState = params.get('checkout');
