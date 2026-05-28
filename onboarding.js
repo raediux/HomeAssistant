@@ -45,6 +45,8 @@ async function claimMember(name) {
   _obBusy(true);
   try {
     const { data: { session } } = await db.auth.getSession();
+    if (!session) throw new Error('No active session — please sign in again.');
+
     const res = await fetch(`${SUPABASE_URL}/functions/v1/claim-member`, {
       method: 'POST',
       headers: {
@@ -53,14 +55,15 @@ async function claimMember(name) {
       },
       body: JSON.stringify({ name }),
     });
-    const json = await res.json();
-    if (json.error) throw new Error(json.error);
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json.error) throw new Error(json.error || json.message || `Server error (${res.status})`);
 
     setHouseholdId(json.household_id);
     document.getElementById('onboarding-overlay').classList.add('hidden');
     document.dispatchEvent(new Event('ha:authed'));
     location.reload();
   } catch (e) {
+    console.error('claimMember:', e);
     _obError(e.message || 'Could not claim slot — it may already be taken.');
     _obBusy(false);
   }
@@ -76,6 +79,8 @@ async function submitCreateHousehold() {
   _obBusy(true);
   try {
     const { data: { session } } = await db.auth.getSession();
+    if (!session) throw new Error('No active session — please sign in again.');
+
     const res = await fetch(`${SUPABASE_URL}/functions/v1/create-household`, {
       method: 'POST',
       headers: {
@@ -84,8 +89,8 @@ async function submitCreateHousehold() {
       },
       body: JSON.stringify({ household_name: householdName, member_name: memberName, tier: _obTier }),
     });
-    const json = await res.json();
-    if (json.error) throw new Error(json.error);
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json.error) throw new Error(json.error || json.message || `Server error (${res.status})`);
 
     if (json.checkout_url) {
       // Family tier → redirect to Stripe; on return the webhook handles subscription
@@ -98,6 +103,7 @@ async function submitCreateHousehold() {
     document.dispatchEvent(new Event('ha:authed'));
     location.reload();
   } catch (e) {
+    console.error('submitCreateHousehold:', e);
     _obError(e.message || 'Could not create household. Please try again.');
     _obBusy(false);
   }
