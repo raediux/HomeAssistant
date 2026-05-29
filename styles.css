@@ -166,6 +166,7 @@ body {
   display: inline-flex;
   align-items: flex-end;
   gap: 4px;
+  text-shadow: 0 0 22px rgba(74,143,212,0.35), 0 0 48px rgba(74,143,212,0.15);
 }
 .topbar-time .ampm {
   font-size: 15px;
@@ -830,8 +831,8 @@ body {
 .fc-day { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
 .fc-icon { font-size: 16px; color: var(--text2); }
 .fc-temps { display: flex; gap: 4px; font-size: 11px; }
-.fc-hi { color: var(--text); font-weight: 500; }
-.fc-lo { color: var(--text3); }
+.fc-hi { color: #a8854a; font-weight: 500; }
+.fc-lo { color: #5a87aa; }
 
 /* ── Mobile: Meal Planner shopping tabs ── */
 .mp-shop-tabs { display: none; }

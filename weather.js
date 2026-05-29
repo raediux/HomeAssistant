@@ -20,6 +20,15 @@ function wxIcon(code) {
   return WX_ICONS[code] || WX_ICONS[code.slice(0, 2) + 'd'] || 'ti-cloud';
 }
 
+const WX_COLORS = {
+  '01': '#f4c842', '02': '#e8be50',
+  '03': '#7a9ab0', '04': '#6a8a9e',
+  '09': '#5b9fd4', '10': '#5b9fd4',
+  '11': '#9b7fd4', '13': '#a8d4f4', '50': '#8aabbb',
+};
+function wxColor(code) { return WX_COLORS[code.slice(0, 2)] || 'var(--text2)'; }
+function wxTempColor(t) { return t < 10 ? '#6db0e0' : t > 20 ? '#e8b04a' : 'var(--text)'; }
+
 async function wxFetch() {
   const [cur, fore] = await Promise.all([
     fetch(`${OWM_BASE}/weather?lat=${WEATHER_LAT}&lon=${WEATHER_LON}&units=metric&appid=${WEATHER_KEY}`).then(r => r.json()),
@@ -74,8 +83,13 @@ function wxRender(data) {
   const { cur, days } = data;
 
   // Current conditions
-  document.getElementById('weather-icon').className = `ti ${wxIcon(cur.weather[0].icon)}`;
-  document.getElementById('weather-temp').textContent = Math.round(cur.main.temp);
+  const iconEl = document.getElementById('weather-icon');
+  iconEl.className = `ti ${wxIcon(cur.weather[0].icon)}`;
+  iconEl.style.color = wxColor(cur.weather[0].icon);
+  const temp = Math.round(cur.main.temp);
+  const tempEl = document.getElementById('weather-temp');
+  tempEl.textContent = temp;
+  tempEl.style.color = wxTempColor(temp);
   document.getElementById('wp-condition').textContent =
     cur.weather[0].description.replace(/\b\w/g, c => c.toUpperCase());
   document.getElementById('wp-feels').textContent     = Math.round(cur.main.feels_like);
@@ -87,7 +101,7 @@ function wxRender(data) {
   document.getElementById('forecast-strip').innerHTML = days.map(d => `
     <div class="forecast-card">
       <div class="fc-day">${DAY[new Date(d.dt * 1000).getDay()]}</div>
-      <i class="ti ${wxIcon(d.icon)} fc-icon"></i>
+      <i class="ti ${wxIcon(d.icon)} fc-icon" style="color:${wxColor(d.icon)}"></i>
       <div class="fc-temps"><span class="fc-hi">${d.hi}°</span><span class="fc-lo">${d.lo}°</span></div>
     </div>`).join('');
 }

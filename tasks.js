@@ -277,14 +277,6 @@ function buildTaskColumns(tier) {
       </div>`;
     layout.appendChild(wrap);
   });
-
-  // Add member slot
-  const addWrap = document.createElement('div');
-  addWrap.className = 'col-glow-wrap col-add-member-wrap';
-  addWrap.innerHTML = tier === 'family'
-    ? `<div class="col-add-member"><i class="ti ti-user-plus"></i><span>Add member</span><span class="col-add-sub">Invite links coming soon</span></div>`
-    : `<div class="col-add-member col-add-locked"><i class="ti ti-lock"></i><span>Add member</span><span class="col-add-sub">Family plan required</span></div>`;
-  layout.appendChild(addWrap);
 }
 
 // ── Init (called from ui.js initApp) ─────────────────────────
