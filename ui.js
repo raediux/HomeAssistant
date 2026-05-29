@@ -199,7 +199,7 @@ function render() {
 function renderWorking() {
   const el = document.getElementById('working-list');
   if (!workingItems.length) {
-    el.innerHTML = '<p style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">No items — add from past purchases or create new</p>';
+    el.innerHTML = '<p style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">No items — add from All Items or create new</p>';
     return;
   }
 
@@ -229,8 +229,8 @@ function renderWorking() {
           <button class="move-btn edt" title="Edit" onclick="editWorkingItem(${item.id})">
             <i class="ti ti-pencil" aria-hidden="true"></i>
           </button>
-          <button class="move-btn del" title="Delete" onclick="deleteWorkingItem(${item.id})">
-            <i class="ti ti-trash" aria-hidden="true"></i>
+          <button class="move-btn del" title="Move back to All Items" onclick="moveToArchive(${item.id})">
+            <i class="ti ti-arrow-back-up" aria-hidden="true"></i>
           </button>
         </div>
       </div>`).join('');

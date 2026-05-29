@@ -156,21 +156,21 @@
           <span class="sec-title">Shopping</span>
         </div>
         <div class="mp-shop-tabs">
-          <button class="mp-shop-tab active" data-panel="working-panel" onclick="mpShopTab(this)">Shopping list</button>
-          <button class="mp-shop-tab" data-panel="past-panel" onclick="mpShopTab(this)">Past purchases</button>
+          <button class="mp-shop-tab active" data-panel="working-panel" onclick="mpShopTab(this)">This Week</button>
+          <button class="mp-shop-tab" data-panel="past-panel" onclick="mpShopTab(this)">All Items</button>
         </div>
         <div class="shopping-panels">
           <div class="shop-panel" id="working-panel">
-            <div class="panel-hdr"><span class="panel-title">Shopping list</span><button class="clear-btn" onclick="clearAll()">Clear All</button></div>
+            <div class="panel-hdr"><span class="panel-title">This Week</span><button class="clear-btn" onclick="clearAll()">Clear All</button></div>
             <div id="working-list"></div>
           </div>
           <div class="shop-panel" id="past-panel">
-            <div class="panel-hdr"><span class="panel-title">Past purchases</span></div>
+            <div class="panel-hdr"><span class="panel-title">All Items</span></div>
             <p class="panel-sub">Click item to add to list</p>
             <div class="search-row">
               <div class="search-bar">
                 <i class="ti ti-search"></i>
-                <input type="text" placeholder="Search past items..." id="past-search" oninput="filterPast()">
+                <input type="text" placeholder="Search items..." id="past-search" oninput="filterPast()">
               </div>
               <button class="btn btn-glass btn-sm" onclick="addToList()"><i class="ti ti-plus"></i> Add</button>
             </div>
@@ -292,15 +292,15 @@
 
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=1.0.34"></script>
-<script src="db.js?v=1.0.34"></script>
-<script src="onboarding.js?v=1.0.34"></script>
-<script src="ui.js?v=1.0.34"></script>
-<script src="tasks.js?v=1.0.34"></script>
-<script src="calendar.js?v=1.0.34"></script>
-<script src="meals.js?v=1.0.34"></script>
-<script src="weather.js?v=1.0.34"></script>
-<script src="billing.js?v=1.0.34"></script>
+<script src="config.js?v=1.0.35"></script>
+<script src="db.js?v=1.0.35"></script>
+<script src="onboarding.js?v=1.0.35"></script>
+<script src="ui.js?v=1.0.35"></script>
+<script src="tasks.js?v=1.0.35"></script>
+<script src="calendar.js?v=1.0.35"></script>
+<script src="meals.js?v=1.0.35"></script>
+<script src="weather.js?v=1.0.35"></script>
+<script src="billing.js?v=1.0.35"></script>
 </body>
 </html>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
