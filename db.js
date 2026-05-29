@@ -178,7 +178,7 @@ function memberSlug(name) {
 
 async function dbLoadMembers() {
   const { data, error } = await db.from('household_members')
-    .select('id, name, role').order('created_at');
+    .select('id, name, role').order('sort_order').order('created_at');
   if (error) { console.error('dbLoadMembers:', error); return []; }
   _members = data || [];
   return _members;
