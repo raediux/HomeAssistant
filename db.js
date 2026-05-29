@@ -108,7 +108,11 @@ async function dbSaveWorkingItem(item) {
 
 async function dbUpdateSortOrders(items) {
   const hid = await getMyHouseholdId();
-  const updates = items.map((item, idx) => ({ id: item.id, sort_order: idx, household_id: hid }));
+  const updates = items.map((item, idx) => ({
+    id: item.id, name: item.name, qty: item.qty || null,
+    store: item.store || null, got: item.got, sort_order: idx,
+    household_id: hid,
+  }));
   const { error } = await db.from('shopping_working').upsert(updates, { onConflict: 'id' });
   if (error) console.error('dbUpdateSortOrders:', error);
 }
