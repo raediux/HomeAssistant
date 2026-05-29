@@ -754,7 +754,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
-  padding-left: 118px; /* 44px day + 8px row-gap + 60px person-name + 6px grid-gap */
+  padding-left: 112px; /* 44px day + 8px row-gap + 60px person-name */
   padding-bottom: 2px;
   flex-shrink: 0;
 }
@@ -768,41 +768,35 @@ body {
 .mp-day-label.today { background: rgba(255,255,255,0.07); border-radius: 6px; padding: 4px 6px; }
 .mp-day-label.today .mp-day-name { color: var(--text); }
 .mp-day-label.today .mp-day-date { color: var(--text2); }
-.mp-persons { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: rgba(255,255,255,0.02); }
-.mp-person-row { display: flex; gap: 6px; align-items: stretch; border-left: 2px solid transparent; border-bottom: 1px solid var(--border); overflow: hidden; min-height: 0; }
-.mp-person-row:last-child { border-bottom: none; }
-.mp-person-row.couple { position: relative; border-left: none; flex: 2; align-items: stretch; }
-.mp-person-row.couple::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--accent), var(--pink)); }
-.mp-person-row.couple .mp-cell { justify-content: center; }
-.mp-person-row.linus  { border-left-color: var(--yellow); flex: 1; }
-.mp-person-name { width: 60px; flex-shrink: 0; display: flex; align-items: center; font-size: 11px; font-weight: 500; color: var(--text3); padding-left: 10px; }
+.mp-persons { flex: 1; min-width: 0; min-height: 0; display: grid; grid-template-columns: 60px 1fr 1fr; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: rgba(255,255,255,0.02); }
+.mp-gname { position: relative; display: flex; align-items: center; font-size: 11px; font-weight: 500; color: var(--text3); padding-left: 14px; border-bottom: 1px solid var(--border); }
+.mp-gname::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--mb, var(--accent)); }
+.mp-gname-couple::before { background: linear-gradient(to bottom, var(--accent), var(--pink)); }
+.mp-gname.last { border-bottom: none; }
+.mp-gcell { position: relative; padding: 9px 8px; display: flex; align-items: center; border-left: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid var(--border); min-height: 36px; overflow-y: auto; scrollbar-width: none; }
+.mp-gcell::-webkit-scrollbar { display: none; }
+.mp-gcell:hover { background: rgba(255,255,255,0.03); }
+.mp-gcell.last { border-bottom: none; }
+.mp-gcell-couple { border-bottom: none; }
+.mp-gcell-couple:hover { background: rgba(255,255,255,0.03); }
+.mp-couple-split-btn, .mp-couple-merge-btn {
+  background: none; border: none; color: var(--text3); cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 0; display: none; align-items: center;
+  flex-shrink: 0; transition: color .12s;
+}
+.mp-cell-filled:hover .mp-couple-split-btn,
+.mp-cell-filled:hover .mp-couple-merge-btn { display: flex; }
+.mp-couple-split-btn:hover { color: var(--accent); }
+.mp-couple-merge-btn:hover { color: var(--accent); }
 .mp-link { color: var(--accent-t); text-decoration: underline; text-decoration-color: rgba(122,179,232,0.4); }
 .mp-link:hover { color: var(--text); text-decoration-color: var(--accent-t); }
-
-.mp-cell {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 9px 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  scrollbar-width: none;
-}
-.mp-cell::-webkit-scrollbar { display: none; }
-.mp-cell:hover { background: rgba(255,255,255,0.03); }
-.mp-cell-slot { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); line-height: 1; }
-.mp-cell-body { flex: 1; display: flex; align-items: center; }
 .mp-cell-add {
   background: none; border: none; color: rgba(255,255,255,0.09); font-size: 12px; font-family: inherit;
   cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 0;
   width: 100%; transition: color .12s;
 }
 .mp-cell-add:hover { color: var(--text2); }
-.mp-cell-filled { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; cursor: pointer; }
+.mp-cell-filled { display: flex; align-items: center; gap: 6px; width: 100%; cursor: pointer; }
 .mp-cell-name { font-size: 13px; color: var(--text); flex: 1; min-width: 0; white-space: normal; word-break: break-word; }
 .mp-cell-rm {
   background: none; border: none; color: var(--text3); cursor: pointer;
