@@ -2,442 +2,133 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Visual Elevation Mockup</title>
+<title>Grocery Autocomplete Mockup</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg:      #111110;
-  --surface: #1c1c1a;
-  --border:  #2e2e2b;
-  --text:    #e8e6e1;
-  --text2:   #9e9b93;
-  --text3:   #6b6960;
-  --blue:    #4a8fd4;
-  --pink:    #c46090;
-  --yellow:  #c9a838;
-  --r: 8px;
+  --bg: #111110; --surface: #1c1c1a; --border: #2e2e2b;
+  --text: #e8e6e1; --text2: #9e9b93; --text3: #6b6960;
+  --blue: #4a8fd4; --r: 8px;
 }
 body {
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse at 65% 0%, #10131a 0%, #0d0e12 45%, #0c0d10 100%);
+  background: radial-gradient(ellipse at 65% 0%, #10131a 0%, #0d0e12 45%, #0c0d10 100%);
   font-family: 'DM Sans', system-ui, sans-serif;
-  color: var(--text);
-  min-height: 100vh;
-  padding: 48px 40px 64px;
+  color: var(--text); min-height: 100vh;
+  display: flex; gap: 48px; padding: 48px; align-items: flex-start; flex-wrap: wrap;
 }
+.scenario-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 14px; }
 
-h1 {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  margin-bottom: 48px;
+/* Modal box */
+.modal-box {
+  background: #1a1a18;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.6);
 }
-h2 {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: .10em;
-  margin-bottom: 20px;
+.modal-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.modal-hdr span { font-size: 14px; font-weight: 600; }
+.modal-x { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 2px; display: flex; align-items: center; }
+.modal-lbl { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 6px; }
+.modal-input {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 9px 11px; font-size: 13px; color: var(--text);
+  font-family: inherit; outline: none;
 }
+.modal-input:focus { border-color: rgba(74,143,212,.5); }
+select.modal-input { cursor: pointer; }
+.modal-ftr { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--r); padding: 8px 14px; font-size: 13px; font-family: inherit; color: var(--text2); cursor: pointer; }
+.btn-glass { background: rgba(74,143,212,0.15); border-color: rgba(74,143,212,0.3); color: var(--blue); }
 
-.scenarios {
-  display: flex;
-  gap: 48px;
-  align-items: flex-start;
-}
+/* Input wrapper for positioning */
+.input-wrap { position: relative; margin-bottom: 12px; }
 
-/* ── Shared column layout ── */
-.layout {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.col {
-  width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  position: relative;
-}
-
-.col-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px 9px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  flex-shrink: 0;
-}
-.col-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.col-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.section-label {
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--text3);
-  padding: 10px 12px 4px;
-}
-
-.task-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 6px 12px;
-  border-top: 1px solid rgba(255,255,255,0.04);
-}
-.task-row:first-of-type { border-top: none; }
-.task-circle {
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.18);
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.task-text { font-size: 12px; color: var(--text2); line-height: 1.4; }
-.task-due { font-size: 10px; color: var(--text3); margin-top: 2px; }
-
-/* ── Scenario A: Current (flat) ── */
-.col-flat {
-  background: var(--surface);
+/* Suggestions dropdown */
+.suggestions {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10;
+  background: #222220;
   border: 1px solid var(--border);
   border-radius: var(--r);
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
   overflow: hidden;
 }
-
-/* ── Scenario B: Ambient glow ── */
-.glow-wrap {
-  position: relative;
+.suggestion-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 11px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
 }
-.glow-blob {
-  position: absolute;
-  width: 260px; height: 260px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-  top: -60px; left: -40px;
-  filter: blur(70px);
-  opacity: 1;
-}
-.glow-wrap .col-flat {
-  position: relative;
-  z-index: 1;
-}
-
-/* ── Scenario C: Glass columns + glow ── */
-.col-glass {
-  background: rgba(255,255,255,0.035);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-top: 1px solid rgba(255,255,255,0.13);
-  border-radius: 10px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-}
-/* Subtle colored top accent on glass columns */
-.col-glass::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  opacity: 0.6;
-  border-radius: 10px 10px 0 0;
-}
-.col-glass.ray::before    { background: var(--blue); }
-.col-glass.jazelle::before { background: var(--pink); }
-.col-glass.linus::before  { background: var(--yellow); }
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover, .suggestion-item.active { background: rgba(255,255,255,0.05); }
+.sug-name { flex: 1; font-size: 13px; }
+.sug-name em { font-style: normal; color: var(--blue); }
+.sug-store { font-size: 11px; color: var(--text3); background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px 5px; white-space: nowrap; }
 </style>
 </head>
 <body>
 
-<h1>Visual elevation — mockup</h1>
-
-<div class="scenarios">
-
-  <!-- ── A: Current ── -->
-  <div>
-    <h2>Current</h2>
-    <div class="layout">
-
-      <div class="col">
-        <div class="col-flat">
-          <div class="col-head">
-            <div class="col-dot" style="background:var(--blue)"></div>
-            <div class="col-name">Ray</div>
-          </div>
-          <div class="section-label">Daily</div>
-          <div class="task-row"><div class="task-circle"></div><div class="task-text">Supplements</div></div>
-          <div class="task-row"><div class="task-circle"></div><div class="task-text">Don't hold back 😘</div></div>
-          <div class="section-label">Occasional</div>
-          <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Car wash</div><div class="task-due">1 day</div></div></div>
-          <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Clear old PC</div><div class="task-due">3 days</div></div></div>
+<!-- State 1: typing, suggestions visible -->
+<div>
+  <div class="scenario-label">Typing — suggestions shown</div>
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span>Add item</span>
+      <button class="modal-x"><i class="ti ti-x"></i></button>
+    </div>
+    <label class="modal-lbl">Item name</label>
+    <div class="input-wrap">
+      <input class="modal-input" type="text" value="mil" style="border-color:rgba(74,143,212,.5)">
+      <div class="suggestions">
+        <div class="suggestion-item active">
+          <span class="sug-name"><em>Mil</em>k</span>
+          <span class="sug-store">Coles</span>
+        </div>
+        <div class="suggestion-item">
+          <span class="sug-name"><em>Mil</em>k (full cream)</span>
+          <span class="sug-store">Woolworths</span>
+        </div>
+        <div class="suggestion-item">
+          <span class="sug-name">Oat <em>mil</em>k</span>
+          <span class="sug-store">Aldi</span>
         </div>
       </div>
-
-      <div class="col">
-        <div class="col-flat">
-          <div class="col-head">
-            <div class="col-dot" style="background:var(--pink)"></div>
-            <div class="col-name">Jazelle</div>
-          </div>
-          <div class="section-label">Daily</div>
-          <div class="task-row"><div class="task-circle"></div><div class="task-text">Jub jub husband</div></div>
-          <div class="section-label">Weekly</div>
-          <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Mop house</div><div class="task-due">Thu</div></div></div>
-          <div class="section-label">Occasional</div>
-          <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Facial consultation</div><div class="task-due">11 days</div></div></div>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="col-flat">
-          <div class="col-head">
-            <div class="col-dot" style="background:var(--yellow)"></div>
-            <div class="col-name">Linus</div>
-          </div>
-          <div class="section-label">Weekly</div>
-          <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Pack going out bag</div><div class="task-due">Sat</div></div></div>
-          <div class="section-label">Occasional</div>
-          <div class="task-row"><div class="task-circle"></div><div class="task-text">Flu shot</div></div>
-        </div>
-      </div>
-
+    </div>
+    <label class="modal-lbl">Store</label>
+    <select class="modal-input">
+      <option>Coles</option>
+    </select>
+    <div class="modal-ftr">
+      <button class="btn">Cancel</button>
+      <button class="btn btn-glass"><i class="ti ti-plus"></i> Add to list</button>
     </div>
   </div>
-
-  <!-- ── B: Ambient glow ── -->
-  <div>
-    <h2>Option 1 — Ambient glow</h2>
-    <div class="layout">
-
-      <div class="col">
-        <div class="glow-wrap">
-          <div class="glow-blob" style="background:radial-gradient(circle, rgba(74,143,212,0.22) 0%, transparent 70%)"></div>
-          <div class="col-flat">
-            <div class="col-head">
-              <div class="col-dot" style="background:var(--blue)"></div>
-              <div class="col-name">Ray</div>
-            </div>
-            <div class="section-label">Daily</div>
-            <div class="task-row"><div class="task-circle"></div><div class="task-text">Supplements</div></div>
-            <div class="task-row"><div class="task-circle"></div><div class="task-text">Don't hold back 😘</div></div>
-            <div class="section-label">Occasional</div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Car wash</div><div class="task-due">1 day</div></div></div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Clear old PC</div><div class="task-due">3 days</div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="glow-wrap">
-          <div class="glow-blob" style="background:radial-gradient(circle, rgba(196,96,144,0.22) 0%, transparent 70%)"></div>
-          <div class="col-flat">
-            <div class="col-head">
-              <div class="col-dot" style="background:var(--pink)"></div>
-              <div class="col-name">Jazelle</div>
-            </div>
-            <div class="section-label">Daily</div>
-            <div class="task-row"><div class="task-circle"></div><div class="task-text">Jub jub husband</div></div>
-            <div class="section-label">Weekly</div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Mop house</div><div class="task-due">Thu</div></div></div>
-            <div class="section-label">Occasional</div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Facial consultation</div><div class="task-due">11 days</div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="glow-wrap">
-          <div class="glow-blob" style="background:radial-gradient(circle, rgba(201,168,56,0.20) 0%, transparent 70%)"></div>
-          <div class="col-flat">
-            <div class="col-head">
-              <div class="col-dot" style="background:var(--yellow)"></div>
-              <div class="col-name">Linus</div>
-            </div>
-            <div class="section-label">Weekly</div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Pack going out bag</div><div class="task-due">Sat</div></div></div>
-            <div class="section-label">Occasional</div>
-            <div class="task-row"><div class="task-circle"></div><div class="task-text">Flu shot</div></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ── C: Glass columns + glow ── -->
-  <div>
-    <h2>Option 2 — Glass columns + glow</h2>
-    <div class="layout">
-
-      <div class="col">
-        <div class="glow-wrap">
-          <div class="glow-blob" style="background:radial-gradient(circle, rgba(74,143,212,0.22) 0%, transparent 70%)"></div>
-          <div class="col-glass ray">
-            <div class="col-head">
-              <div class="col-dot" style="background:var(--blue)"></div>
-              <div class="col-name">Ray</div>
-            </div>
-            <div class="section-label">Daily</div>
-            <div class="task-row"><div class="task-circle"></div><div class="task-text">Supplements</div></div>
-            <div class="task-row"><div class="task-circle"></div><div class="task-text">Don't hold back 😘</div></div>
-            <div class="section-label">Occasional</div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Car wash</div><div class="task-due">1 day</div></div></div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Clear old PC</div><div class="task-due">3 days</div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="glow-wrap">
-          <div class="glow-blob" style="background:radial-gradient(circle, rgba(196,96,144,0.22) 0%, transparent 70%)"></div>
-          <div class="col-glass jazelle">
-            <div class="col-head">
-              <div class="col-dot" style="background:var(--pink)"></div>
-              <div class="col-name">Jazelle</div>
-            </div>
-            <div class="section-label">Daily</div>
-            <div class="task-row"><div class="task-circle"></div><div class="task-text">Jub jub husband</div></div>
-            <div class="section-label">Weekly</div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Mop house</div><div class="task-due">Thu</div></div></div>
-            <div class="section-label">Occasional</div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Facial consultation</div><div class="task-due">11 days</div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col">
-        <div class="glow-wrap">
-          <div class="glow-blob" style="background:radial-gradient(circle, rgba(201,168,56,0.20) 0%, transparent 70%)"></div>
-          <div class="col-glass linus">
-            <div class="col-head">
-              <div class="col-dot" style="background:var(--yellow)"></div>
-              <div class="col-name">Linus</div>
-            </div>
-            <div class="section-label">Weekly</div>
-            <div class="task-row"><div class="task-circle"></div><div><div class="task-text">Pack going out bag</div><div class="task-due">Sat</div></div></div>
-            <div class="section-label">Occasional</div>
-            <div class="task-row"><div class="task-circle"></div><div class="task-text">Flu shot</div></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
 </div>
 
-<!-- ── Today highlight options ── -->
-<style>
-.today-section { margin-top: 64px; }
-.today-options { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; margin-top: 0; }
-.today-option { display: flex; flex-direction: column; gap: 12px; }
-.today-option-label {
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .1em; color: var(--text3);
-}
-.day-row { display: flex; gap: 6px; align-items: center; }
-
-/* Base day label */
-.dl {
-  width: 44px; display: flex; flex-direction: column;
-  align-items: center; gap: 2px; padding: 4px 0;
-  border-radius: 6px;
-}
-.dl-name { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; line-height: 1; }
-.dl-date { font-size: 16px; font-weight: 600; color: var(--text2); line-height: 1; }
-
-/* Option 1 — background chip (align-self: center fix) */
-.dl.opt1-today { background: rgba(255,255,255,0.07); }
-.dl.opt1-today .dl-name { color: var(--text); }
-.dl.opt1-today .dl-date { color: var(--text2); }
-
-/* Option 2 — dot under date */
-.dl.opt2-today { position: relative; }
-.dl.opt2-today .dl-name { color: var(--text); }
-.dl.opt2-today .dl-date { color: var(--text); }
-.dl.opt2-today::after {
-  content: ''; display: block; width: 4px; height: 4px;
-  border-radius: 50%; background: var(--text2);
-  margin: 2px auto 0;
-}
-
-/* Option 3 — border chip */
-.dl.opt3-today { border: 1px solid rgba(255,255,255,0.22); }
-.dl.opt3-today .dl-name { color: var(--text); }
-.dl.opt3-today .dl-date { color: var(--text); }
-
-/* Option 4 — bold text only */
-.dl.opt4-today .dl-name { color: var(--text); font-weight: 700; font-size: 11px; }
-.dl.opt4-today .dl-date { color: var(--text); font-weight: 700; }
-</style>
-
-<div class="today-section">
-  <h1>Today highlight — options</h1>
-  <div class="today-options">
-
-    <div class="today-option">
-      <div class="today-option-label">1 — Background chip</div>
-      <div class="day-row">
-        <div class="dl"><div class="dl-name">Mon</div><div class="dl-date">25</div></div>
-        <div class="dl"><div class="dl-name">Tue</div><div class="dl-date">26</div></div>
-        <div class="dl opt1-today"><div class="dl-name">Wed</div><div class="dl-date">27</div></div>
-        <div class="dl"><div class="dl-name">Thu</div><div class="dl-date">28</div></div>
-        <div class="dl"><div class="dl-name">Fri</div><div class="dl-date">29</div></div>
-      </div>
+<!-- State 2: suggestion selected, form filled -->
+<div>
+  <div class="scenario-label">Suggestion selected — form filled</div>
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span>Add item</span>
+      <button class="modal-x"><i class="ti ti-x"></i></button>
     </div>
-
-    <div class="today-option">
-      <div class="today-option-label">2 — Dot under date</div>
-      <div class="day-row">
-        <div class="dl"><div class="dl-name">Mon</div><div class="dl-date">25</div></div>
-        <div class="dl"><div class="dl-name">Tue</div><div class="dl-date">26</div></div>
-        <div class="dl opt2-today"><div class="dl-name">Wed</div><div class="dl-date">27</div></div>
-        <div class="dl"><div class="dl-name">Thu</div><div class="dl-date">28</div></div>
-        <div class="dl"><div class="dl-name">Fri</div><div class="dl-date">29</div></div>
-      </div>
+    <label class="modal-lbl">Item name</label>
+    <div class="input-wrap">
+      <input class="modal-input" type="text" value="Milk" style="border-color:rgba(74,143,212,.5)">
+      <!-- no dropdown -->
     </div>
-
-    <div class="today-option">
-      <div class="today-option-label">3 — Border chip</div>
-      <div class="day-row">
-        <div class="dl"><div class="dl-name">Mon</div><div class="dl-date">25</div></div>
-        <div class="dl"><div class="dl-name">Tue</div><div class="dl-date">26</div></div>
-        <div class="dl opt3-today"><div class="dl-name">Wed</div><div class="dl-date">27</div></div>
-        <div class="dl"><div class="dl-name">Thu</div><div class="dl-date">28</div></div>
-        <div class="dl"><div class="dl-name">Fri</div><div class="dl-date">29</div></div>
-      </div>
+    <label class="modal-lbl">Store</label>
+    <select class="modal-input">
+      <option>Coles</option>
+    </select>
+    <div class="modal-ftr">
+      <button class="btn">Cancel</button>
+      <button class="btn btn-glass"><i class="ti ti-plus"></i> Add to list</button>
     </div>
-
-    <div class="today-option">
-      <div class="today-option-label">4 — Bold text only</div>
-      <div class="day-row">
-        <div class="dl"><div class="dl-name">Mon</div><div class="dl-date">25</div></div>
-        <div class="dl"><div class="dl-name">Tue</div><div class="dl-date">26</div></div>
-        <div class="dl opt4-today"><div class="dl-name">Wed</div><div class="dl-date">27</div></div>
-        <div class="dl"><div class="dl-name">Thu</div><div class="dl-date">28</div></div>
-        <div class="dl"><div class="dl-name">Fri</div><div class="dl-date">29</div></div>
-      </div>
-    </div>
-
   </div>
 </div>
 

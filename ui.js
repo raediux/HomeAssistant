@@ -356,6 +356,56 @@ function toggleGot(id) {
   if (item) { item.got = !item.got; render(); dbSaveWorkingItem(item); }
 }
 
+// ── Shopping autocomplete ─────────────────────────────────────
+let _sugIndex = -1;
+
+function onModalNameInput() {
+  const q = document.getElementById('modal-name').value.trim().toLowerCase();
+  const el = document.getElementById('modal-suggestions');
+  if (!q || editState) { el.classList.remove('open'); el.innerHTML = ''; _sugIndex = -1; return; }
+  const matches = pastItems
+    .filter(i => i.name.toLowerCase().includes(q))
+    .sort((a, b) => (b.times || 0) - (a.times || 0))
+    .slice(0, 6);
+  if (!matches.length) { el.classList.remove('open'); el.innerHTML = ''; _sugIndex = -1; return; }
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  el.innerHTML = matches.map((item, i) => `
+    <div class="sug-item${i === _sugIndex ? ' active' : ''}" onmousedown="applySuggestion(${item.id})">
+      <span class="sug-item-name">${esc(item.name).replace(re, '<em>$1</em>')}</span>
+      <span class="sug-item-store">${esc(item.store)}</span>
+    </div>`).join('');
+  el._matches = matches;
+  el.classList.add('open');
+  _sugIndex = -1;
+}
+
+function onModalNameKeydown(e) {
+  const el = document.getElementById('modal-suggestions');
+  const items = el.querySelectorAll('.sug-item');
+  if (e.key === 'Escape') { el.classList.remove('open'); _sugIndex = -1; return; }
+  if (!el.classList.contains('open') || !items.length) { if (e.key === 'Enter') confirmAdd(); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); _sugIndex = Math.min(_sugIndex + 1, items.length - 1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); _sugIndex = Math.max(_sugIndex - 1, -1); }
+  else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (_sugIndex >= 0 && el._matches[_sugIndex]) applySuggestion(el._matches[_sugIndex].id);
+    else confirmAdd();
+    return;
+  } else return;
+  items.forEach((it, i) => it.classList.toggle('active', i === _sugIndex));
+}
+
+function applySuggestion(id) {
+  const item = pastItems.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('modal-name').value = item.name;
+  const cat = document.getElementById('modal-cat');
+  if (STORES.includes(item.store)) cat.value = item.store;
+  const el = document.getElementById('modal-suggestions');
+  el.classList.remove('open'); el.innerHTML = ''; _sugIndex = -1;
+  document.getElementById('modal-name').focus();
+}
+
 function addToList() {
   document.getElementById('add-modal').classList.add('open');
   setTimeout(() => document.getElementById('modal-name').focus(), 50);
@@ -394,6 +444,8 @@ function editPastItem(id) {
 function closeAddModal() {
   document.getElementById('add-modal').classList.remove('open');
   document.getElementById('modal-name').value = '';
+  const sugEl = document.getElementById('modal-suggestions');
+  sugEl.classList.remove('open'); sugEl.innerHTML = ''; _sugIndex = -1;
   if (editState) {
     editState = null;
     document.querySelector('#add-modal .modal-hdr span').textContent = 'Add item';

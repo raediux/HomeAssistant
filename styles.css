@@ -676,6 +676,16 @@ body {
 .modal-input { width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 8px 11px; font-size: 13px; color: var(--text); font-family: inherit; outline: none; transition: border-color .12s; }
 .modal-input:focus { border-color: var(--accent); }
 .modal-ftr { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+.modal-input-wrap { position: relative; margin-bottom: 12px; }
+.modal-input-wrap .modal-input { margin-bottom: 0; }
+#modal-suggestions { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; background: #1e1e1c; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); box-shadow: 0 8px 24px rgba(0,0,0,.5); overflow: hidden; }
+#modal-suggestions.open { display: block; }
+.sug-item { display: flex; align-items: center; gap: 8px; padding: 8px 11px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; transition: background .1s; }
+.sug-item:last-child { border-bottom: none; }
+.sug-item:hover, .sug-item.active { background: rgba(255,255,255,0.05); }
+.sug-item-name { flex: 1; }
+.sug-item-name em { font-style: normal; color: var(--accent); }
+.sug-item-store { font-size: 11px; color: var(--text3); background: rgba(255,255,255,0.05); border-radius: 4px; padding: 2px 5px; white-space: nowrap; }
 .dow-grid { display: flex; gap: 5px; }
 .dow-btn { flex: 1; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--r); padding: 7px 4px; font-size: 11px; font-weight: 600; color: var(--text2); cursor: pointer; text-align: center; transition: background .12s, border-color .12s, color .12s; }
 .dow-btn:hover { border-color: var(--accent); color: var(--text); }
