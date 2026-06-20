@@ -1,0 +1,26 @@
+:root {
+  color-scheme: dark;
+  --bg:      #111110;
+  --surface: #1c1c1a;
+  --surface2:#242422;
+  --border:  #2e2e2b;
+  --border2: #3a3a36;
+  --text:    #e8e6e1;
+  --text2:   #9e9b93;
+  --text3:   #6b6960;
+  --accent:  #4a8fd4;
+  --accent-l:#1a2d42;
+  --accent-t:#7ab3e8;
+  --green:   #5a9e5a;
+  --green-l: #1a2e1a;
+  --amber:   #c4903a;
+  --amber-l: #2e2010;
+  --red:     #c46060;
+  --red-l:   #2e1a1a;
+  --pink:    #c46090;
+  --pink-l:  #2e1a28;
+  --yellow:  #c9a838;
+  --yellow-l:#2e2710;
+  --r: 8px;
+  --rl: 12px;
+}

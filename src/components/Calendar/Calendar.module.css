@@ -1,0 +1,95 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 24px;
+  width: 75%;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 0 10px;
+}
+
+.monthLabel { font-size: 18px; font-weight: 600; color: var(--text); text-align: center; }
+
+.ib {
+  background: none; border: none; cursor: pointer; padding: 3px 5px;
+  border-radius: 5px; color: var(--text2);
+  transition: background .12s, color .12s; display: flex; align-items: center;
+}
+.ib:hover { background: var(--surface2); color: var(--text); }
+
+.body { display: flex; gap: 0; align-items: flex-start; }
+.gridWrap { flex: 1; min-width: 0; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+
+.dayHdr { text-align: center; font-size: 9px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; padding-bottom: 6px; }
+
+.day {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 5px 3px;
+  aspect-ratio: 4/3;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color 0.12s, background 0.12s;
+}
+.day:hover { border-color: rgba(255,255,255,0.14); }
+.dayEmpty { background: none; border-color: transparent; cursor: default; pointer-events: none; }
+.dayToday { border-color: var(--accent); }
+.daySelected { background: var(--accent-l); border-color: var(--accent); }
+
+.dayNum { font-size: 11px; font-weight: 500; color: var(--text2); line-height: 1; }
+.dayToday .dayNum { color: var(--accent); font-weight: 700; }
+
+.calBadge { font-size: 9px; font-weight: 500; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+.calBadgeMore { font-size: 9px; font-weight: 500; color: var(--text3); padding-left: 2px; line-height: 1.4; }
+
+/* Detail panel */
+.detail {
+  width: 220px;
+  flex-shrink: 0;
+  margin-left: 16px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  padding: 16px 18px;
+}
+
+.detailDate { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.detailEmpty { font-size: 12px; color: var(--text3); }
+.detailSection { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin: 12px 0 6px; }
+.detailSection:first-of-type { margin-top: 4px; }
+
+.taskRow { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.taskRow:last-child { border-bottom: none; }
+.taskDot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.taskTitle { font-size: 13px; color: var(--text); }
+.taskPerson { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+.badgeRow { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.badgePill { font-size: 9px; font-weight: 500; padding: 1px 4px; border-radius: 3px; line-height: 1.4; flex: 1; }
+.badgeDel { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
+.badgeDel:hover { color: var(--red); }
+
+.badgeForm { display: flex; flex-direction: column; gap: 8px; }
+.badgeInput { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 6px 10px; font-size: 12px; color: var(--text); font-family: inherit; outline: none; transition: border-color .12s; }
+.badgeInput:focus { border-color: var(--accent); }
+
+.swatches { display: flex; gap: 6px; }
+.swatch { width: 10px; height: 10px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .1s, border-color .1s; }
+.swatch:hover { transform: scale(1.15); }
+.swatch.selected { border-color: var(--text); }
