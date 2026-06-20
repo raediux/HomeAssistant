@@ -96,37 +96,37 @@ export default function Weather({ style }) {
   const cond = cur.weather[0].description.replace(/\b\w/g, c => c.toUpperCase());
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingLeft: 12, borderLeft: '1px solid rgba(255,255,255,0.09)', ...style }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 14, borderLeft: '1px solid rgba(255,255,255,0.09)', ...style }}>
       {/* Current */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <WxIcon size={20} style={{ color: wxColor(icon), flexShrink: 0 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-            <span style={{ fontSize: 18, fontWeight: 600, color: wxTempColor(temp), lineHeight: 1 }}>{temp}</span>
-            <span style={{ fontSize: 11, color: 'var(--text3)' }}>°</span>
-            <span style={{ fontSize: 11, color: 'var(--text2)' }}>{cond}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <WxIcon size={26} style={{ color: wxColor(icon), flexShrink: 0 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 22, fontWeight: 600, color: wxTempColor(temp), lineHeight: 1 }}>{temp}</span>
+            <span style={{ fontSize: 13, color: 'var(--text3)' }}>°</span>
+            <span style={{ fontSize: 12, color: 'var(--text2)' }}>{cond}</span>
           </div>
-          <div style={{ display: 'flex', gap: 8, fontSize: 10, color: 'var(--text3)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><IconThermometer size={10} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{Math.round(cur.main.feels_like)}</b>°</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><IconDroplet size={10} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{cur.main.humidity}</b>%</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><IconWind size={10} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{Math.round(cur.wind.speed * 3.6)}</b> km/h</span>
+          <div style={{ display: 'flex', gap: 10, fontSize: 11, color: 'var(--text3)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconThermometer size={13} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{Math.round(cur.main.feels_like)}</b>°</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconDroplet size={13} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{cur.main.humidity}</b>%</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconWind size={13} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{Math.round(cur.wind.speed * 3.6)}</b> km/h</span>
           </div>
         </div>
       </div>
 
       {/* Divider */}
-      <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', alignSelf: 'stretch', margin: '3px 0' }} />
+      <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', alignSelf: 'stretch', margin: '4px 0' }} />
 
       {/* Forecast strip */}
-      <div style={{ display: 'flex', gap: 14 }}>
+      <div style={{ display: 'flex', gap: 16 }}>
         {days.map(d => {
           const FcIcon = wxIcon(d.icon);
           return (
-            <div key={d.dt} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <span style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 500 }}>{DAY_NAMES[new Date(d.dt*1000).getDay()]}</span>
-              <FcIcon size={16} style={{ color: wxColor(d.icon) }} />
-              <div style={{ display: 'flex', gap: 4, fontSize: 11 }}>
-                <span style={{ color: '#a8854a', fontWeight: 500 }}>{d.hi}°</span>
+            <div key={d.dt} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <span style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>{DAY_NAMES[new Date(d.dt*1000).getDay()]}</span>
+              <FcIcon size={20} style={{ color: wxColor(d.icon) }} />
+              <div style={{ display: 'flex', gap: 5, fontSize: 12 }}>
+                <span style={{ color: '#c9913a', fontWeight: 500 }}>{d.hi}°</span>
                 <span style={{ color: '#5a87aa' }}>{d.lo}°</span>
               </div>
             </div>
