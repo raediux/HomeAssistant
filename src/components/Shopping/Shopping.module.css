@@ -84,7 +84,7 @@
   transition: border-color .12s, background .12s;
   user-select: none;
 }
-.sItem:hover { border-color: rgba(255,255,255,0.14); }
+@media (hover: hover) { .sItem:hover { border-color: rgba(255,255,255,0.14); } }
 .sItem.done { opacity: .35; }
 .sItem.dragOver { border-color: var(--accent); background: var(--accent-l); }
 .sItem.dragging { opacity: .4; border-style: dashed; }

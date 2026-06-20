@@ -272,8 +272,6 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
       transition={{ layout: { type: 'spring', stiffness: 500, damping: 35 }, duration: 0.22 }}
       className={`${s.sItem} ${item.got ? s.done : ''}`}
       onClick={onToggle}
-      whileHover={{ boxShadow: '0 6px 20px rgba(0,0,0,0.45)', y: -1 }}
-      transition={{ duration: 0.15 }}
     >
       <motion.div
         className={`${s.circle} ${item.got ? s.checked : ''}`}
