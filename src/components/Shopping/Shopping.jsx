@@ -272,6 +272,7 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
       transition={{ layout: { type: 'spring', stiffness: 500, damping: 35 }, duration: 0.22 }}
       className={`${s.sItem} ${item.got ? s.done : ''}`}
       onClick={onToggle}
+      onTouchEnd={e => { e.preventDefault(); onToggle(); }}
     >
       <motion.div
         className={`${s.circle} ${item.got ? s.checked : ''}`}
