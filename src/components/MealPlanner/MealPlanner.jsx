@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IconChevronLeft, IconChevronRight, IconPlus, IconX, IconArrowsSplit2, IconLink } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { dbLoadMeals, dbSaveMeal, dbDeleteMeal } from '../../db.js';
 import { cn, memberSlug } from '../../utils.js';
+import { useShoppingData } from '../../hooks/useShoppingData.js';
 import Shopping from '../Shopping/Shopping.jsx';
+import ShoppingWorkingPanel from '../Shopping/ShoppingWorkingPanel.jsx';
+import ShoppingPastPanel from '../Shopping/ShoppingPastPanel.jsx';
+import ShoppingModal from '../Shopping/ShoppingModal.jsx';
 import s from './MealPlanner.module.css';
 
 const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -52,6 +56,24 @@ export default function MealPlanner() {
     return ws;
   });
   const [modal, setModal] = useState(null); // { dateKey, person, slot, existing }
+  const [activeMobilePanel, setActiveMobilePanel] = useState(2);
+  const mobilePanelsRef = useRef(null);
+  const shopData = useShoppingData();
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const el = mobilePanelsRef.current;
+      if (el && el.clientWidth > 0) {
+        el.scrollLeft = el.clientWidth * 2;
+      }
+    });
+  }, []);
+
+  function handleMobileScroll() {
+    const el = mobilePanelsRef.current;
+    if (!el) return;
+    setActiveMobilePanel(Math.round(el.scrollLeft / el.clientWidth));
+  }
 
   useEffect(() => {
     dbLoadMeals().then(rows => {
@@ -220,6 +242,49 @@ export default function MealPlanner() {
         <Shopping embedded />
       </div>
 
+      {/* ── Mobile 4-panel view ── */}
+      <div className={s.mobileLayout}>
+        <div className={s.mTabs}>
+          {['Lunch','Dinner','This Week','All Items'].map((label, i) => (
+            <button
+              key={label}
+              className={`${s.mTab} ${activeMobilePanel === i ? s.mTabActive : ''}`}
+              onClick={() => {
+                mobilePanelsRef.current?.scrollTo({ left: mobilePanelsRef.current.clientWidth * i, behavior: 'smooth' });
+                setActiveMobilePanel(i);
+              }}
+            >{label}</button>
+          ))}
+        </div>
+        <div className={s.mPanels} ref={mobilePanelsRef} onScroll={handleMobileScroll}>
+          <div className={s.mPanel}>
+            <MobileMealPanel slot="lunch" meals={meals} members={members} weekStart={weekStart}
+              todayKey={todayKey} onOpen={openModal} onRemove={removeCell}
+              onPrev={prevWeek} onNext={nextWeek} weekLabelStr={weekLabel(weekStart)} />
+          </div>
+          <div className={s.mPanel}>
+            <MobileMealPanel slot="dinner" meals={meals} members={members} weekStart={weekStart}
+              todayKey={todayKey} onOpen={openModal} onRemove={removeCell}
+              onPrev={prevWeek} onNext={nextWeek} weekLabelStr={weekLabel(weekStart)} />
+          </div>
+          <div className={s.mPanel}>
+            <ShoppingWorkingPanel shopData={shopData} showAddBtn noWrapper />
+          </div>
+          <div className={s.mPanel}>
+            <ShoppingPastPanel shopData={shopData} noWrapper />
+          </div>
+        </div>
+        {shopData.modal && (
+          <ShoppingModal
+            editItem={shopData.modal.editItem}
+            defaultStore={shopData.modal.defaultStore}
+            pastItems={shopData.past}
+            onConfirm={shopData.handleModalConfirm}
+            onClose={() => shopData.setModal(null)}
+          />
+        )}
+      </div>
+
       {modal && (
         <MealModal
           existing={modal.existing}
@@ -228,6 +293,98 @@ export default function MealPlanner() {
         />
       )}
     </div>
+  );
+}
+
+function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, onRemove, onPrev, onNext, weekLabelStr }) {
+  const coupleMembers = (members || []).slice(0, COUPLE_SIZE);
+  const otherMembers  = (members || []).slice(COUPLE_SIZE);
+  return (
+    <>
+      <div className={s.mPanelHdr}>
+        <span className={s.mPanelTitle}>{slot.charAt(0).toUpperCase() + slot.slice(1)}</span>
+        <div className={s.mWeekNav}>
+          <button className={s.ib} onClick={onPrev}><IconChevronLeft size={14} /></button>
+          <span className={s.mWeekLabel}>{weekLabelStr}</span>
+          <button className={s.ib} onClick={onNext}><IconChevronRight size={14} /></button>
+        </div>
+      </div>
+      <div className={s.mMealList}>
+        {Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+          const dk = dateKey(d);
+          const dayData = meals[dk] || {};
+          const isToday = dk === todayKey;
+          const slotSplit = isSplit(dayData, slot, members || []);
+
+          return (
+            <div key={dk} className={cn(s.mDay, isToday && s.mDayToday)}>
+              <div className={s.mDayMeta}>
+                <span className={s.mDayName}>{DAY_NAMES[d.getDay()]}</span>
+                <span className={s.mDayDate}>{d.getDate()}</span>
+              </div>
+              <div className={s.mDaySlots}>
+                {slotSplit ? (
+                  coupleMembers.map((m, ci) => {
+                    const p = memberSlug(m.name);
+                    const meal = dayData[p]?.[slot];
+                    return (
+                      <div key={p} className={s.mSlot}>
+                        <span className={s.mName} style={{ color: MEMBER_COLORS[ci] }}>{m.name}</span>
+                        {meal ? (
+                          <div className={s.mMeal} onClick={() => onOpen(dk, p, slot)}>
+                            <span className={s.mMealText}>{meal}</span>
+                            <button className={s.mRm} onClick={e => { e.stopPropagation(); onRemove(dk, p, slot); }}>×</button>
+                          </div>
+                        ) : (
+                          <button className={s.mAdd} onClick={() => onOpen(dk, p, slot)}>+ Add</button>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className={s.mSlot}>
+                    <span className={s.mName}>
+                      <span style={{ color: MEMBER_COLORS[0] }}>{coupleMembers[0]?.name}</span>
+                      {' & '}
+                      <span style={{ color: MEMBER_COLORS[1] }}>{coupleMembers[1]?.name}</span>
+                    </span>
+                    {(() => {
+                      const meal = dayData['couple']?.[slot];
+                      return meal ? (
+                        <div className={s.mMeal} onClick={() => onOpen(dk, 'couple', slot)}>
+                          <span className={s.mMealText}>{meal}</span>
+                          <button className={s.mRm} onClick={e => { e.stopPropagation(); onRemove(dk, 'couple', slot); }}>×</button>
+                        </div>
+                      ) : (
+                        <button className={s.mAdd} onClick={() => onOpen(dk, 'couple', slot)}>+ Add</button>
+                      );
+                    })()}
+                  </div>
+                )}
+                {otherMembers.map((m, oi) => {
+                  const p = memberSlug(m.name);
+                  const meal = dayData[p]?.[slot];
+                  return (
+                    <div key={p} className={s.mSlot}>
+                      <span className={s.mName} style={{ color: MEMBER_COLORS[COUPLE_SIZE + oi] }}>{m.name}</span>
+                      {meal ? (
+                        <div className={s.mMeal} onClick={() => onOpen(dk, p, slot)}>
+                          <span className={s.mMealText}>{meal}</span>
+                          <button className={s.mRm} onClick={e => { e.stopPropagation(); onRemove(dk, p, slot); }}>×</button>
+                        </div>
+                      ) : (
+                        <button className={s.mAdd} onClick={() => onOpen(dk, p, slot)}>+ Add</button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
 

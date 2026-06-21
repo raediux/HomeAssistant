@@ -22,10 +22,11 @@ const ACCENTS = [
 
 export default function Tasks() {
   const { members } = useHousehold();
-  const [tasks, setTasks]           = useState([]);
-  const [modal, setModal]           = useState(null);  // { mode, person, frequency, task? }
-  const [activePerson, setActivePerson] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [modal, setModal] = useState(null);
+  const [activeDot, setActiveDot] = useState(0);
   const nextId = useRef(200);
+  const layoutRef = useRef(null);
 
   useEffect(() => {
     dbLoadTasks().then(data => {
@@ -34,9 +35,11 @@ export default function Tasks() {
     });
   }, []);
 
-  useEffect(() => {
-    if (members?.length && !activePerson) setActivePerson(memberSlug(members[0].name));
-  }, [members]);
+  function handleScroll() {
+    const el = layoutRef.current;
+    if (!el) return;
+    setActiveDot(Math.round(el.scrollLeft / el.clientWidth));
+  }
 
   function toggleDone(task) {
     let updated;
@@ -87,32 +90,25 @@ export default function Tasks() {
 
   return (
     <>
-      {/* Mobile person tabs */}
-      <div className={s.mobileTabs}>
-        {members.map(m => {
-          const slug = memberSlug(m.name);
-          return (
-            <button
-              key={slug}
-              className={`${s.mobileTab} ${activePerson === slug ? s.mobileTabActive : ''}`}
-              data-person={slug}
-              onClick={() => setActivePerson(slug)}
-            >{m.name}</button>
-          );
-        })}
+      <div className={s.dotBar}>
+        {members.map((m, i) => (
+          <div
+            key={m.name}
+            className={`${s.dot} ${i === activeDot ? s.dotActive : ''}`}
+            style={{ '--dot-col': ACCENTS[i % 4].col }}
+          />
+        ))}
       </div>
 
-      <div className={s.layout}>
+      <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
         {members.map((member, idx) => {
           const slug = memberSlug(member.name);
           const ci   = idx % 4;
-          const isActive = activePerson === slug;
-
-          const acc = ACCENTS[ci];
+          const acc  = ACCENTS[ci];
           return (
             <div
               key={slug}
-              className={`${s.glowWrap} ${isActive ? s.glowWrapActive : ''}`}
+              className={s.glowWrap}
               style={{ '--col': acc.col, '--col-glow': acc.glow, '--col-tint': acc.tint, '--col-shadow': acc.shadow }}
               data-person={slug}
             >
