@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { IconChevronLeft, IconChevronRight, IconPlus, IconX, IconArrowsSplit2, IconLink } from '@tabler/icons-react';
+
+const MODAL_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { dbLoadMeals, dbSaveMeal, dbDeleteMeal } from '../../db.js';
 import { cn, memberSlug } from '../../utils.js';
@@ -474,7 +477,7 @@ function MealModal({ existing, onConfirm, onClose }) {
 
   return (
     <div className="modal-overlay open" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box">
+      <motion.div className="modal-box" initial={{ scale: 0.88, y: 16, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.88, y: 16, opacity: 0 }} transition={MODAL_SPRING}>
         <div className="modal-hdr">
           <span>{existing ? 'Edit meal' : 'Add meal'}</span>
           <button className="modal-x" onClick={onClose}><IconX size={18} /></button>
@@ -494,7 +497,7 @@ function MealModal({ existing, onConfirm, onClose }) {
           <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" onClick={() => onConfirm(value)}>Save</button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

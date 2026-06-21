@@ -1,0 +1,64 @@
+import { useEffect, useRef } from 'react';
+
+export default function MemberParticles({ color }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+    let w = 0, h = 0;
+
+    const particles = Array.from({ length: 20 }, () => ({
+      x:      Math.random(),
+      y:      Math.random(),
+      vx:     (Math.random() - 0.5) * 0.00025,
+      vy:     (Math.random() - 0.5) * 0.00025,
+      r:      Math.random() * 1.8 + 0.8,
+      alpha:  Math.random() * 0.35 + 0.08,
+      dAlpha: (Math.random() - 0.5) * 0.0015,
+    }));
+
+    function resize() {
+      w = canvas.offsetWidth;
+      h = canvas.offsetHeight;
+      canvas.width  = w;
+      canvas.height = h;
+    }
+
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+    resize();
+
+    function tick() {
+      if (document.hidden) { animId = requestAnimationFrame(tick); return; }
+      ctx.clearRect(0, 0, w, h);
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha += p.dAlpha;
+        if (p.x < 0 || p.x > 1) p.vx *= -1;
+        if (p.y < 0 || p.y > 1) p.vy *= -1;
+        if (p.alpha < 0.05 || p.alpha > 0.45) p.dAlpha *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x * w, p.y * h, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.globalAlpha = p.alpha;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      animId = requestAnimationFrame(tick);
+    }
+
+    tick();
+    return () => { cancelAnimationFrame(animId); ro.disconnect(); };
+  }, [color]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, borderRadius: 'inherit' }}
+    />
+  );
+}

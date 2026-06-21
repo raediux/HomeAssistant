@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
 import s from './Tasks.module.css';
+
+const SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
 const DOW_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const FREQ_LABELS = { daily: 'Daily', weekly: 'Weekly', occasional: 'Occasional' };
@@ -37,7 +40,7 @@ export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
 
   return (
     <div className="modal-overlay open" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box">
+      <motion.div className="modal-box" initial={{ scale: 0.88, y: 16, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.88, y: 16, opacity: 0 }} transition={SPRING}>
         <div className="modal-hdr">
           <span>{heading}</span>
           <button className="modal-x" onClick={onClose}><IconX size={18} /></button>
@@ -90,7 +93,7 @@ export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
             {isAdd ? 'Add task' : 'Save'}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

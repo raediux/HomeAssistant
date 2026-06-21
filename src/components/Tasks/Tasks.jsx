@@ -9,6 +9,7 @@ import { memberSlug } from '../../utils.js';
 import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
 import TaskModal from './TaskModal.jsx';
 import Whiteboard from './Whiteboard.jsx';
+import MemberParticles from './MemberParticles.jsx';
 import s from './Tasks.module.css';
 
 const FREQUENCIES = ['daily', 'weekly', 'occasional'];
@@ -115,6 +116,7 @@ export default function Tasks() {
               style={{ '--col': acc.col, '--col-glow': acc.glow, '--col-tint': acc.tint, '--col-shadow': acc.shadow }}
               data-person={slug}
             >
+              <MemberParticles color={acc.col} />
               <div className={s.column}>
                 <div className={s.colName}>{member.name}</div>
                 <div className={s.colTasks}>
@@ -245,7 +247,8 @@ function TiltCard({ className, onClick, done, children }) {
       onMouseLeave={e => { setHovered(false); onMouseLeave(e); }}
       onClick={onClick}
       whileHover={{ scale: 1.02, boxShadow: '0 14px 40px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35)' }}
-      transition={{ scale: { type: 'spring', stiffness: 400, damping: 25 }, boxShadow: { duration: 0.15 } }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ scale: { type: 'spring', stiffness: 500, damping: 18 }, boxShadow: { duration: 0.15 } }}
     >
       {typeof children === 'function' ? children(hovered) : children}
     </motion.div>

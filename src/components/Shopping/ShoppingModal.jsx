@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
+
+const SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
 const STORES = ['Aldi','Asian Grocer','Big W','Butcher','Chemist Warehouse','Coles','Kmart','Korean Grocer','Pharmacy 4 Less','Ray Mum','Target','Woolworths','Others'];
 
@@ -73,7 +76,7 @@ export default function ShoppingModal({ editItem, defaultStore, pastItems, onCon
 
   return (
     <div className="modal-overlay open" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box">
+      <motion.div className="modal-box" initial={{ scale: 0.88, y: 16, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.88, y: 16, opacity: 0 }} transition={SPRING}>
         <div className="modal-hdr">
           <span>{isEdit ? 'Edit item' : 'Add item'}</span>
           <button className="modal-x" onClick={onClose}><IconX size={18} /></button>
@@ -122,7 +125,7 @@ export default function ShoppingModal({ editItem, defaultStore, pastItems, onCon
             {isEdit ? 'Save' : 'Add to list'}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
