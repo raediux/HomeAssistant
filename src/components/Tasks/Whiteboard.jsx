@@ -133,7 +133,7 @@ export default function Whiteboard() {
       <canvas
         ref={canvasRef}
         className={s.boardCanvas}
-        style={{ height: 220 }}
+        style={{ flex: 1, minHeight: 0 }}
         onMouseDown={startDraw}
         onMouseMove={draw}
         onMouseUp={endDraw}
