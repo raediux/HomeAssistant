@@ -7,7 +7,6 @@ import MealPlanner from '../MealPlanner/MealPlanner.jsx';
 import Calendar from '../Calendar/Calendar.jsx';
 import { UndoProvider } from '../../contexts/UndoContext.jsx';
 import ThreeBackground from '../shared/ThreeBackground.jsx';
-import CalendarGlobe from '../Calendar/CalendarGlobe.jsx';
 import s from './Dashboard.module.css';
 
 const TAB_ORDER = ['tasks', 'meals', 'calendar'];
@@ -32,7 +31,6 @@ export default function Dashboard() {
   return (
     <UndoProvider>
     <ThreeBackground />
-    {tab === 'calendar' && <CalendarGlobe />}
     <div className={s.app}>
       <Topbar />
       <TabBar activeTab={tab} onSwitch={handleSwitch} />
