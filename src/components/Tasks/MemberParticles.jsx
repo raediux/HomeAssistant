@@ -15,9 +15,9 @@ export default function MemberParticles({ color }) {
       y:      Math.random(),
       vx:     (Math.random() - 0.5) * 0.00025,
       vy:     (Math.random() - 0.5) * 0.00025,
-      r:      Math.random() * 0.9 + 0.4,
-      alpha:  Math.random() * 0.35 + 0.08,
-      dAlpha: (Math.random() - 0.5) * 0.0015,
+      r:      Math.random() * 1.2 + 0.6,
+      alpha:  Math.random() * 0.4 + 0.25,
+      dAlpha: (Math.random() - 0.5) * 0.002,
     }));
 
     const ro = new ResizeObserver(entries => {
@@ -37,7 +37,7 @@ export default function MemberParticles({ color }) {
         p.alpha += p.dAlpha;
         if (p.x < 0 || p.x > 1) p.vx *= -1;
         if (p.y < 0 || p.y > 1) p.vy *= -1;
-        if (p.alpha < 0.05 || p.alpha > 0.45) p.dAlpha *= -1;
+        if (p.alpha < 0.15 || p.alpha > 0.65) p.dAlpha *= -1;
         ctx.beginPath();
         ctx.arc(p.x * w, p.y * h, p.r, 0, Math.PI * 2);
         ctx.fillStyle = color;
