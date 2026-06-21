@@ -76,7 +76,7 @@ export default function CalendarGlobe() {
         position: 'absolute',
         inset: 0,
         pointerEvents: 'none',
-        zIndex: 0,
+        zIndex: -1,
         overflow: 'hidden',
       }}
     />
