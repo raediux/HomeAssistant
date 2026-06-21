@@ -16,6 +16,12 @@ export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
     setDow(modal.task?.dow ?? null);
   }, [modal]);
 
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose(); }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   if (!modal) return null;
 
   function handleConfirm() {
@@ -42,6 +48,7 @@ export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
           autoFocus
           className="modal-input"
           style={{ marginBottom: 12 }}
+          maxLength={200}
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleConfirm(); }}

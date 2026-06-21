@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useUndo } from '../contexts/UndoContext.jsx';
 import {
   dbLoadWorkingItems, dbLoadPastItems,
   dbSaveWorkingItem, dbDeleteWorkingItem,
@@ -8,6 +9,7 @@ import {
 export const STORES = ['Aldi','Asian Grocer','Big W','Butcher','Chemist Warehouse','Coles','Kmart','Korean Grocer','Pharmacy 4 Less','Ray Mum','Target','Woolworths','Others'];
 
 export function useShoppingData() {
+  const { scheduleDelete } = useUndo();
   const [working, setWorking]             = useState([]);
   const [past, setPast]                   = useState([]);
   const [collapsed, setCollapsed]         = useState({});
@@ -51,9 +53,9 @@ export function useShoppingData() {
     });
   }
 
-  function deleteWorkingItem(id) {
+  function deleteWorkingItem(id, name) {
     setWorking(prev => prev.filter(i => i.id !== id));
-    dbDeleteWorkingItem(id);
+    scheduleDelete(`"${name}" deleted`, () => dbDeleteWorkingItem(id));
   }
 
   function clearAll() {
@@ -86,9 +88,9 @@ export function useShoppingData() {
     dbSaveWorkingItem(newWorking);
   }
 
-  function deletePastItem(id) {
+  function deletePastItem(id, name) {
     setPast(prev => prev.filter(i => i.id !== id));
-    dbDeletePastItem(id);
+    scheduleDelete(`"${name}" deleted`, () => dbDeletePastItem(id));
   }
 
   function handleModalConfirm({ name, store }) {

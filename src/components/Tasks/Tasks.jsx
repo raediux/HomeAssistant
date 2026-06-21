@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useAnimation } from 'framer-motion';
 import { useTilt } from '../../hooks/useTilt.js';
 import { IconPlus, IconEdit, IconTrash, IconCheck, IconAlertCircle, IconClock, IconCalendar } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
+import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbLoadTasks, dbSaveTask, dbDeleteTask } from '../../db.js';
 import { memberSlug } from '../../utils.js';
 import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
@@ -23,6 +24,7 @@ const ACCENTS = [
 
 export default function Tasks() {
   const { members } = useHousehold();
+  const { scheduleDelete } = useUndo();
   const [tasks, setTasks] = useState([]);
   const [modal, setModal] = useState(null);
   const [activeDot, setActiveDot] = useState(0);
@@ -54,9 +56,9 @@ export default function Tasks() {
     dbSaveTask(updated);
   }
 
-  function deleteTask(id) {
+  function deleteTask(id, title) {
     setTasks(prev => prev.filter(t => t.id !== id));
-    dbDeleteTask(id);
+    scheduleDelete(`"${title}" deleted`, () => dbDeleteTask(id));
   }
 
   function openAdd(person, frequency) {
@@ -182,7 +184,7 @@ export default function Tasks() {
                                             <button className={s.ib} onClick={() => openEdit(task)} title="Edit">
                                               <IconEdit size={14} />
                                             </button>
-                                            <button className={`${s.ib} ${s.ibDel}`} onClick={() => deleteTask(task.id)} title="Delete">
+                                            <button className={`${s.ib} ${s.ibDel}`} onClick={() => deleteTask(task.id, task.title)} title="Delete">
                                               <IconTrash size={14} />
                                             </button>
                                           </motion.div>

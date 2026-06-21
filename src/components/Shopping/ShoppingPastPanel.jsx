@@ -31,7 +31,7 @@ export default function ShoppingPastPanel({ shopData, noWrapper }) {
             <PastItem key={item.id} item={item}
               onMove={() => moveToList(item.id)}
               onEdit={() => setModal({ editItem: { ...item, type: 'past' }, defaultStore: null })}
-              onDelete={() => deletePastItem(item.id)}
+              onDelete={() => deletePastItem(item.id, item.name)}
             />
           ))}
         </AnimatePresence>
@@ -53,7 +53,7 @@ export default function ShoppingPastPanel({ shopData, noWrapper }) {
                     <PastItem key={item.id} item={item}
                       onMove={() => moveToList(item.id)}
                       onEdit={() => setModal({ editItem: { ...item, type: 'past' }, defaultStore: null })}
-                      onDelete={() => deletePastItem(item.id)}
+                      onDelete={() => deletePastItem(item.id, item.name)}
                     />
                   ))}
                 </AnimatePresence>

@@ -466,6 +466,11 @@ function MealPersonRow({ person, name, color, isCouple, isFirst, isLast, dayData
 
 function MealModal({ existing, onConfirm, onClose }) {
   const [value, setValue] = useState(existing || '');
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape') onClose(); }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
     <div className="modal-overlay open" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -479,6 +484,7 @@ function MealModal({ existing, onConfirm, onClose }) {
           autoFocus
           className="modal-input"
           style={{ marginBottom: 4 }}
+          maxLength={200}
           value={value}
           onChange={e => setValue(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') onConfirm(value); }}

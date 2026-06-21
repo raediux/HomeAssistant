@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IconX } from '@tabler/icons-react';
 
 const STORES = ['Aldi','Asian Grocer','Big W','Butcher','Chemist Warehouse','Coles','Kmart','Korean Grocer','Pharmacy 4 Less','Ray Mum','Target','Woolworths','Others'];
 
 export default function ShoppingModal({ editItem, defaultStore, pastItems, onConfirm, onClose }) {
+  const inputRef = useRef(null);
   const [name, setName]   = useState('');
   const [store, setStore] = useState('Others');
   const [suggestions, setSuggestions] = useState([]);
@@ -43,7 +44,7 @@ export default function ShoppingModal({ editItem, defaultStore, pastItems, onCon
   }
 
   function handleKeyDown(e) {
-    if (e.key === 'Escape') { setSuggestions([]); return; }
+    if (e.key === 'Escape') { if (suggestions.length) setSuggestions([]); else onClose(); return; }
     if (!suggestions.length) { if (e.key === 'Enter') handleConfirm(); return; }
     if (e.key === 'ArrowDown') { e.preventDefault(); setSugIndex(i => Math.min(i + 1, suggestions.length - 1)); return; }
     if (e.key === 'ArrowUp')   { e.preventDefault(); setSugIndex(i => Math.max(i - 1, -1)); return; }
@@ -64,6 +65,10 @@ export default function ShoppingModal({ editItem, defaultStore, pastItems, onCon
     onConfirm({ name: n, store });
   }
 
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
   const re = name.trim() ? new RegExp(`(${name.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi') : null;
 
   return (
@@ -77,6 +82,7 @@ export default function ShoppingModal({ editItem, defaultStore, pastItems, onCon
         <label className="modal-lbl">Item name</label>
         <div style={{ position: 'relative', marginBottom: 12 }}>
           <input
+            ref={inputRef}
             autoFocus
             className="modal-input"
             value={name}
@@ -88,7 +94,8 @@ export default function ShoppingModal({ editItem, defaultStore, pastItems, onCon
           {suggestions.length > 0 && (
             <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 10, background: '#1e1e1c', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 'var(--r)', boxShadow: '0 8px 24px rgba(0,0,0,.5)', overflow: 'hidden' }}>
               {suggestions.map((item, i) => {
-                const highlighted = re ? item.name.replace(re, '<em style="font-style:normal;color:var(--accent)">$1</em>') : item.name;
+                const safe = escapeHtml(item.name);
+                const highlighted = re ? safe.replace(re, '<em style="font-style:normal;color:var(--accent)">$1</em>') : safe;
                 return (
                   <div
                     key={item.id}

@@ -5,6 +5,7 @@ import TabBar from '../TabBar/TabBar.jsx';
 import Tasks from '../Tasks/Tasks.jsx';
 import MealPlanner from '../MealPlanner/MealPlanner.jsx';
 import Calendar from '../Calendar/Calendar.jsx';
+import { UndoProvider } from '../../contexts/UndoContext.jsx';
 import s from './Dashboard.module.css';
 
 const TAB_ORDER = ['tasks', 'meals', 'calendar'];
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const dir = TAB_ORDER.indexOf(tab) - prevIdx.current;
 
   return (
+    <UndoProvider>
     <div className={s.app}>
       <Topbar />
       <TabBar activeTab={tab} onSwitch={handleSwitch} />
@@ -49,5 +51,6 @@ export default function Dashboard() {
         </AnimatePresence>
       </div>
     </div>
+    </UndoProvider>
   );
 }

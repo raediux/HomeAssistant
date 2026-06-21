@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
+import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbLoadBadges, dbSaveBadge, dbDeleteBadge, dbLoadTasks } from '../../db.js';
 import { cn, memberSlug } from '../../utils.js';
 import { isTaskDone } from '../Tasks/taskUtils.js';
@@ -22,6 +23,7 @@ function monDow(jsDay) { return (jsDay + 6) % 7; }
 
 export default function Calendar() {
   const { members } = useHousehold();
+  const { scheduleDelete } = useUndo();
   const now = new Date();
   const [year,  setYear]  = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -80,9 +82,9 @@ export default function Calendar() {
     if (newId) setBadges(prev => [...prev, { id: newId, date: dateStr, label: label.trim(), color }]);
   }
 
-  async function deleteBadge(id) {
-    await dbDeleteBadge(id);
+  function deleteBadge(id, label) {
     setBadges(prev => prev.filter(b => b.id !== id));
+    scheduleDelete(`"${label}" deleted`, () => dbDeleteBadge(id));
   }
 
   const todayStr = toDateStr(new Date());
@@ -196,7 +198,7 @@ function DetailPanel({ dateStr, tasks, badges, memberColor, memberLabel, onAddBa
           {badges.map(b => (
             <div key={b.id} className={s.badgeRow}>
               <div className={s.badgePill} style={{ background: b.color + '22', color: b.color }}>{b.label}</div>
-              <button className={s.badgeDel} onClick={() => onDeleteBadge(b.id)} title="Remove">×</button>
+              <button className={s.badgeDel} onClick={() => onDeleteBadge(b.id, b.label)} title="Remove">×</button>
             </div>
           ))}
         </>

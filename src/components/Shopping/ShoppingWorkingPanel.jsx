@@ -44,7 +44,7 @@ export default function ShoppingWorkingPanel({ shopData, showAddBtn, noWrapper }
                     key={item.id}
                     item={item}
                     onToggle={() => toggleGot(item.id)}
-                    onDelete={() => deleteWorkingItem(item.id)}
+                    onDelete={() => deleteWorkingItem(item.id, item.name)}
                     onEdit={() => setModal({ editItem: { id: item.id, type: 'working', name: item.name, store: item.store }, defaultStore: null })}
                     onArchive={() => moveToArchive(item.id)}
                   />
