@@ -15,7 +15,7 @@ export default function MemberParticles({ color }) {
       y:      Math.random(),
       vx:     (Math.random() - 0.5) * 0.00025,
       vy:     (Math.random() - 0.5) * 0.00025,
-      r:      Math.random() * 1.8 + 0.8,
+      r:      Math.random() * 0.9 + 0.4,
       alpha:  Math.random() * 0.35 + 0.08,
       dAlpha: (Math.random() - 0.5) * 0.0015,
     }));
