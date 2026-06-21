@@ -9,10 +9,10 @@ export default function MemberParticles({ color }) {
     const ctx = canvas.getContext('2d');
     let animId;
 
-    // Seed dimensions synchronously so tick() has correct w/h from frame 1
-    const rect = canvas.getBoundingClientRect();
-    let w = rect.width  || canvas.offsetWidth;
-    let h = rect.height || canvas.offsetHeight;
+    const parent = canvas.parentElement;
+    const rect = parent.getBoundingClientRect();
+    let w = rect.width;
+    let h = rect.height;
     canvas.width  = w;
     canvas.height = h;
 
@@ -32,7 +32,7 @@ export default function MemberParticles({ color }) {
       canvas.width  = w;
       canvas.height = h;
     });
-    ro.observe(canvas);
+    ro.observe(parent);
 
     function tick() {
       if (document.hidden || w === 0 || h === 0) { animId = requestAnimationFrame(tick); return; }
