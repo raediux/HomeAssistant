@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { IconEraser } from '@tabler/icons-react';
 import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import s from './Tasks.module.css';
 
@@ -124,7 +125,7 @@ export default function Whiteboard() {
           onClick={() => setEraser(e => !e)}
           title="Eraser"
         >
-          <i className="ti ti-eraser" aria-hidden="true" style={{ fontSize: 14 }} />
+          <IconEraser size={14} />
         </button>
         <span className={s.boardSep} />
         <button className={s.clearBtn} onClick={clearCanvas}>Clear</button>
