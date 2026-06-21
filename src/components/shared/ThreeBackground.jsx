@@ -73,22 +73,22 @@ const FRAG = `
 
   void main() {
     vec2 uv = vUv;
-    float t = time * 0.08;
+    float t = time * 0.06;
 
-    // Domain warp — offset UV by noise before sampling colour fields
+    // Gentle domain warp for organic flow without blotchiness
     vec2 q = vec2(
-      snoise(vec3(uv * 1.8, t)),
-      snoise(vec3(uv * 1.8 + vec2(5.2, 1.3), t))
+      snoise(vec3(uv * 1.1, t)),
+      snoise(vec3(uv * 1.1 + vec2(5.2, 1.3), t))
     );
-    vec2 w = uv + 0.35 * q;
+    vec2 w = uv + 0.15 * q;
 
-    float nA = snoise(vec3(w * 1.4,       t + 0.0)) * 0.5 + 0.5;
-    float nB = snoise(vec3(w * 1.1 + 3.4, t + 0.7)) * 0.5 + 0.5;
-    float nC = snoise(vec3(w * 1.6 - 1.7, t + 1.4)) * 0.5 + 0.5;
+    float nA = snoise(vec3(w * 0.9,       t + 0.0)) * 0.5 + 0.5;
+    float nB = snoise(vec3(w * 0.8 + 3.4, t + 0.7)) * 0.5 + 0.5;
+    float nC = snoise(vec3(w * 1.0 - 1.7, t + 1.4)) * 0.5 + 0.5;
 
-    float mA = smoothstep(0.3, 0.85, nA * (1.0 - uv.y * 0.5));
-    float mB = smoothstep(0.3, 0.85, nB * uv.y * 1.2);
-    float mC = smoothstep(0.35, 0.80, nC * 0.9);
+    float mA = smoothstep(0.1, 0.75, nA * (1.0 - uv.y * 0.4));
+    float mB = smoothstep(0.1, 0.75, nB * uv.y * 1.1);
+    float mC = smoothstep(0.15, 0.70, nC * 0.95);
 
     vec3 col = cBg;
     col += cA * mA * 0.10;
