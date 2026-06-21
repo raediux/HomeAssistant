@@ -8,16 +8,22 @@ export default function MemberParticles({ color }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animId;
-    let w = 0, h = 0;
+
+    // Seed dimensions synchronously so tick() has correct w/h from frame 1
+    const rect = canvas.getBoundingClientRect();
+    let w = rect.width  || canvas.offsetWidth;
+    let h = rect.height || canvas.offsetHeight;
+    canvas.width  = w;
+    canvas.height = h;
 
     const particles = Array.from({ length: 20 }, () => ({
       x:      Math.random(),
       y:      Math.random(),
       vx:     (Math.random() - 0.5) * 0.00025,
       vy:     (Math.random() - 0.5) * 0.00025,
-      r:      Math.random() * 1.2 + 0.6,
-      alpha:  Math.random() * 0.4 + 0.25,
-      dAlpha: (Math.random() - 0.5) * 0.002,
+      r:      Math.random() * 0.9 + 0.4,
+      alpha:  Math.random() * 0.35 + 0.08,
+      dAlpha: (Math.random() - 0.5) * 0.0015,
     }));
 
     const ro = new ResizeObserver(entries => {
@@ -29,7 +35,7 @@ export default function MemberParticles({ color }) {
     ro.observe(canvas);
 
     function tick() {
-      if (document.hidden) { animId = requestAnimationFrame(tick); return; }
+      if (document.hidden || w === 0 || h === 0) { animId = requestAnimationFrame(tick); return; }
       ctx.clearRect(0, 0, w, h);
       for (const p of particles) {
         p.x += p.vx;
@@ -37,7 +43,7 @@ export default function MemberParticles({ color }) {
         p.alpha += p.dAlpha;
         if (p.x < 0 || p.x > 1) p.vx *= -1;
         if (p.y < 0 || p.y > 1) p.vy *= -1;
-        if (p.alpha < 0.15 || p.alpha > 0.65) p.dAlpha *= -1;
+        if (p.alpha < 0.05 || p.alpha > 0.45) p.dAlpha *= -1;
         ctx.beginPath();
         ctx.arc(p.x * w, p.y * h, p.r, 0, Math.PI * 2);
         ctx.fillStyle = color;
@@ -55,7 +61,7 @@ export default function MemberParticles({ color }) {
   return (
     <canvas
       ref={canvasRef}
-      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0, borderRadius: 'inherit' }}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: -1, borderRadius: 'inherit' }}
     />
   );
 }
