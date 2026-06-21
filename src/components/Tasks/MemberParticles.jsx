@@ -20,16 +20,13 @@ export default function MemberParticles({ color }) {
       dAlpha: (Math.random() - 0.5) * 0.0015,
     }));
 
-    function resize() {
-      w = canvas.offsetWidth;
-      h = canvas.offsetHeight;
+    const ro = new ResizeObserver(entries => {
+      const r = entries[0].contentRect;
+      w = r.width; h = r.height;
       canvas.width  = w;
       canvas.height = h;
-    }
-
-    const ro = new ResizeObserver(resize);
+    });
     ro.observe(canvas);
-    resize();
 
     function tick() {
       if (document.hidden) { animId = requestAnimationFrame(tick); return; }

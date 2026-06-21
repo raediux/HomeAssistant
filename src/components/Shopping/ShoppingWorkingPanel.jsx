@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion, useAnimation } from 'framer-motion';
 import { IconCheck, IconPencil, IconArrowBackUp, IconPlus, IconChevronDown, IconTrash } from '@tabler/icons-react';
-import { useMagnet } from '../../hooks/useMagnet.js';
 import { STORES } from '../../hooks/useShoppingData.js';
 import s from './Shopping.module.css';
 
@@ -65,7 +64,7 @@ export default function ShoppingWorkingPanel({ shopData, showAddBtn, noWrapper }
 function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
   const controls = useAnimation();
   const firstRender = useRef(true);
-  const { ref, x, y, onMouseMove, onMouseLeave } = useMagnet(0.14, 60);
+
 
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return; }
@@ -82,12 +81,8 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
       initial={{ opacity: 0, x: -12 }}
       exit={{ opacity: 0, x: -16, height: 0, marginBottom: 0 }}
       transition={{ layout: { type: 'spring', stiffness: 500, damping: 35 }, duration: 0.22 }}
-      ref={ref}
       className={`${s.sItem} ${item.got ? s.done : ''}`}
-      style={{ x, y }}
       onClick={onToggle}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
       onTouchEnd={e => { e.preventDefault(); onToggle(); }}
     >
       <motion.div
