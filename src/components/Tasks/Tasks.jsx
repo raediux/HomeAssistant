@@ -7,6 +7,7 @@ import { dbLoadTasks, dbSaveTask, dbDeleteTask } from '../../db.js';
 import { memberSlug } from '../../utils.js';
 import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
 import TaskModal from './TaskModal.jsx';
+import Whiteboard from './Whiteboard.jsx';
 import s from './Tasks.module.css';
 
 const FREQUENCIES = ['daily', 'weekly', 'occasional'];
@@ -89,7 +90,7 @@ export default function Tasks() {
   if (!members?.length) return null;
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <div className={s.dotBar}>
         {members.map((m, i) => (
           <div
@@ -204,6 +205,8 @@ export default function Tasks() {
         })}
       </div>
 
+      <Whiteboard />
+
       {modal && (
         <TaskModal
           modal={modal}
@@ -212,7 +215,7 @@ export default function Tasks() {
           onClose={() => setModal(null)}
         />
       )}
-    </>
+    </div>
   );
 }
 

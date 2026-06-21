@@ -107,7 +107,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 246px;
+  min-height: 150px;
 }
 
 .boxHdr {
@@ -206,6 +206,83 @@
 .ibDel:hover { background: var(--red-l); color: var(--red); }
 
 .empty { color: var(--text3); font-size: 12px; padding: 8px 0; }
+
+/* Whiteboard */
+.boardWrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 12px 0 0;
+}
+
+.boardBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px 10px;
+  flex-wrap: wrap;
+}
+
+.boardTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text3);
+  margin-right: 4px;
+}
+
+.colorBtn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color .12s, transform .12s;
+}
+.colorBtn:hover { transform: scale(1.15); }
+.colorBtnActive { border-color: rgba(255,255,255,0.6) !important; }
+
+.sizeBtn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  color: var(--text2);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 3px 8px;
+  transition: background .12s, color .12s;
+}
+.sizeBtn:hover { background: rgba(255,255,255,0.12); }
+.sizeBtnActive { background: rgba(255,255,255,0.14); color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+.boardSep { flex: 1; }
+
+.eraserBtn, .clearBtn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  color: var(--text2);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 3px 10px;
+  transition: background .12s, color .12s;
+}
+.eraserBtn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.eraserBtnActive { background: rgba(74,143,212,0.18); color: var(--accent); border-color: rgba(74,143,212,0.3); }
+.clearBtn:hover { background: var(--red-l); color: var(--red); }
+
+.boardCanvas {
+  display: block;
+  width: 100%;
+  border-radius: var(--r);
+  cursor: crosshair;
+  touch-action: none;
+}
 
 /* Mobile */
 .dotBar { display: none; }

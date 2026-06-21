@@ -160,3 +160,19 @@ export async function dbDeleteMeal(date, person, slot) {
     .delete().eq('date', date).eq('person', person).eq('slot', slot);
   if (error) console.error('dbDeleteMeal:', error);
 }
+
+export async function dbLoadWhiteboard() {
+  const hid = await getMyHouseholdId();
+  const { data, error } = await db.from('whiteboard').select('data').eq('household_id', hid).maybeSingle();
+  if (error) { console.error('dbLoadWhiteboard:', error); return null; }
+  return data?.data ?? null;
+}
+
+export async function dbSaveWhiteboard(dataUrl) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('whiteboard').upsert(
+    { household_id: hid, data: dataUrl, updated_at: new Date().toISOString() },
+    { onConflict: 'household_id' }
+  );
+  if (error) console.error('dbSaveWhiteboard:', error);
+}
