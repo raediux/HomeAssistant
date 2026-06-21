@@ -241,7 +241,7 @@ function TiltCard({ className, onClick, done, children }) {
     <motion.div
       ref={ref}
       className={className}
-      style={{ rotateX, rotateY, transformPerspective: 800 }}
+      style={{ rotateX, rotateY, transformPerspective: 800, transformStyle: 'preserve-3d' }}
       animate={controls}
       onMouseMove={e => { setHovered(true); onMouseMove(e); }}
       onMouseLeave={e => { setHovered(false); onMouseLeave(e); }}
@@ -251,6 +251,14 @@ function TiltCard({ className, onClick, done, children }) {
       transition={{ scale: { type: 'spring', stiffness: 500, damping: 18 }, boxShadow: { duration: 0.15 } }}
     >
       {typeof children === 'function' ? children(hovered) : children}
+      {/* depth face — visible on tilt */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        borderRadius: 'inherit',
+        background: 'rgba(0,0,0,0.55)',
+        transform: 'translateZ(-6px)',
+        pointerEvents: 'none',
+      }} />
     </motion.div>
   );
 }
