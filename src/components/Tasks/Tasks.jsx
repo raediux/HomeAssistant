@@ -100,8 +100,7 @@ export default function Tasks() {
         ))}
       </div>
 
-      <div className={s.layout}>
-      <div className={s.mobileScroll} ref={layoutRef} onScroll={handleScroll}>
+      <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
         {members.map((member, idx) => {
           const slug = memberSlug(member.name);
           const ci   = idx % 4;
@@ -203,7 +202,6 @@ export default function Tasks() {
             </div>
           );
         })}
-      </div>
       </div>
 
       {modal && (

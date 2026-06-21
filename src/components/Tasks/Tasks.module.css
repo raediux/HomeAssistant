@@ -216,25 +216,24 @@
 }
 .dotActive { background: var(--dot-col, var(--accent)); transform: scale(1.3); }
 
-.mobileScroll { display: none; }
-
 @media (max-width: 600px) {
-  .layout { display: none; }
-
-  .mobileScroll {
-    display: flex;
-    flex: 1;
-    min-height: 0;
+  .layout {
+    overflow: hidden;
     overflow-x: scroll;
     scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    gap: 0;
+    padding: 0;
+    align-items: stretch;
   }
-  .mobileScroll::-webkit-scrollbar { display: none; }
+  .layout::-webkit-scrollbar { display: none; }
 
   .glowWrap {
     flex: 0 0 100%;
+    min-width: 0;
     scroll-snap-align: start;
-    min-height: 0;
+    scroll-snap-stop: always;
   }
 
   .dotBar {
