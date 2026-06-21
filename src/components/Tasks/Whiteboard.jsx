@@ -3,7 +3,7 @@ import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import s from './Tasks.module.css';
 
 const COLORS = ['#e8eaf0', '#4a8fd4', '#c46090', '#c9a838', '#64c882', '#e05555'];
-const SIZES  = [{ label: 'S', px: 3 }, { label: 'M', px: 7 }, { label: 'L', px: 14 }];
+const SIZES  = [{ stroke: 2, px: 3 }, { stroke: 4, px: 7 }, { stroke: 7, px: 14 }];
 const BG     = '#16161a';
 
 export default function Whiteboard() {
@@ -109,10 +109,15 @@ export default function Whiteboard() {
         <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
         {SIZES.map((sz, i) => (
           <button
-            key={sz.label}
+            key={i}
             className={`${s.sizeBtn} ${size === i ? s.sizeBtnActive : ''}`}
             onClick={() => setSize(i)}
-          >{sz.label}</button>
+            title={['Thin','Medium','Thick'][i]}
+          >
+            <svg width="20" height="14" viewBox="0 0 20 14" style={{ display: 'block' }}>
+              <line x1="3" y1="7" x2="17" y2="7" stroke="currentColor" strokeWidth={sz.stroke} strokeLinecap="round" />
+            </svg>
+          </button>
         ))}
         <span className={s.boardSep} />
         <button
