@@ -3,7 +3,7 @@ import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import s from './Tasks.module.css';
 
 const COLORS = ['#e8eaf0', '#4a8fd4', '#c46090', '#c9a838', '#64c882', '#e05555'];
-const SIZES  = [{ stroke: 2, px: 3 }, { stroke: 4, px: 7 }, { stroke: 7, px: 14 }];
+const SIZES  = [{ stroke: 1, px: 1.5 }, { stroke: 2, px: 3 }, { stroke: 4, px: 6 }];
 const BG     = '#16161a';
 
 export default function Whiteboard() {
@@ -11,7 +11,7 @@ export default function Whiteboard() {
   const drawing     = useRef(false);
   const saveTimer   = useRef(null);
   const [color, setColor]   = useState(COLORS[0]);
-  const [size, setSize]     = useState(1);
+  const [size, setSize]     = useState(0);
   const [eraser, setEraser] = useState(false);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function Whiteboard() {
     ctx.lineCap     = 'round';
     ctx.lineJoin    = 'round';
     ctx.strokeStyle = eraser ? BG : color;
-    if (eraser) ctx.lineWidth = SIZES[size].px * 4;
+    if (eraser) ctx.lineWidth = SIZES[size].px * 6;
     ctx.lineTo(x, y);
     ctx.stroke();
     ctx.beginPath();
