@@ -19,7 +19,7 @@ export default function TabBar({ activeTab, onSwitch }) {
           {t.label}
         </button>
       ))}
-      <span className={s.version}>v{APP_VERSION}</span>
+      <span className={s.version} onClick={() => window.location.reload(true)}>v{APP_VERSION}</span>
     </div>
   );
 }
