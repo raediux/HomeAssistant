@@ -1,0 +1,18 @@
+{
+  "name": "Home Assistant",
+  "short_name": "Home",
+  "description": "Household dashboard",
+  "start_url": "/HomeAssistant/",
+  "scope": "/HomeAssistant/",
+  "display": "standalone",
+  "background_color": "#0d0d0f",
+  "theme_color": "#0d0d0f",
+  "icons": [
+    {
+      "src": "/HomeAssistant/tos.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
