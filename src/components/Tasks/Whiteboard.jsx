@@ -119,11 +119,14 @@ export default function Whiteboard() {
             </svg>
           </button>
         ))}
-        <span className={s.boardSep} />
         <button
           className={`${s.eraserBtn} ${eraser ? s.eraserBtnActive : ''}`}
           onClick={() => setEraser(e => !e)}
-        >Eraser</button>
+          title="Eraser"
+        >
+          <i className="ti ti-eraser" aria-hidden="true" style={{ fontSize: 14 }} />
+        </button>
+        <span className={s.boardSep} />
         <button className={s.clearBtn} onClick={clearCanvas}>Clear</button>
       </div>
       <canvas
