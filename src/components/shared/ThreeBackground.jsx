@@ -75,41 +75,6 @@ export default function ThreeBackground() {
     aurora.position.z = -3;
     scene.add(aurora);
 
-    // ── Floating shapes ───────────────────────────────────────────
-    const geos = [
-      new THREE.IcosahedronGeometry(0.38, 0),
-      new THREE.TorusGeometry(0.28, 0.10, 8, 18),
-      new THREE.OctahedronGeometry(0.38, 0),
-      new THREE.IcosahedronGeometry(0.22, 0),
-      new THREE.TorusGeometry(0.18, 0.07, 6, 14),
-      new THREE.TetrahedronGeometry(0.32, 0),
-    ];
-
-    const shapes = Array.from({ length: 16 }, (_, i) => {
-      const geo = geos[i % geos.length];
-      const col = COLORS[i % COLORS.length];
-      const mat = new THREE.MeshBasicMaterial({
-        color: col, wireframe: true,
-        transparent: true,
-        opacity: 0.10 + Math.random() * 0.12,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(
-        (Math.random() - 0.5) * 14,
-        (Math.random() - 0.5) * 9,
-        (Math.random() - 0.5) * 2.5 - 0.5,
-      );
-      mesh.rotation.set(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, 0);
-      scene.add(mesh);
-      return {
-        mesh,
-        rx: (Math.random() - 0.5) * 0.004,
-        ry: (Math.random() - 0.5) * 0.005,
-        floatAmp:    0.006 + Math.random() * 0.006,
-        floatSpeed:  0.3   + Math.random() * 0.3,
-        floatOffset: Math.random() * Math.PI * 2,
-      };
-    });
 
     // ── Mouse parallax ────────────────────────────────────────────
     const mouse = { x: 0, y: 0 };
@@ -141,12 +106,6 @@ export default function ThreeBackground() {
 
       camera.position.x += (mouse.x * 0.4 - camera.position.x) * 0.025;
       camera.position.y += (mouse.y * 0.25 - camera.position.y) * 0.025;
-
-      shapes.forEach(s => {
-        s.mesh.rotation.x += s.rx;
-        s.mesh.rotation.y += s.ry;
-        s.mesh.position.y += Math.sin(t * s.floatSpeed + s.floatOffset) * s.floatAmp * 0.01;
-      });
 
       renderer.render(scene, camera);
     }
