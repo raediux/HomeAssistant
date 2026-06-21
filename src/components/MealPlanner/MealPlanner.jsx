@@ -11,7 +11,6 @@ import Shopping from '../Shopping/Shopping.jsx';
 import ShoppingWorkingPanel from '../Shopping/ShoppingWorkingPanel.jsx';
 import ShoppingPastPanel from '../Shopping/ShoppingPastPanel.jsx';
 import ShoppingModal from '../Shopping/ShoppingModal.jsx';
-import MealPlannerParticles from './MealPlannerParticles.jsx';
 import s from './MealPlanner.module.css';
 
 const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -177,8 +176,7 @@ export default function MealPlanner() {
     <div className={s.layout}>
 
       {/* ── Left: Meal Grid ── */}
-      <div className={s.colPlanner} style={{ position: 'relative' }}>
-        <MealPlannerParticles />
+      <div className={s.colPlanner}>
         <div className={s.secHdr}>
           <div className={s.weekNav}>
             <button className={s.ib} onClick={prevWeek}><IconChevronLeft size={16} /></button>
