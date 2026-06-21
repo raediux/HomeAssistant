@@ -79,7 +79,7 @@ function PastItem({ item, onMove, onEdit, onDelete }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -16, height: 0, marginBottom: 0 }}
       transition={{ layout: { type: 'spring', stiffness: 500, damping: 35 }, duration: 0.22 }}
-      style={{ rotateX, rotateY, transformPerspective: 600 }}
+      style={{ rotateX, rotateY, transformPerspective: 600, transformStyle: 'preserve-3d' }}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       className={s.pItem}
@@ -91,6 +91,7 @@ function PastItem({ item, onMove, onEdit, onDelete }) {
         <button className={`${s.moveBtn} ${s.del}`} title="Delete" onClick={onDelete}><IconTrash size={12} /></button>
         <button className={`${s.moveBtn} ${s.edt}`} title="Edit" onClick={onEdit}><IconPencil size={12} /></button>
       </div>
+      <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'rgba(0,0,0,0.55)', transform: 'translateZ(-6px)', pointerEvents: 'none' }} />
     </motion.div>
   );
 }

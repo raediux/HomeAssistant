@@ -82,6 +82,7 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
       exit={{ opacity: 0, x: -16, height: 0, marginBottom: 0 }}
       transition={{ layout: { type: 'spring', stiffness: 500, damping: 35 }, duration: 0.22 }}
       className={`${s.sItem} ${item.got ? s.done : ''}`}
+      style={{ transformStyle: 'preserve-3d', transformPerspective: 800 }}
       onClick={onToggle}
       onTouchEnd={e => { e.preventDefault(); onToggle(); }}
     >
@@ -100,6 +101,7 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
         <button className={`${s.moveBtn} ${s.edt}`} title="Edit" onClick={onEdit}><IconPencil size={12} /></button>
         <button className={`${s.moveBtn} ${s.rem}`} title="Move back to All Items" onClick={onArchive}><IconArrowBackUp size={12} /></button>
       </div>
+      <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'rgba(0,0,0,0.55)', transform: 'translateZ(-6px)', pointerEvents: 'none' }} />
     </motion.div>
   );
 }
