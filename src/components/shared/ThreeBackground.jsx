@@ -13,6 +13,7 @@ const VERT = `
 `;
 
 const FRAG = `
+  precision highp float;
   uniform float time;
   uniform vec3 cA;
   uniform vec3 cB;
@@ -37,6 +38,10 @@ const FRAG = `
     col += cA * mA * 0.09;
     col += cB * mB * 0.07;
     col += cC * mC * 0.05;
+
+    // Dither to break up 8-bit banding
+    float noise = hash(uv * 1000.0 + time * 3.7) - 0.5;
+    col += noise / 255.0;
 
     gl_FragColor = vec4(col, 1.0);
   }
