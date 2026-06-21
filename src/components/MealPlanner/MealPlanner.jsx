@@ -169,6 +169,7 @@ export default function MealPlanner() {
   if (!members?.length) return null;
 
   return (
+    <>
     <div className={s.layout}>
 
       {/* ── Left: Meal Grid ── */}
@@ -242,6 +243,8 @@ export default function MealPlanner() {
         <Shopping embedded />
       </div>
 
+    </div>
+
       {/* ── Mobile 4-panel view ── */}
       <div className={s.mobileLayout}>
         <div className={s.mTabs}>
@@ -292,7 +295,7 @@ export default function MealPlanner() {
           onClose={() => setModal(null)}
         />
       )}
-    </div>
+    </>
   );
 }
 

@@ -223,6 +223,7 @@
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     padding: 10px 0;
+    gap: 0;
   }
   .layout::-webkit-scrollbar { display: none; }
   .glowWrap {
