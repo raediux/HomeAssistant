@@ -73,7 +73,7 @@ export default function CalendarGlobe() {
     <div
       ref={mountRef}
       style={{
-        position: 'absolute',
+        position: 'fixed',
         inset: 0,
         pointerEvents: 'none',
         zIndex: -1,

@@ -5,7 +5,6 @@ import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbLoadBadges, dbSaveBadge, dbDeleteBadge, dbLoadTasks } from '../../db.js';
 import { cn, memberSlug } from '../../utils.js';
 import { isTaskDone } from '../Tasks/taskUtils.js';
-import CalendarGlobe from './CalendarGlobe.jsx';
 import s from './Calendar.module.css';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -94,8 +93,7 @@ export default function Calendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   return (
-    <div className={s.container} style={{ position: 'relative' }}>
-      <CalendarGlobe />
+    <div className={s.container}>
       <div className={s.nav}>
         <button className={s.ib} onClick={prevMonth}><IconChevronLeft size={16} /></button>
         <span className={s.monthLabel}>{MONTH_NAMES[month]} {year}</span>
