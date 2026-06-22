@@ -106,7 +106,7 @@ export default function Tasks() {
       </div>
 
       <div className={s.sceneWrap}>
-        <TaskScene count={members.length} accents={ACCENTS} />
+        <TaskScene count={members.length} />
         <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
         {members.map((member, idx) => {
           const slug = memberSlug(member.name);

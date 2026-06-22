@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-export default function TaskScene({ count, accents }) {
+export default function TaskScene({ count }) {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function TaskScene({ count, accents }) {
       const startX = -totalW / 2 + panelW / 2;
 
       for (let i = 0; i < count; i++) {
-        const color = new THREE.Color(accents[i % accents.length].col);
+        const color = new THREE.Color(0xffffff);
         const shape = roundedRect(panelW, panelH, 0.09);
 
         const geo = new THREE.ExtrudeGeometry(shape, {
@@ -82,7 +82,7 @@ export default function TaskScene({ count, accents }) {
         scene.add(mesh);
         panels.push(mesh);
 
-        const pl = new THREE.PointLight(color, 0.9, 6);
+        const pl = new THREE.PointLight(0xffffff, 0.4, 6);
         pl.position.set(mesh.position.x, 1.5, 2.5);
         scene.add(pl);
         pointLights.push(pl);
