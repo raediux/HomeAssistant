@@ -1,9 +1,3 @@
-.sceneWrap {
-  position: relative;
-  flex: 0 0 auto;
-  min-height: 0;
-}
-
 .layout {
   display: flex;
   flex-direction: row;
@@ -13,8 +7,6 @@
   padding: 10px 0;
   overflow-x: auto;
   overflow-y: visible;
-  position: relative;
-  z-index: 1;
 }
 
 .glowWrap {
@@ -59,10 +51,12 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border: 1px solid rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.07);
   border-top: 4px solid var(--col);
   border-radius: var(--r);
-  background: transparent;
+  background: linear-gradient(170deg, var(--col-tint) 0%, rgba(255,255,255,0.02) 40%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 28px var(--col-shadow);
   overflow: hidden;
 }
@@ -110,9 +104,8 @@
 .box {
   flex: 1;
   padding: 14px 16px;
-  background: rgba(13,13,15,0.22);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(13,13,15,0.45);
+  backdrop-filter: blur(6px);
   display: flex;
   flex-direction: column;
   min-width: 0;

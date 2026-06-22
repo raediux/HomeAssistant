@@ -10,7 +10,6 @@ import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
 import TaskModal from './TaskModal.jsx';
 import Whiteboard from './Whiteboard.jsx';
 import MemberParticles from './MemberParticles.jsx';
-import TaskScene from './TaskScene.jsx';
 import s from './Tasks.module.css';
 
 const FREQUENCIES = ['daily', 'weekly', 'occasional'];
@@ -105,9 +104,7 @@ export default function Tasks() {
         ))}
       </div>
 
-      <div className={s.sceneWrap}>
-        <TaskScene count={members.length} />
-        <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
+      <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
         {members.map((member, idx) => {
           const slug = memberSlug(member.name);
           const ci   = idx % 4;
@@ -210,7 +207,6 @@ export default function Tasks() {
             </div>
           );
         })}
-        </div>
       </div>
 
       <Whiteboard />
