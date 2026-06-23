@@ -79,7 +79,7 @@ export default function Topbar() {
         href="https://mail.google.com"
         target="_blank"
         rel="noopener noreferrer"
-        style={{ color: 'var(--text2)', display: 'flex', alignItems: 'center', padding: '6px', borderRadius: '8px', transition: 'color .15s, background .15s', textDecoration: 'none' }}
+        style={{ color: 'var(--text2)', display: 'flex', alignItems: 'center', padding: '6px', borderRadius: '8px', transition: 'color .15s, background .15s', textDecoration: 'none', marginLeft: 'auto' }}
         onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.background = 'var(--surface2)'; }}
         onMouseLeave={e => { e.currentTarget.style.color = 'var(--text2)'; e.currentTarget.style.background = 'transparent'; }}
       >

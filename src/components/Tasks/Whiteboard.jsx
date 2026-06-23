@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { IconEraser } from '@tabler/icons-react';
 import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
+import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import s from './Tasks.module.css';
 
 const COLORS = ['#e8eaf0', '#4a8fd4', '#c46090', '#c9a838', '#64c882', '#e05555'];
@@ -8,6 +9,12 @@ const SIZES  = [{ stroke: 1, px: 1.5 }, { stroke: 2, px: 3 }, { stroke: 4, px: 6
 const BG     = '#16161a';
 
 export default function Whiteboard() {
+  const { features } = useHousehold();
+  if (!features?.includes('whiteboard')) return null;
+  return <WhiteboardCanvas />;
+}
+
+function WhiteboardCanvas() {
   const canvasRef   = useRef(null);
   const drawing     = useRef(false);
   const saveTimer   = useRef(null);
@@ -45,7 +52,9 @@ export default function Whiteboard() {
   const scheduleSave = useCallback(() => {
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      dbSaveWhiteboard(canvasRef.current.toDataURL('image/png'));
+      const dataUrl = canvasRef.current.toDataURL('image/png');
+      if (dataUrl.length > 1_400_000) return;
+      dbSaveWhiteboard(dataUrl);
     }, 2000);
   }, []);
 
@@ -103,7 +112,7 @@ export default function Whiteboard() {
           <div
             key={c}
             className={`${s.colorBtn} ${color === c && !eraser ? s.colorBtnActive : ''}`}
-            style={{ background: c }}
+            style={{ background: c, width: 14, height: 14 }}
             onClick={() => { setColor(c); setEraser(false); }}
           />
         ))}
@@ -115,7 +124,7 @@ export default function Whiteboard() {
             onClick={() => setSize(i)}
             title={['Thin','Medium','Thick'][i]}
           >
-            <svg width="20" height="14" viewBox="0 0 20 14" style={{ display: 'block' }}>
+            <svg width="16" height="12" viewBox="0 0 20 14" style={{ display: 'block' }}>
               <line x1="3" y1="7" x2="17" y2="7" stroke="currentColor" strokeWidth={sz.stroke} strokeLinecap="round" />
             </svg>
           </button>
@@ -125,7 +134,7 @@ export default function Whiteboard() {
           onClick={() => setEraser(e => !e)}
           title="Eraser"
         >
-          <IconEraser size={14} />
+          <IconEraser size={12} />
         </button>
         <span className={s.boardSep} />
         <button className={s.clearBtn} onClick={clearCanvas}>Clear</button>

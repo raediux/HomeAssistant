@@ -226,9 +226,9 @@
 .boardBar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 0 0 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .boardTitle {
@@ -270,7 +270,7 @@
 
 .boardSep { flex: 1; }
 
-.eraserBtn, .clearBtn {
+.eraserBtn {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 5px;
@@ -283,7 +283,18 @@
 }
 .eraserBtn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
 .eraserBtnActive { background: rgba(74,143,212,0.18); color: var(--accent); border-color: rgba(74,143,212,0.3); }
-.clearBtn:hover { background: var(--red-l); color: var(--red); }
+
+.clearBtn {
+  background: none;
+  border: none;
+  color: var(--red);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 3px 6px;
+  transition: opacity .12s;
+}
+.clearBtn:hover { opacity: 0.7; }
 
 .boardCanvas {
   display: block;
