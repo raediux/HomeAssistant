@@ -22,5 +22,15 @@
     "TabBar":              "src/components/TabBar/TabBar.jsx",
     "Dashboard":           "src/components/Dashboard/Dashboard.jsx",
     "Auth":                "src/components/Auth/Auth.jsx"
+  },
+  "overrides": {
+    "Calendar":    { "cardMode": "single" },
+    "MealPlanner": { "cardMode": "single" },
+    "Tasks":       { "cardMode": "single" },
+    "Shopping":    { "cardMode": "single" },
+    "Whiteboard":  { "cardMode": "single" },
+    "Topbar":      { "cardMode": "single" },
+    "Weather":     { "cardMode": "single" },
+    "Auth":        { "cardMode": "single" }
   }
 }
