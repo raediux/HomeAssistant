@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { IconEraser, IconArrowBackUp } from '@tabler/icons-react';
+import { IconEraser, IconArrowBackUp, IconPalette } from '@tabler/icons-react';
 import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import s from './Tasks.module.css';
@@ -156,13 +156,15 @@ function WhiteboardCanvas() {
             onClick={() => { setColor(c); setEraser(false); }}
           />
         ))}
-        <input
-          type="color"
-          value={color}
-          onChange={e => { setColor(e.target.value); setEraser(false); }}
-          title="Custom colour"
-          className={s.colorPicker}
-        />
+        <label className={s.colorPickerBtn} title="Custom colour">
+          <IconPalette size={12} />
+          <input
+            type="color"
+            value={color}
+            onChange={e => { setColor(e.target.value); setEraser(false); }}
+            style={{ display: 'none' }}
+          />
+        </label>
         <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
         {SIZES.map((sz, i) => (
           <button
@@ -184,9 +186,13 @@ function WhiteboardCanvas() {
           <IconEraser size={12} />
         </button>
         <span className={s.boardSep} />
-        <button className={s.eraserBtn} onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ opacity: canUndo ? 1 : 0.3 }}>
+        <span
+          onClick={canUndo ? undo : undefined}
+          title="Undo (Ctrl+Z)"
+          style={{ opacity: canUndo ? 1 : 0.5, cursor: canUndo ? 'pointer' : 'default', display: 'flex', alignItems: 'center', color: 'var(--text2)', flexShrink: 0 }}
+        >
           <IconArrowBackUp size={12} />
-        </button>
+        </span>
         <button className={s.clearBtn} onClick={clearCanvas}>Clear</button>
       </div>
       <canvas
