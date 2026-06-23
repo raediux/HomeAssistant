@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { IconEraser } from '@tabler/icons-react';
+import { IconEraser, IconArrowBackUp } from '@tabler/icons-react';
 import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import s from './Tasks.module.css';
@@ -14,13 +14,17 @@ export default function Whiteboard() {
   return <WhiteboardCanvas />;
 }
 
+const HISTORY_LIMIT = 20;
+
 function WhiteboardCanvas() {
   const canvasRef   = useRef(null);
   const drawing     = useRef(false);
   const saveTimer   = useRef(null);
+  const history     = useRef([]);
   const [color, setColor]   = useState(COLORS[0]);
   const [size, setSize]     = useState(0);
   const [eraser, setEraser] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -48,6 +52,30 @@ function WhiteboardCanvas() {
     });
     return () => ro.disconnect();
   }, []);
+
+  function pushHistory() {
+    const dataUrl = canvasRef.current.toDataURL('image/png');
+    history.current.push(dataUrl);
+    if (history.current.length > HISTORY_LIMIT) history.current.shift();
+    setCanUndo(true);
+  }
+
+  function undo() {
+    if (!history.current.length) return;
+    history.current.pop();
+    setCanUndo(history.current.length > 0);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const prev = history.current[history.current.length - 1];
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (prev) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      img.src = prev;
+    }
+    scheduleSave();
+  }
 
   const scheduleSave = useCallback(() => {
     clearTimeout(saveTimer.current);
@@ -93,16 +121,29 @@ function WhiteboardCanvas() {
   function endDraw(e) {
     if (!drawing.current) return;
     drawing.current = false;
+    pushHistory();
     scheduleSave();
   }
 
   function clearCanvas() {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    pushHistory();
     ctx.fillStyle = BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     scheduleSave();
   }
+
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <div className={s.boardWrap}>
@@ -137,6 +178,9 @@ function WhiteboardCanvas() {
           <IconEraser size={12} />
         </button>
         <span className={s.boardSep} />
+        <button className={s.eraserBtn} onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ opacity: canUndo ? 1 : 0.3 }}>
+          <IconArrowBackUp size={12} />
+        </button>
         <button className={s.clearBtn} onClick={clearCanvas}>Clear</button>
       </div>
       <canvas
