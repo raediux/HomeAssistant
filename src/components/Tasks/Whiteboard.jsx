@@ -157,7 +157,7 @@ function WhiteboardCanvas() {
           />
         ))}
         <label className={s.colorPickerBtn} title="Custom colour">
-          <IconPalette size={12} />
+          <IconPalette size={15} />
           <input
             type="color"
             value={color}
