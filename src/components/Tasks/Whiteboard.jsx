@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { IconEraser, IconArrowBackUp, IconPalette } from '@tabler/icons-react';
+import { IconEraser, IconArrowBackUp } from '@tabler/icons-react';
 import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
+import ColorPicker from './ColorPicker.jsx';
 import s from './Tasks.module.css';
 
 const COLORS = ['#e8eaf0', '#4a8fd4', '#c46090', '#c9a838', '#64c882', '#e05555'];
@@ -156,15 +157,7 @@ function WhiteboardCanvas() {
             onClick={() => { setColor(c); setEraser(false); }}
           />
         ))}
-        <label className={s.colorPickerBtn} title="Custom colour">
-          <IconPalette size={15} />
-          <input
-            type="color"
-            value={color}
-            onChange={e => { setColor(e.target.value); setEraser(false); }}
-            style={{ display: 'none' }}
-          />
-        </label>
+        <ColorPicker color={color} onChange={c => { setColor(c); setEraser(false); }} />
         <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
         {SIZES.map((sz, i) => (
           <button

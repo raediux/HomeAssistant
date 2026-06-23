@@ -252,15 +252,6 @@
 .colorBtn:hover { transform: scale(1.15); }
 .colorBtnActive { border-color: rgba(255,255,255,0.6) !important; }
 
-.colorPickerBtn {
-  display: flex;
-  align-items: center;
-  color: var(--text2);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: color .12s;
-}
-.colorPickerBtn:hover { color: var(--text); }
 
 .sizeBtn {
   background: rgba(255,255,255,0.07);
