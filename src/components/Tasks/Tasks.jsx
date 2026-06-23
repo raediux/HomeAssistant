@@ -102,6 +102,10 @@ export default function Tasks() {
             style={{ '--dot-col': ACCENTS[i % 4].col }}
           />
         ))}
+        <div
+          className={`${s.dot} ${members.length === activeDot ? s.dotActive : ''}`}
+          style={{ '--dot-col': 'rgba(255,255,255,0.5)' }}
+        />
       </div>
 
       <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
@@ -207,9 +211,13 @@ export default function Tasks() {
             </div>
           );
         })}
-      </div>
 
-      <Whiteboard />
+        <div className={s.glowWrap}>
+          <div className={s.column}>
+            <Whiteboard />
+          </div>
+        </div>
+      </div>
 
       {modal && (
         <TaskModal
