@@ -252,6 +252,21 @@
 .colorBtn:hover { transform: scale(1.15); }
 .colorBtnActive { border-color: rgba(255,255,255,0.6) !important; }
 
+.colorPicker {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+  padding: 0;
+  background: none;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.colorPicker::-webkit-color-swatch-wrapper { padding: 0; }
+.colorPicker::-webkit-color-swatch { border: none; border-radius: 50%; }
+.colorPicker::-moz-color-swatch { border: none; border-radius: 50%; }
+
 .sizeBtn {
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.1);

@@ -148,7 +148,6 @@ function WhiteboardCanvas() {
   return (
     <div className={s.boardWrap}>
       <div className={s.boardBar}>
-        <span className={s.boardTitle}>Board</span>
         {COLORS.map(c => (
           <div
             key={c}
@@ -157,6 +156,13 @@ function WhiteboardCanvas() {
             onClick={() => { setColor(c); setEraser(false); }}
           />
         ))}
+        <input
+          type="color"
+          value={color}
+          onChange={e => { setColor(e.target.value); setEraser(false); }}
+          title="Custom colour"
+          className={s.colorPicker}
+        />
         <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
         {SIZES.map((sz, i) => (
           <button
