@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { IconUser, IconLogout } from '@tabler/icons-react';
+import { IconUser, IconLogout, IconMail } from '@tabler/icons-react';
 import { supabase } from '../../supabase.js';
+import { clearHouseholdId } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useSession } from '../../contexts/AuthContext.jsx';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
@@ -56,7 +57,7 @@ export default function Topbar() {
             <div className={s.tier} data-tier={household?.tier || 'free'}>
               {(household?.tier || 'free').charAt(0).toUpperCase() + (household?.tier || 'free').slice(1)}
             </div>
-            <button className={s.signoutBtn} onClick={() => supabase.auth.signOut()}>
+            <button className={s.signoutBtn} onClick={() => { clearHouseholdId(); supabase.auth.signOut(); }}>
               <IconLogout size={15} /> Sign out
             </button>
           </div>
@@ -74,6 +75,16 @@ export default function Topbar() {
       </div>
 
       <Weather />
+      <a
+        href="https://mail.google.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: 'var(--text2)', display: 'flex', alignItems: 'center', padding: '6px', borderRadius: '8px', transition: 'color .15s, background .15s', textDecoration: 'none' }}
+        onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.background = 'var(--surface2)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'var(--text2)'; e.currentTarget.style.background = 'transparent'; }}
+      >
+        <IconMail size={20} />
+      </a>
     </div>
   );
 }
