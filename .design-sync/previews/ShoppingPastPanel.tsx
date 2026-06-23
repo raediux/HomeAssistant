@@ -1,4 +1,5 @@
 import { ShoppingPastPanel } from 'home-assistant-react';
+import { MotionConfig } from 'framer-motion';
 
 const past = [
   { id: 1, name: 'Milk', store: 'Coles', times: 8, category: 'Dairy' },
@@ -27,8 +28,10 @@ const mockData = {
 
 export function Default() {
   return (
-    <div style={{ background: '#111110', minHeight: 400, padding: 16 }}>
-      <ShoppingPastPanel shopData={mockData} noWrapper />
-    </div>
+    <MotionConfig reducedMotion="always">
+      <div style={{ background: '#111110', minHeight: 400, padding: 16 }}>
+        <ShoppingPastPanel shopData={mockData} noWrapper />
+      </div>
+    </MotionConfig>
   );
 }

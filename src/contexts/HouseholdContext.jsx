@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { getMyHouseholdId, dbLoadMembers, dbLoadTier } from '../db.js';
 import { useSession } from './AuthContext.jsx';
 
-const HouseholdContext = createContext(null);
+export const HouseholdContext = createContext(null);
 
 export function HouseholdProvider({ children }) {
   const session = useSession();

@@ -1,11 +1,5 @@
-import { ShoppingModal } from 'home-assistant-react';
-
-const past = [
-  { id: 1, name: 'Milk', store: 'Coles', times: 8, category: 'Dairy' },
-  { id: 2, name: 'Bread', store: 'Woolworths', times: 6, category: 'Bakery' },
-  { id: 3, name: 'Eggs', store: 'Aldi', times: 5, category: 'Dairy' },
-  { id: 4, name: 'Chicken', store: 'Coles', times: 4, category: 'Meat' },
-];
+// Static mockup — bypasses framer-motion animation (initial: opacity 0 inside IIFE bundle)
+const STORES = ['Aldi', 'Coles', 'Woolworths', 'Big W', 'Chemist Warehouse', 'Others'];
 
 const wrap = {
   minHeight: 400,
@@ -18,7 +12,22 @@ const wrap = {
 export function AddItem() {
   return (
     <div style={wrap}>
-      <ShoppingModal editItem={null} defaultStore="Coles" pastItems={past} onConfirm={() => {}} onClose={() => {}} />
+      <div className="modal-box">
+        <div className="modal-hdr">
+          <span>Add Item</span>
+          <button className="modal-x">✕</button>
+        </div>
+        <label className="modal-lbl">Item</label>
+        <input className="modal-input" placeholder="Item name" defaultValue="" readOnly style={{ marginBottom: 14 }} />
+        <label className="modal-lbl">Store</label>
+        <select className="modal-input" defaultValue="Coles" style={{ cursor: 'pointer' }}>
+          {STORES.map(s => <option key={s}>{s}</option>)}
+        </select>
+        <div className="modal-ftr">
+          <button className="btn">Cancel</button>
+          <button className="btn btn-primary">Add</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -26,13 +35,22 @@ export function AddItem() {
 export function EditItem() {
   return (
     <div style={wrap}>
-      <ShoppingModal
-        editItem={{ id: 1, name: 'Milk', qty: '2L', store: 'Coles', got: false }}
-        defaultStore="Coles"
-        pastItems={past}
-        onConfirm={() => {}}
-        onClose={() => {}}
-      />
+      <div className="modal-box">
+        <div className="modal-hdr">
+          <span>Edit Item</span>
+          <button className="modal-x">✕</button>
+        </div>
+        <label className="modal-lbl">Item</label>
+        <input className="modal-input" defaultValue="Milk" readOnly style={{ marginBottom: 14 }} />
+        <label className="modal-lbl">Store</label>
+        <select className="modal-input" defaultValue="Coles" style={{ cursor: 'pointer' }}>
+          {STORES.map(s => <option key={s} selected={s === 'Coles'}>{s}</option>)}
+        </select>
+        <div className="modal-ftr">
+          <button className="btn">Cancel</button>
+          <button className="btn btn-primary">Save</button>
+        </div>
+      </div>
     </div>
   );
 }

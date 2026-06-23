@@ -1,4 +1,5 @@
 import { ShoppingWorkingPanel } from 'home-assistant-react';
+import { MotionConfig } from 'framer-motion';
 
 const working = [
   { id: 1, name: 'Milk', qty: '2L', store: 'Coles', got: false, sort_order: 0 },
@@ -38,8 +39,10 @@ const mockData = {
 
 export function Default() {
   return (
-    <div style={{ background: '#111110', minHeight: 400, padding: 16 }}>
-      <ShoppingWorkingPanel shopData={mockData} showAddBtn noWrapper />
-    </div>
+    <MotionConfig reducedMotion="always">
+      <div style={{ background: '#111110', minHeight: 400, padding: 16 }}>
+        <ShoppingWorkingPanel shopData={mockData} showAddBtn noWrapper />
+      </div>
+    </MotionConfig>
   );
 }

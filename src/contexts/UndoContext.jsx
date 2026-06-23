@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const UndoContext = createContext(null);
+export const UndoContext = createContext(null);
 
 export function UndoProvider({ children }) {
   const [toast, setToast] = useState(null); // { label }
