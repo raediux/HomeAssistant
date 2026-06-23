@@ -6,5 +6,5 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const WEATHER_KEY = import.meta.env.VITE_WEATHER_KEY;
-export const WEATHER_LAT = -33.8154;
-export const WEATHER_LON = 151.0285;
+export const WEATHER_LAT = -33.8147;
+export const WEATHER_LON = 151.0235;
