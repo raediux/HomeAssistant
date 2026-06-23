@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { getMyHouseholdId, dbLoadMembers, dbLoadTier } from '../db.js';
 import { useSession } from './AuthContext.jsx';
 
@@ -6,16 +6,34 @@ const HouseholdContext = createContext(null);
 
 export function HouseholdProvider({ children }) {
   const session = useSession();
-  const [household, setHousehold] = useState(null); // { id, members, tier }
+  const [household, setHousehold] = useState(null); // { id, members, tier, features }
+  const loadedUserId = useRef(null);
 
   useEffect(() => {
-    if (!session) { setHousehold(null); return; }
+    const userId = session?.user?.id ?? null;
+
+    if (!session) {
+      loadedUserId.current = null;
+      setHousehold(null);
+      return;
+    }
+
+    // Supabase fires onAuthStateChange on token refresh and tab focus, not just
+    // login. Only reload the household when the actual user changes — otherwise
+    // a transient refetch can briefly blank feature-gated UI (e.g. whiteboard).
+    if (userId === loadedUserId.current) return;
+    loadedUserId.current = userId;
 
     async function load() {
       const hid = await getMyHouseholdId();
-      if (!hid) { setHousehold({ id: null, members: [], tier: 'free' }); return; }
-      const [members, tier] = await Promise.all([dbLoadMembers(), dbLoadTier(hid)]);
-      setHousehold({ id: hid, members, tier });
+      if (!hid) { setHousehold({ id: null, members: [], tier: 'free', features: [] }); return; }
+      const [members, tierData] = await Promise.all([dbLoadMembers(), dbLoadTier(hid)]);
+      setHousehold(prev => ({
+        id: hid,
+        members,
+        tier: tierData?.tier ?? prev?.tier ?? 'free',
+        features: tierData?.features ?? prev?.features ?? [],
+      }));
     }
 
     load();

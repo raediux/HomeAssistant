@@ -25,8 +25,14 @@ export async function dbLoadMembers() {
 }
 
 export async function dbLoadTier(householdId) {
-  const { data } = await db.from('subscriptions').select('tier').eq('household_id', householdId).maybeSingle();
-  return data?.tier || 'free';
+  const { data, error } = await db.from('subscriptions').select('tier, features').eq('household_id', householdId).maybeSingle();
+  if (error) {
+    // Transient/RLS failure — signal caller to preserve previously known values
+    // rather than silently blanking tier/features (which hides feature-gated UI).
+    console.warn('dbLoadTier failed:', error.message);
+    return null;
+  }
+  return { tier: data?.tier || 'free', features: data?.features || [] };
 }
 
 // ── Tasks ─────────────────────────────────────────────────────
@@ -56,7 +62,8 @@ export async function dbSaveTask(task) {
 }
 
 export async function dbDeleteTask(id) {
-  const { error } = await db.from('tasks').delete().eq('id', id);
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('tasks').delete().eq('id', id).eq('household_id', hid);
   if (error) console.error('dbDeleteTask:', error);
 }
 
@@ -77,8 +84,23 @@ export async function dbSaveBadge(badge) {
 }
 
 export async function dbDeleteBadge(id) {
-  const { error } = await db.from('calendar_badges').delete().eq('id', id);
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('calendar_badges').delete().eq('id', id).eq('household_id', hid);
   if (error) console.error('dbDeleteBadge:', error);
+}
+
+// ── Shopping — weekly auto-clear ─────────────────────────────
+export async function dbGetLastShoppingClear() {
+  const hid = await getMyHouseholdId();
+  if (!hid) return null;
+  const { data } = await db.from('households').select('last_shopping_clear').eq('id', hid).maybeSingle();
+  return data?.last_shopping_clear ?? null;
+}
+
+export async function dbSetLastShoppingClear(dateStr) {
+  const hid = await getMyHouseholdId();
+  if (!hid) return;
+  await db.from('households').update({ last_shopping_clear: dateStr }).eq('id', hid);
 }
 
 // ── Shopping — working list ───────────────────────────────────
@@ -112,7 +134,8 @@ export async function dbUpdateSortOrders(items) {
 }
 
 export async function dbDeleteWorkingItem(id) {
-  const { error } = await db.from('shopping_working').delete().eq('id', id);
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('shopping_working').delete().eq('id', id).eq('household_id', hid);
   if (error) console.error('dbDeleteWorkingItem:', error);
 }
 
@@ -135,7 +158,8 @@ export async function dbSavePastItem(item) {
 }
 
 export async function dbDeletePastItem(id) {
-  const { error } = await db.from('shopping_past').delete().eq('id', id);
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('shopping_past').delete().eq('id', id).eq('household_id', hid);
   if (error) console.error('dbDeletePastItem:', error);
 }
 
@@ -156,8 +180,9 @@ export async function dbSaveMeal(date, person, slot, meal) {
 }
 
 export async function dbDeleteMeal(date, person, slot) {
+  const hid = await getMyHouseholdId();
   const { error } = await db.from('meal_plans')
-    .delete().eq('date', date).eq('person', person).eq('slot', slot);
+    .delete().eq('date', date).eq('person', person).eq('slot', slot).eq('household_id', hid);
   if (error) console.error('dbDeleteMeal:', error);
 }
 
