@@ -1,4 +1,4 @@
-import { Calendar, MockProviders } from 'home-assistant-react';
+import { Calendar } from 'home-assistant-react';
 import React from 'react';
 
 class ErrorBoundary extends React.Component {
@@ -14,14 +14,14 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// NOTE: intentionally NO MockProviders — relies on the context default value
+// to confirm bare components render the way the design tool's thumbnail does.
 export function Default() {
   return (
     <ErrorBoundary>
-      <MockProviders>
-        <div style={{ background: '#111110', minHeight: 600 }}>
-          <Calendar />
-        </div>
-      </MockProviders>
+      <div style={{ background: '#111110', minHeight: 600 }}>
+        <Calendar />
+      </div>
     </ErrorBoundary>
   );
 }

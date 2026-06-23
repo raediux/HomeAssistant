@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export const UndoContext = createContext(null);
+// Default applies only outside any <UndoProvider> (e.g. design-tool thumbnail
+// render of a bare Shopping component); the real app's provider overrides it.
+export const UndoContext = createContext({ scheduleDelete: () => {} });
 
 export function UndoProvider({ children }) {
   const [toast, setToast] = useState(null); // { label }

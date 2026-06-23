@@ -2,7 +2,20 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { getMyHouseholdId, dbLoadMembers, dbLoadTier } from '../db.js';
 import { useSession } from './AuthContext.jsx';
 
-export const HouseholdContext = createContext(null);
+// Default applies ONLY when no <HouseholdProvider> is mounted (e.g. design-tool
+// thumbnail rendering of a bare component). The real app always wraps in the
+// provider, whose value= overrides this default, so live loading behaviour is
+// unchanged. Mock members let context-dependent components render standalone.
+export const HouseholdContext = createContext({
+  id: 'preview',
+  members: [
+    { id: '1', name: 'Ray', slug: 'ray', color: '#4a8fd4' },
+    { id: '2', name: 'Jazelle', slug: 'jazelle', color: '#c46090' },
+    { id: '3', name: 'Linus', slug: 'linus', color: '#c9a838' },
+  ],
+  tier: 'pro',
+  features: ['whiteboard'],
+});
 
 export function HouseholdProvider({ children }) {
   const session = useSession();
