@@ -112,7 +112,7 @@ function WhiteboardCanvas() {
           <div
             key={c}
             className={`${s.colorBtn} ${color === c && !eraser ? s.colorBtnActive : ''}`}
-            style={{ background: c, width: 14, height: 14 }}
+            style={{ background: c }}
             onClick={() => { setColor(c); setEraser(false); }}
           />
         ))}
@@ -124,7 +124,7 @@ function WhiteboardCanvas() {
             onClick={() => setSize(i)}
             title={['Thin','Medium','Thick'][i]}
           >
-            <svg width="16" height="12" viewBox="0 0 20 14" style={{ display: 'block' }}>
+            <svg width="20" height="14" viewBox="0 0 20 14" style={{ display: 'block' }}>
               <line x1="3" y1="7" x2="17" y2="7" stroke="currentColor" strokeWidth={sz.stroke} strokeLinecap="round" />
             </svg>
           </button>
@@ -134,7 +134,7 @@ function WhiteboardCanvas() {
           onClick={() => setEraser(e => !e)}
           title="Eraser"
         >
-          <IconEraser size={12} />
+          <IconEraser size={14} />
         </button>
         <span className={s.boardSep} />
         <button className={s.clearBtn} onClick={clearCanvas}>Clear</button>
