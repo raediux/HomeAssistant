@@ -73,7 +73,7 @@
 
 .colTasks {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -81,7 +81,8 @@
 .section {
   display: flex;
   flex-direction: row;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 .section:first-child { border-top: none; }
@@ -110,7 +111,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 184px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .boxHdr {
