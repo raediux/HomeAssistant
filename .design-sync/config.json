@@ -1,0 +1,26 @@
+{
+  "projectId": "8244e639-4b44-4b7e-b2ab-7538b4034910",
+  "shape": "package",
+  "pkg": "home-assistant-react",
+  "globalName": "HomeAssistant",
+  "srcDir": "src/components",
+  "cssEntry": "ds-bundle-combined.css",
+  "buildCmd": "vite build --config vite.lib.config.js",
+  "componentSrcMap": {
+    "Tasks":               "src/components/Tasks/Tasks.jsx",
+    "Whiteboard":          "src/components/Tasks/Whiteboard.jsx",
+    "ColorPicker":         "src/components/Tasks/ColorPicker.jsx",
+    "TaskModal":           "src/components/Tasks/TaskModal.jsx",
+    "Shopping":            "src/components/Shopping/Shopping.jsx",
+    "ShoppingWorkingPanel":"src/components/Shopping/ShoppingWorkingPanel.jsx",
+    "ShoppingPastPanel":   "src/components/Shopping/ShoppingPastPanel.jsx",
+    "ShoppingModal":       "src/components/Shopping/ShoppingModal.jsx",
+    "MealPlanner":         "src/components/MealPlanner/MealPlanner.jsx",
+    "Calendar":            "src/components/Calendar/Calendar.jsx",
+    "Topbar":              "src/components/Topbar/Topbar.jsx",
+    "Weather":             "src/components/Topbar/Weather.jsx",
+    "TabBar":              "src/components/TabBar/TabBar.jsx",
+    "Dashboard":           "src/components/Dashboard/Dashboard.jsx",
+    "Auth":                "src/components/Auth/Auth.jsx"
+  }
+}

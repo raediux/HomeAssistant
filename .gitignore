@@ -25,3 +25,9 @@ dist-ssr
 
 # Claude Code
 .claude/
+
+# Design sync build artifacts
+ds-bundle/
+dist-lib/
+.ds-sync/
+.design-sync/.cache/
