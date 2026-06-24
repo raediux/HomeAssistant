@@ -94,6 +94,7 @@ function WhiteboardCanvas() {
   }
 
   function startDraw(e) {
+    if (e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
     drawing.current = true;
     const ctx = canvasRef.current.getContext('2d');
