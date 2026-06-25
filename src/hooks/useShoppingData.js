@@ -32,7 +32,7 @@ export function useShoppingData() {
         finalWorking = [];
         w.forEach(item => {
           dbDeleteWorkingItem(item.id);
-          const existing = finalPast.find(pp => pp.name.toLowerCase() === item.name.toLowerCase());
+          const existing = finalPast.find(pp => pp.name.toLowerCase() === item.name.toLowerCase() && pp.store === item.store);
           if (existing) {
             const updated = { ...existing, times: existing.times + 1 };
             dbSavePastItem(updated);
@@ -67,7 +67,7 @@ export function useShoppingData() {
     setWorking(prev => prev.filter(i => i.id !== id));
     dbDeleteWorkingItem(id);
     setPast(prev => {
-      const existing = prev.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+      const existing = prev.find(p => p.name.toLowerCase() === item.name.toLowerCase() && p.store === item.store);
       if (existing) {
         const updated = prev.map(p => p.name.toLowerCase() === item.name.toLowerCase() ? { ...p, times: p.times + 1 } : p);
         dbSavePastItem(updated.find(p => p.name.toLowerCase() === item.name.toLowerCase()));
@@ -91,7 +91,7 @@ export function useShoppingData() {
     items.forEach(item => {
       dbDeleteWorkingItem(item.id);
       setPast(prev => {
-        const existing = prev.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+        const existing = prev.find(p => p.name.toLowerCase() === item.name.toLowerCase() && p.store === item.store);
         if (existing) {
           const updated = prev.map(p => p.name.toLowerCase() === item.name.toLowerCase() ? { ...p, times: p.times + 1 } : p);
           dbSavePastItem(updated.find(p => p.name.toLowerCase() === item.name.toLowerCase()));
