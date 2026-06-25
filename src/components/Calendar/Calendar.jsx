@@ -3,6 +3,7 @@ import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbLoadBadges, dbSaveBadge, dbDeleteBadge, dbLoadTasks } from '../../db.js';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync.js';
 import { cn, memberSlug } from '../../utils.js';
 import { isTaskDone } from '../Tasks/taskUtils.js';
 import s from './Calendar.module.css';
@@ -31,12 +32,28 @@ export default function Calendar() {
   const [badges, setBadges] = useState([]);
   const [tasks,  setTasks]  = useState([]);
 
-  // Load badges once; tasks come from Tasks module state — we re-use db directly
   useEffect(() => {
     dbLoadBadges().then(setBadges);
-    // Load tasks for calendar pills (occasional only)
     dbLoadTasks().then(setTasks);
   }, []);
+
+  useRealtimeSync('calendar_badges', ({ eventType, new: row, old }) => {
+    if (eventType === 'DELETE') {
+      setBadges(prev => prev.filter(b => b.id !== old.id));
+    } else {
+      const badge = { id: row.id, date: row.date, label: row.label, color: row.color };
+      setBadges(prev => prev.some(b => b.id === badge.id) ? prev.map(b => b.id === badge.id ? badge : b) : [...prev, badge]);
+    }
+  });
+
+  useRealtimeSync('tasks', ({ eventType, new: row, old }) => {
+    if (eventType === 'DELETE') {
+      setTasks(prev => prev.filter(t => t.id !== old.id));
+    } else {
+      const task = { id: row.id, person: row.person, frequency: row.frequency, title: row.title, dueDate: row.due_date, dow: row.dow, done: row.done, lastDoneDate: row.last_done_date || null };
+      setTasks(prev => prev.some(t => t.id === task.id) ? prev.map(t => t.id === task.id ? task : t) : [...prev, task]);
+    }
+  });
 
   function prevMonth() {
     if (month === 0) { setMonth(11); setYear(y => y - 1); }

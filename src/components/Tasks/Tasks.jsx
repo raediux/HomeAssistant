@@ -5,6 +5,7 @@ import { IconPlus, IconEdit, IconTrash, IconCheck, IconAlertCircle, IconClock, I
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbLoadTasks, dbSaveTask, dbDeleteTask } from '../../db.js';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync.js';
 import { memberSlug } from '../../utils.js';
 import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
 import TaskModal from './TaskModal.jsx';
@@ -38,6 +39,15 @@ export default function Tasks() {
       if (data.length) nextId.current = Math.max(...data.map(t => t.id)) + 1;
     });
   }, []);
+
+  useRealtimeSync('tasks', ({ eventType, new: row, old }) => {
+    if (eventType === 'DELETE') {
+      setTasks(prev => prev.filter(t => t.id !== old.id));
+    } else {
+      const task = { id: row.id, person: row.person, frequency: row.frequency, title: row.title, dueDate: row.due_date, dow: row.dow, done: row.done, lastDoneDate: row.last_done_date || null };
+      setTasks(prev => prev.some(t => t.id === task.id) ? prev.map(t => t.id === task.id ? task : t) : [...prev, task]);
+    }
+  });
 
   function handleScroll() {
     const el = layoutRef.current;

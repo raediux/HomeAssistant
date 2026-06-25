@@ -5,6 +5,7 @@ import { IconChevronLeft, IconChevronRight, IconPlus, IconX, IconArrowsSplit2, I
 const MODAL_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { dbLoadMeals, dbSaveMeal, dbDeleteMeal } from '../../db.js';
+import { useRealtimeSync } from '../../hooks/useRealtimeSync.js';
 import { cn, memberSlug } from '../../utils.js';
 import { useShoppingData } from '../../hooks/useShoppingData.js';
 import Shopping from '../Shopping/Shopping.jsx';
@@ -90,6 +91,26 @@ export default function MealPlanner() {
       setMeals(map);
     });
   }, []);
+
+  useRealtimeSync('meal_plans', ({ eventType, new: row, old }) => {
+    if (eventType === 'DELETE') {
+      const r = old;
+      setMeals(prev => {
+        if (!prev[r.date]?.[r.person]) return prev;
+        const next = { ...prev, [r.date]: { ...prev[r.date], [r.person]: { ...prev[r.date][r.person] } } };
+        delete next[r.date][r.person][r.slot];
+        return next;
+      });
+    } else {
+      setMeals(prev => ({
+        ...prev,
+        [row.date]: {
+          ...prev[row.date],
+          [row.person]: { ...prev[row.date]?.[row.person], [row.slot]: row.meal },
+        },
+      }));
+    }
+  });
 
   function prevWeek() { setWeekStart(ws => { const d = new Date(ws); d.setDate(d.getDate()-7); return d; }); }
   function nextWeek() { setWeekStart(ws => { const d = new Date(ws); d.setDate(d.getDate()+7); return d; }); }
