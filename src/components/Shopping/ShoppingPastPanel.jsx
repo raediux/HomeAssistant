@@ -6,6 +6,7 @@ import s from './Shopping.module.css';
 
 export default function ShoppingPastPanel({ shopData, noWrapper }) {
   const { filteredPast, pastGroups, search, setSearch, collapsedPast, setCollapsedPast, moveToList, deletePastItem, setModal } = shopData;
+  const isSearching = search.trim().length > 0;
   const q = search.toLowerCase();
 
   const content = (
@@ -27,8 +28,8 @@ export default function ShoppingPastPanel({ shopData, noWrapper }) {
 
       {q ? (
         <AnimatePresence initial={false}>
-          {filteredPast.map(item => (
-            <PastItem key={item.id} item={item}
+          {[...filteredPast].sort((a, b) => a.name.localeCompare(b.name)).map(item => (
+            <PastItem key={item.id} item={item} showStore
               onMove={() => moveToList(item.id)}
               onEdit={() => setModal({ editItem: { ...item, type: 'past' }, defaultStore: null })}
               onDelete={() => deletePastItem(item.id, item.name)}
@@ -69,7 +70,7 @@ export default function ShoppingPastPanel({ shopData, noWrapper }) {
   return <div className={s.shopPanel}>{content}</div>;
 }
 
-function PastItem({ item, onMove, onEdit, onDelete }) {
+function PastItem({ item, showStore, onMove, onEdit, onDelete }) {
   const { ref, rotateX, rotateY, onMouseMove, onMouseLeave } = useTilt(4);
   return (
     <motion.div
@@ -86,6 +87,7 @@ function PastItem({ item, onMove, onEdit, onDelete }) {
     >
       <div className={s.pMoveZone} onClick={onMove}>
         <span className={s.pName}>{item.name}</span>
+        {showStore && item.store && <span className={s.storeTag}>{item.store}</span>}
       </div>
       <div className={s.itemActions}>
         <button className={`${s.moveBtn} ${s.del}`} title="Delete" onClick={onDelete}><IconTrash size={12} /></button>
