@@ -4,6 +4,7 @@ import {
   dbLoadWorkingItems, dbLoadPastItems,
   dbSaveWorkingItem, dbDeleteWorkingItem,
   dbSavePastItem, dbDeletePastItem,
+  dbGetLastShoppingClear, dbSetLastShoppingClear,
 } from '../db.js';
 
 export const STORES = ['Aldi','Asian Grocer','Big W','Butcher','Chemist Warehouse','Coles','Kmart','Korean Grocer','Pharmacy 4 Less','Ray Mum','Target','Woolworths','Others'];
@@ -19,10 +20,35 @@ export function useShoppingData() {
   const nextId = useRef(100);
 
   useEffect(() => {
-    Promise.all([dbLoadWorkingItems(), dbLoadPastItems()]).then(([w, p]) => {
-      setWorking(w);
-      setPast(p);
-      const maxId = Math.max(...w.map(i => i.id), ...p.map(i => i.id), 99);
+    Promise.all([dbLoadWorkingItems(), dbLoadPastItems(), dbGetLastShoppingClear()]).then(([w, p, lastClear]) => {
+      const today = new Date();
+      const isMonday = today.getDay() === 1;
+      const todayStr = today.toISOString().slice(0, 10);
+
+      let finalWorking = w;
+      let finalPast = p;
+
+      if (isMonday && lastClear !== todayStr && w.length > 0) {
+        finalWorking = [];
+        w.forEach(item => {
+          dbDeleteWorkingItem(item.id);
+          const existing = finalPast.find(pp => pp.name.toLowerCase() === item.name.toLowerCase());
+          if (existing) {
+            const updated = { ...existing, times: existing.times + 1 };
+            dbSavePastItem(updated);
+            finalPast = finalPast.map(pp => pp.id === existing.id ? updated : pp);
+          } else {
+            const newPast = { id: item.id, name: item.name, store: item.store, times: 1 };
+            dbSavePastItem(newPast);
+            finalPast = [newPast, ...finalPast];
+          }
+        });
+        dbSetLastShoppingClear(todayStr);
+      }
+
+      setWorking(finalWorking);
+      setPast(finalPast);
+      const maxId = Math.max(...w.map(i => i.id), ...finalPast.map(i => i.id), 99);
       nextId.current = maxId + 1;
     });
   }, []);
@@ -86,6 +112,7 @@ export function useShoppingData() {
     const newWorking = { id: item.id, name: item.name, qty: null, store: item.store, got: false, sort_order: working.length };
     setWorking(prev => [...prev, newWorking]);
     dbSaveWorkingItem(newWorking);
+    setSearch('');
   }
 
   function deletePastItem(id, name) {

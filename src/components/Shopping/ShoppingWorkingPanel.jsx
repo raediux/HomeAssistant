@@ -24,7 +24,7 @@ export default function ShoppingWorkingPanel({ shopData, showAddBtn, noWrapper }
       {working.length === 0 && <p className={s.empty}>No items — add from All Items or create new</p>}
 
       {STORES.filter(st => workingGroups[st].length > 0).map(st => {
-        const items = [...workingGroups[st]].sort((a, b) => Number(a.got) - Number(b.got));
+        const items = [...workingGroups[st]].sort((a, b) => Number(a.got) - Number(b.got) || a.name.localeCompare(b.name));
         const isCollapsed = collapsed[st];
         return (
           <div key={st} className={s.catSection}>
@@ -65,6 +65,8 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
   const controls = useAnimation();
   const firstRender = useRef(true);
 
+
+  useEffect(() => { controls.start({ opacity: 1, x: 0 }); }, []);
 
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return; }

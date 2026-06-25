@@ -37,7 +37,7 @@ export default function ShoppingPastPanel({ shopData, noWrapper }) {
         </AnimatePresence>
       ) : (
         STORES.filter(st => pastGroups[st].length > 0).map(st => {
-          const items = pastGroups[st];
+          const items = [...pastGroups[st]].sort((a, b) => a.name.localeCompare(b.name));
           const isCollapsed = collapsedPast[st];
           return (
             <div key={st} className={s.catSection}>
