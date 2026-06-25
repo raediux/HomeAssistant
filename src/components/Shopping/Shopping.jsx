@@ -1,4 +1,4 @@
-import { useShoppingData } from '../../hooks/useShoppingData.js';
+import { useShop } from '../../contexts/ShoppingContext.jsx';
 import ShoppingWorkingPanel from './ShoppingWorkingPanel.jsx';
 import ShoppingPastPanel from './ShoppingPastPanel.jsx';
 import ShoppingModal from './ShoppingModal.jsx';
@@ -6,7 +6,7 @@ import { IconPlus } from '@tabler/icons-react';
 import s from './Shopping.module.css';
 
 export default function Shopping({ embedded = false }) {
-  const shopData = useShoppingData();
+  const shopData = useShop();
 
   return (
     <div className={s.panel}>

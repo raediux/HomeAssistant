@@ -7,7 +7,7 @@ import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { dbLoadMeals, dbSaveMeal, dbDeleteMeal } from '../../db.js';
 import { useRealtimeSync } from '../../hooks/useRealtimeSync.js';
 import { cn, memberSlug } from '../../utils.js';
-import { useShoppingData } from '../../hooks/useShoppingData.js';
+import { useShop } from '../../contexts/ShoppingContext.jsx';
 import Shopping from '../Shopping/Shopping.jsx';
 import ShoppingWorkingPanel from '../Shopping/ShoppingWorkingPanel.jsx';
 import ShoppingPastPanel from '../Shopping/ShoppingPastPanel.jsx';
@@ -63,7 +63,7 @@ export default function MealPlanner() {
   const [modal, setModal] = useState(null); // { dateKey, person, slot, existing }
   const [activeMobilePanel, setActiveMobilePanel] = useState(2);
   const mobilePanelsRef = useRef(null);
-  const shopData = useShoppingData();
+  const shopData = useShop();
 
   useEffect(() => {
     requestAnimationFrame(() => {
