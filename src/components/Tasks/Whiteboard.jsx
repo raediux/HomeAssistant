@@ -42,12 +42,16 @@ function WhiteboardCanvas() {
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
     dbLoadWhiteboard().then(dataUrl => {
-      if (!dataUrl) return;
+      if (!dataUrl) {
+        history.current = [canvas.toDataURL('image/png')];
+        return;
+      }
       const img = new Image();
       img.onload = () => {
         ctx.fillStyle = BG;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        history.current = [canvas.toDataURL('image/png')];
       };
       img.src = dataUrl;
     });
