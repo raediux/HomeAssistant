@@ -4,8 +4,8 @@ import { useTilt } from '../../hooks/useTilt.js';
 import { IconPlus, IconEdit, IconTrash, IconCheck, IconAlertCircle, IconClock, IconCalendar } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
-import { dbLoadTasks, dbSaveTask, dbDeleteTask } from '../../db.js';
-import { useRealtimeSync } from '../../hooks/useRealtimeSync.js';
+import { dbSaveTask, dbDeleteTask } from '../../db.js';
+import { useTasksData } from '../../contexts/TasksContext.jsx';
 import { memberSlug } from '../../utils.js';
 import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
 import TaskModal from './TaskModal.jsx';
@@ -27,27 +27,19 @@ const ACCENTS = [
 export default function Tasks() {
   const { members } = useHousehold();
   const { scheduleDelete } = useUndo();
-  const [tasks, setTasks] = useState([]);
+  const { tasks, setTasks } = useTasksData();
   const [modal, setModal] = useState(null);
   const [activeDot, setActiveDot] = useState(0);
   const nextId = useRef(200);
+  const nextIdInit = useRef(false);
   const layoutRef = useRef(null);
 
   useEffect(() => {
-    dbLoadTasks().then(data => {
-      setTasks(data);
-      if (data.length) nextId.current = Math.max(...data.map(t => t.id)) + 1;
-    });
-  }, []);
-
-  useRealtimeSync('tasks', ({ eventType, new: row, old }) => {
-    if (eventType === 'DELETE') {
-      setTasks(prev => prev.filter(t => t.id !== old.id));
-    } else {
-      const task = { id: row.id, person: row.person, frequency: row.frequency, title: row.title, dueDate: row.due_date, dow: row.dow, done: row.done, lastDoneDate: row.last_done_date || null };
-      setTasks(prev => prev.some(t => t.id === task.id) ? prev.map(t => t.id === task.id ? task : t) : [...prev, task]);
+    if (!nextIdInit.current && tasks.length > 0) {
+      nextIdInit.current = true;
+      nextId.current = Math.max(...tasks.map(t => t.id)) + 1;
     }
-  });
+  }, [tasks]);
 
   function handleScroll() {
     const el = layoutRef.current;

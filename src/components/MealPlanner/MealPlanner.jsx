@@ -4,8 +4,8 @@ import { IconChevronLeft, IconChevronRight, IconPlus, IconX, IconArrowsSplit2, I
 
 const MODAL_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
-import { dbLoadMeals, dbSaveMeal, dbDeleteMeal } from '../../db.js';
-import { useRealtimeSync } from '../../hooks/useRealtimeSync.js';
+import { dbSaveMeal, dbDeleteMeal } from '../../db.js';
+import { useMealsData } from '../../contexts/MealsContext.jsx';
 import { cn, memberSlug } from '../../utils.js';
 import { useShop } from '../../contexts/ShoppingContext.jsx';
 import Shopping from '../Shopping/Shopping.jsx';
@@ -54,7 +54,7 @@ function linkify(text) {
 
 export default function MealPlanner() {
   const { members } = useHousehold();
-  const [meals, setMeals]       = useState({});
+  const { meals, setMeals } = useMealsData();
   const [weekStart, setWeekStart] = useState(() => {
     const today = new Date(); today.setHours(0,0,0,0);
     const ws = new Date(today); ws.setDate(today.getDate() - today.getDay());
@@ -79,38 +79,6 @@ export default function MealPlanner() {
     if (!el) return;
     setActiveMobilePanel(Math.round(el.scrollLeft / el.clientWidth));
   }
-
-  useEffect(() => {
-    dbLoadMeals().then(rows => {
-      const map = {};
-      for (const r of rows) {
-        if (!map[r.date]) map[r.date] = {};
-        if (!map[r.date][r.person]) map[r.date][r.person] = {};
-        map[r.date][r.person][r.slot] = r.meal;
-      }
-      setMeals(map);
-    });
-  }, []);
-
-  useRealtimeSync('meal_plans', ({ eventType, new: row, old }) => {
-    if (eventType === 'DELETE') {
-      const r = old;
-      setMeals(prev => {
-        if (!prev[r.date]?.[r.person]) return prev;
-        const next = { ...prev, [r.date]: { ...prev[r.date], [r.person]: { ...prev[r.date][r.person] } } };
-        delete next[r.date][r.person][r.slot];
-        return next;
-      });
-    } else {
-      setMeals(prev => ({
-        ...prev,
-        [row.date]: {
-          ...prev[row.date],
-          [row.person]: { ...prev[row.date]?.[row.person], [row.slot]: row.meal },
-        },
-      }));
-    }
-  });
 
   function prevWeek() { setWeekStart(ws => { const d = new Date(ws); d.setDate(d.getDate()-7); return d; }); }
   function nextWeek() { setWeekStart(ws => { const d = new Date(ws); d.setDate(d.getDate()+7); return d; }); }
