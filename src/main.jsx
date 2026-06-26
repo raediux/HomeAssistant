@@ -6,15 +6,18 @@ import './styles/reset.css';
 import './styles/shared.css';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import { HouseholdProvider } from './contexts/HouseholdContext.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import App from './App.jsx';
 
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <HouseholdProvider>
-        <App />
-      </HouseholdProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <HouseholdProvider>
+          <App />
+        </HouseholdProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );

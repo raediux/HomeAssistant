@@ -40,7 +40,8 @@ function fmtHour(dt) {
 function loadCache() {
   try {
     const c = JSON.parse(localStorage.getItem(WX_CACHE_KEY) || 'null');
-    return c && (Date.now() - c.ts < WX_TTL) ? c : null;
+    if (!c || !c.cur || !Array.isArray(c.hours)) return null; // reject stale/old-shaped blobs
+    return Date.now() - c.ts < WX_TTL ? c : null;
   } catch { return null; }
 }
 
@@ -110,6 +111,8 @@ export default function Weather({ style }) {
   if (!wx) return null;
 
   const { cur, hours } = wx;
+  if (!cur?.weather?.[0] || !Array.isArray(hours)) return null; // guard against malformed data
+
   const icon = cur.weather[0].icon;
   const WxIcon = wxIcon(icon);
   const temp = Math.round(cur.main.temp);
