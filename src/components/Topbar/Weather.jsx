@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   IconSun, IconMoon, IconCloud,
   IconCloudRain, IconCloudStorm, IconCloudSnow, IconCloudFog,
-  IconThermometer, IconDroplet, IconWind, IconChevronRight,
+  IconThermometer, IconDroplet, IconWind,
 } from '@tabler/icons-react';
 import { WEATHER_KEY, WEATHER_LAT, WEATHER_LON } from '../../supabase.js';
 
@@ -124,13 +124,13 @@ export default function Weather({ style }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontSize: 22, fontWeight: 600, color: wxTempColor(temp), lineHeight: 1 }}>{temp}</span>
-            <span style={{ fontSize: 13, color: 'var(--text3)' }}>°</span>
-            <span style={{ fontSize: 12, color: 'var(--text2)' }}>{cond}</span>
+            <span style={{ fontSize: 13, color: 'var(--text2)' }}>°</span>
+            <span style={{ fontSize: 12, color: 'var(--text)' }}>{cond}</span>
           </div>
-          <div style={{ display: 'flex', gap: 10, fontSize: 11, color: 'var(--text3)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconThermometer size={13} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{Math.round(cur.main.feels_like)}</b>°</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconDroplet size={13} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{cur.main.humidity}</b>%</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconWind size={13} /><b style={{ color: 'var(--text2)', fontWeight: 500 }}>{Math.round(cur.wind.speed * 3.6)}</b> km/h</span>
+          <div style={{ display: 'flex', gap: 10, fontSize: 11, color: 'var(--text2)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconThermometer size={13} /><b style={{ color: 'var(--text)', fontWeight: 500 }}>{Math.round(cur.main.feels_like)}</b>°</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconDroplet size={13} /><b style={{ color: 'var(--text)', fontWeight: 500 }}>{cur.main.humidity}</b>%</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IconWind size={13} /><b style={{ color: 'var(--text)', fontWeight: 500 }}>{Math.round(cur.wind.speed * 3.6)}</b> km/h</span>
           </div>
         </div>
       </div>
@@ -139,19 +139,23 @@ export default function Weather({ style }) {
       <button
         onClick={() => setExpanded(v => !v)}
         style={{
-          background: expanded ? 'rgba(255,255,255,0.08)' : 'transparent',
-          border: '1px solid rgba(255,255,255,0.10)',
-          borderRadius: 6,
-          padding: '4px 6px',
+          background: 'none',
+          border: 'none',
+          padding: '0 2px',
           cursor: 'pointer',
-          color: expanded ? 'var(--text)' : 'var(--text3)',
           display: 'flex',
           alignItems: 'center',
-          transition: 'all 0.15s',
           flexShrink: 0,
         }}
       >
-        <IconChevronRight size={15} style={{ transform: expanded ? 'rotate(180deg) scaleX(0.5) scaleY(2)' : 'scaleX(0.5) scaleY(2)', transition: 'transform 0.2s' }} />
+        <svg
+          width="10" height="32" viewBox="0 0 10 32"
+          fill="none" stroke={expanded ? 'var(--text)' : 'var(--text3)'}
+          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s, stroke 0.15s' }}
+        >
+          <polyline points="2,2 8,16 2,30" />
+        </svg>
       </button>
 
       {/* Hourly strip */}
