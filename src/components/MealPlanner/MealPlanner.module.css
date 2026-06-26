@@ -26,6 +26,89 @@
 .weekNav { display: flex; align-items: center; gap: 6px; }
 .weekLabel { font-size: 12px; color: var(--text2); min-width: 164px; text-align: center; }
 
+/* Per-week sharing control */
+.sharingWrap { position: relative; flex-shrink: 0; }
+.sharingBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(74,143,212,0.14);
+  border: 1px solid rgba(74,143,212,0.38);
+  color: var(--accent-t, #9cc4ee);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.sharingBtn:hover { background: rgba(74,143,212,0.22); }
+
+.sharingPop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 210px;
+  background: #1d1d22;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px;
+  padding: 9px;
+  z-index: 50;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.55);
+}
+.sharingHdr {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 2px 4px 8px;
+}
+.sharingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  padding: 7px 6px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .1s;
+}
+.sharingRow:hover { background: rgba(255,255,255,0.05); }
+.sharingCheck {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sharingFtr { border-top: 1px solid rgba(255,255,255,0.08); margin-top: 5px; padding-top: 6px; }
+.sharingReset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--text3);
+  text-align: left;
+  padding: 5px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.sharingReset:hover { background: rgba(255,255,255,0.05); color: var(--text2); }
+
 .ib {
   background: none;
   border: none;

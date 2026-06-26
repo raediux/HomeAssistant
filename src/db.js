@@ -196,6 +196,29 @@ export async function dbDeleteMeal(date, person, slot) {
   if (error) console.error('dbDeleteMeal:', error);
 }
 
+// ── Per-week meal sharing ─────────────────────────────────────
+export async function dbLoadMealShareWeeks() {
+  const { data, error } = await db.from('meal_share_weeks').select('week_start, member_ids');
+  if (error) { console.error('dbLoadMealShareWeeks:', error); return []; }
+  return data || [];
+}
+
+export async function dbSetMealShareWeek(weekStart, memberIds) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('meal_share_weeks').upsert(
+    { household_id: hid, week_start: weekStart, member_ids: memberIds },
+    { onConflict: 'household_id,week_start' }
+  );
+  if (error) console.error('dbSetMealShareWeek:', error);
+}
+
+export async function dbClearMealShareWeek(weekStart) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('meal_share_weeks')
+    .delete().eq('week_start', weekStart).eq('household_id', hid);
+  if (error) console.error('dbClearMealShareWeek:', error);
+}
+
 export async function dbLoadWhiteboard() {
   const hid = await getMyHouseholdId();
   const { data, error } = await db.from('whiteboard').select('data').eq('household_id', hid).maybeSingle();

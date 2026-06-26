@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { dbLoadMeals } from '../db.js';
+import { dbLoadMeals, dbLoadMealShareWeeks } from '../db.js';
 import { useRealtimeSync } from '../hooks/useRealtimeSync.js';
 
 const MealsContext = createContext(null);
 
 export function MealsProvider({ children }) {
   const [meals, setMeals] = useState({});
+  // Per-week sharing overrides: { [weekStart]: [memberId, ...] }. Absence of a
+  // key means that week inherits the household default (members.sharesMeals).
+  const [shareWeeks, setShareWeeks] = useState({});
 
   useEffect(() => {
     dbLoadMeals().then(rows => {
@@ -16,6 +19,11 @@ export function MealsProvider({ children }) {
         map[r.date][r.person][r.slot] = r.meal;
       }
       setMeals(map);
+    });
+    dbLoadMealShareWeeks().then(rows => {
+      const map = {};
+      for (const r of rows) map[r.week_start] = r.member_ids || [];
+      setShareWeeks(map);
     });
   }, []);
 
@@ -36,7 +44,20 @@ export function MealsProvider({ children }) {
     }
   });
 
-  return <MealsContext.Provider value={{ meals, setMeals }}>{children}</MealsContext.Provider>;
+  useRealtimeSync('meal_share_weeks', ({ eventType, new: row, old }) => {
+    setShareWeeks(prev => {
+      const next = { ...prev };
+      if (eventType === 'DELETE') delete next[old.week_start];
+      else next[row.week_start] = row.member_ids || [];
+      return next;
+    });
+  });
+
+  return (
+    <MealsContext.Provider value={{ meals, setMeals, shareWeeks, setShareWeeks }}>
+      {children}
+    </MealsContext.Provider>
+  );
 }
 
 export function useMealsData() { return useContext(MealsContext); }

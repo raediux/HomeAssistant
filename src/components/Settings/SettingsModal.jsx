@@ -91,7 +91,7 @@ export default function SettingsModal({ onClose }) {
 
         {isOwner && (
           <>
-            <div className={s.section}>Shared meals</div>
+            <div className={s.section}>Default meal sharing</div>
             {(members || []).map(member => (
               <div key={member.id} className={s.toggleRow}>
                 <span className={s.toggleName} style={{ color: member.color }}>{member.name}</span>
@@ -106,7 +106,7 @@ export default function SettingsModal({ onClose }) {
                 </button>
               </div>
             ))}
-            <div className={s.hint}>Members who share meals get one linked meal slot in the planner (needs 2 or more).</div>
+            <div className={s.hint}>The default sharing group for new weeks. Any week can override this from the planner’s “Sharing” button. Needs 2 or more to link a meal.</div>
           </>
         )}
       </motion.div>

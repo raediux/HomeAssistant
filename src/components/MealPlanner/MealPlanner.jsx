@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { IconChevronLeft, IconChevronRight, IconPlus, IconX, IconArrowsSplit2, IconLink } from '@tabler/icons-react';
+import { IconChevronLeft, IconChevronRight, IconPlus, IconX, IconArrowsSplit2, IconLink, IconUsers, IconChevronDown, IconCheck, IconRotate } from '@tabler/icons-react';
 
 const MODAL_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
-import { dbSaveMeal, dbDeleteMeal } from '../../db.js';
+import { useSession } from '../../contexts/AuthContext.jsx';
+import { useClickOutside } from '../../hooks/useClickOutside.js';
+import { dbSaveMeal, dbDeleteMeal, dbSetMealShareWeek, dbClearMealShareWeek } from '../../db.js';
 import { useMealsData } from '../../contexts/MealsContext.jsx';
 import { cn, memberSlug } from '../../utils.js';
 import { useShop } from '../../contexts/ShoppingContext.jsx';
@@ -54,7 +56,8 @@ function linkify(text) {
 
 export default function MealPlanner() {
   const { members } = useHousehold();
-  const { meals, setMeals } = useMealsData();
+  const { meals, setMeals, shareWeeks, setShareWeeks } = useMealsData();
+  const session = useSession();
   const [weekStart, setWeekStart] = useState(() => {
     const today = new Date(); today.setHours(0,0,0,0);
     const ws = new Date(today); ws.setDate(today.getDate() - today.getDay());
@@ -65,15 +68,31 @@ export default function MealPlanner() {
   const mobilePanelsRef = useRef(null);
   const shopData = useShop();
 
-  // Members who share linked meals are data-driven (the `sharesMeals` flag),
-  // not position-based. A shared group only forms with 2+ sharers; a lone
-  // sharer is treated as an individual. Sharers render first so the linked
-  // cell stays contiguous regardless of member sort order.
-  const sharingMembers = (members || []).filter(m => m.sharesMeals);
+  const myMember = (members || []).find(m => m.user_id === session?.user?.id);
+  const isOwner  = myMember?.role === 'owner';
+
+  // Who shares linked meals is per-week: an override row for the viewed week,
+  // else the household default (`sharesMeals` flag). Either way it's a member
+  // set (data-driven, order-independent); a shared group needs 2+ sharers, and
+  // sharers render first so the linked cell stays contiguous.
+  const weekKey  = dateKey(weekStart);
+  const override = shareWeeks?.[weekKey]; // array of member ids, or undefined → use default
+  const sharingMembers = override
+    ? (members || []).filter(m => override.includes(m.id))
+    : (members || []).filter(m => m.sharesMeals);
   const hasSharedGroup = sharingMembers.length >= 2;
   const sharers     = hasSharedGroup ? sharingMembers : [];
-  const individuals = hasSharedGroup ? (members || []).filter(m => !m.sharesMeals) : (members || []);
+  const individuals = hasSharedGroup ? (members || []).filter(m => !sharers.includes(m)) : (members || []);
   const orderedMembers = [...sharers, ...individuals];
+
+  async function setWeekSharing(ids) {
+    setShareWeeks(prev => ({ ...prev, [weekKey]: ids }));
+    await dbSetMealShareWeek(weekKey, ids);
+  }
+  async function resetWeekSharing() {
+    setShareWeeks(prev => { const next = { ...prev }; delete next[weekKey]; return next; });
+    await dbClearMealShareWeek(weekKey);
+  }
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -182,6 +201,9 @@ export default function MealPlanner() {
             <span className={s.weekLabel}>{weekLabel(weekStart)}</span>
             <button className={s.ib} onClick={nextWeek}><IconChevronRight size={16} /></button>
           </div>
+          {isOwner && (
+            <SharingControl members={members} override={override} onSetWeek={setWeekSharing} onResetWeek={resetWeekSharing} />
+          )}
         </div>
 
         <div className={s.grid}>
@@ -266,12 +288,16 @@ export default function MealPlanner() {
           <div className={s.mPanel}>
             <MobileMealPanel slot="lunch" meals={meals} members={members} weekStart={weekStart}
               todayKey={todayKey} onOpen={openModal} onRemove={removeCell}
-              onPrev={prevWeek} onNext={nextWeek} weekLabelStr={weekLabel(weekStart)} />
+              onPrev={prevWeek} onNext={nextWeek} weekLabelStr={weekLabel(weekStart)}
+              sharers={sharers} otherMembers={individuals} hasSharedGroup={hasSharedGroup}
+              isOwner={isOwner} override={override} onSetWeek={setWeekSharing} onResetWeek={resetWeekSharing} />
           </div>
           <div className={s.mPanel}>
             <MobileMealPanel slot="dinner" meals={meals} members={members} weekStart={weekStart}
               todayKey={todayKey} onOpen={openModal} onRemove={removeCell}
-              onPrev={prevWeek} onNext={nextWeek} weekLabelStr={weekLabel(weekStart)} />
+              onPrev={prevWeek} onNext={nextWeek} weekLabelStr={weekLabel(weekStart)}
+              sharers={sharers} otherMembers={individuals} hasSharedGroup={hasSharedGroup}
+              isOwner={isOwner} override={override} onSetWeek={setWeekSharing} onResetWeek={resetWeekSharing} />
           </div>
           <div className={s.mPanel}>
             <ShoppingWorkingPanel shopData={shopData} showAddBtn noWrapper />
@@ -302,15 +328,64 @@ export default function MealPlanner() {
   );
 }
 
-function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, onRemove, onPrev, onNext, weekLabelStr }) {
-  const sharingMembers = (members || []).filter(m => m.sharesMeals);
-  const hasSharedGroup = sharingMembers.length >= 2;
-  const sharers      = hasSharedGroup ? sharingMembers : [];
-  const otherMembers = hasSharedGroup ? (members || []).filter(m => !m.sharesMeals) : (members || []);
+// Owner-only popover to set who shares meals for the viewed week.
+function SharingControl({ members, override, onSetWeek, onResetWeek }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useClickOutside(ref, () => setOpen(false));
+
+  const defaultIds = (members || []).filter(m => m.sharesMeals).map(m => m.id);
+  const currentIds = override ?? defaultIds;
+  const isDefault  = override === undefined;
+
+  function toggle(id) {
+    const set = new Set(currentIds);
+    if (set.has(id)) set.delete(id); else set.add(id);
+    onSetWeek([...set]);
+  }
+
+  return (
+    <div ref={ref} className={s.sharingWrap}>
+      <button className={s.sharingBtn} onClick={() => setOpen(o => !o)}>
+        <IconUsers size={15} /> Sharing <IconChevronDown size={13} style={{ opacity: 0.7 }} />
+      </button>
+      {open && (
+        <div className={s.sharingPop}>
+          <div className={s.sharingHdr}>Sharing this week</div>
+          {(members || []).map(m => {
+            const on = currentIds.includes(m.id);
+            return (
+              <button key={m.id} className={s.sharingRow} onClick={() => toggle(m.id)}>
+                <span className={s.sharingCheck} style={on ? { background: m.color, borderColor: m.color } : undefined}>
+                  {on && <IconCheck size={12} color="#fff" />}
+                </span>
+                <span style={{ color: m.color, fontWeight: on ? 500 : 400 }}>{m.name}</span>
+              </button>
+            );
+          })}
+          {!isDefault && (
+            <div className={s.sharingFtr}>
+              <button className={s.sharingReset} onClick={() => { onResetWeek(); }}>
+                <IconRotate size={13} /> Reset to default
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, onRemove, onPrev, onNext, weekLabelStr, sharers, otherMembers, hasSharedGroup, isOwner, override, onSetWeek, onResetWeek }) {
   return (
     <>
       <div className={s.mPanelHdr}>
-        <span className={s.mPanelTitle}>{slot.charAt(0).toUpperCase() + slot.slice(1)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className={s.mPanelTitle}>{slot.charAt(0).toUpperCase() + slot.slice(1)}</span>
+          {isOwner && (
+            <SharingControl members={members} override={override} onSetWeek={onSetWeek} onResetWeek={onResetWeek} />
+          )}
+        </div>
         <div className={s.mWeekNav}>
           <button className={s.ib} onClick={onPrev}><IconChevronLeft size={14} /></button>
           <span className={s.mWeekLabel}>{weekLabelStr}</span>
