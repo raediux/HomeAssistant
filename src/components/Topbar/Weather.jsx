@@ -151,7 +151,7 @@ export default function Weather({ style }) {
           flexShrink: 0,
         }}
       >
-        <IconChevronRight size={15} style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        <IconChevronRight size={15} style={{ transform: expanded ? 'rotate(180deg) scaleX(0.5) scaleY(2)' : 'scaleX(0.5) scaleY(2)', transition: 'transform 0.2s' }} />
       </button>
 
       {/* Hourly strip */}
