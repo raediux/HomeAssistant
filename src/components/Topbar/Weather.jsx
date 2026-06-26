@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   IconSun, IconMoon, IconCloud,
   IconCloudRain, IconCloudStorm, IconCloudSnow, IconCloudFog,
-  IconThermometer, IconDroplet, IconWind,
+  IconThermometer, IconDroplet, IconWind, IconClock,
 } from '@tabler/icons-react';
 import { WEATHER_KEY, WEATHER_LAT, WEATHER_LON } from '../../supabase.js';
 
@@ -29,11 +29,13 @@ const COLOR_MAP = {
   '11': '#9b7fd4', '13': '#a8d4f4', '50': '#8aabbb',
 };
 
-const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
 function wxIcon(code) { return ICON_MAP[code] || ICON_MAP[code.slice(0,2)+'d'] || IconCloud; }
 function wxColor(code) { return COLOR_MAP[code.slice(0,2)] || 'var(--text2)'; }
 function wxTempColor(t) { return t < 10 ? '#6db0e0' : t > 20 ? '#e8b04a' : 'var(--text)'; }
+function fmtHour(dt) {
+  const h = new Date(dt * 1000).getHours();
+  return h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h-12}pm`;
+}
 
 function loadCache() {
   try {
@@ -47,35 +49,32 @@ async function fetchWeather() {
     fetch(`${OWM_BASE}/weather?lat=${WEATHER_LAT}&lon=${WEATHER_LON}&units=metric&appid=${WEATHER_KEY}`).then(r => r.json()),
     fetch(`${OWM_BASE}/forecast?lat=${WEATHER_LAT}&lon=${WEATHER_LON}&units=metric&cnt=40&appid=${WEATHER_KEY}`).then(r => r.json()),
   ]);
-  if (cur.cod && cur.cod !== 200)   throw new Error(cur.message);
+  if (cur.cod && cur.cod !== 200)    throw new Error(cur.message);
   if (fore.cod && fore.cod !== '200') throw new Error(fore.message);
 
-  const todayStr = new Date().toLocaleDateString('en-AU');
-  const dayMap = new Map();
-  for (const item of fore.list) {
-    const key = new Date(item.dt * 1000).toLocaleDateString('en-AU');
-    if (key === todayStr) continue;
-    if (!dayMap.has(key)) dayMap.set(key, { temps: [], items: [] });
-    const b = dayMap.get(key);
-    b.temps.push(item.main.temp);
-    b.items.push(item);
-  }
+  const now = Date.now() / 1000;
+  const hours = fore.list.filter(i => i.dt > now).slice(0, 8).map(i => ({
+    dt: i.dt,
+    icon: i.weather[0].icon,
+    temp: Math.round(i.main.temp),
+  }));
 
-  const days = [];
-  for (const [, { temps, items }] of dayMap) {
-    if (days.length >= 3) break;
-    const mid = items.find(i => { const h = new Date(i.dt*1000).getHours(); return h>=11 && h<=14; })
-              || items[Math.floor(items.length/2)];
-    days.push({ dt: mid.dt, icon: mid.weather[0].icon, hi: Math.round(Math.max(...temps)), lo: Math.round(Math.min(...temps)) });
-  }
-
-  const data = { cur, days, ts: Date.now() };
+  const data = { cur, hours, ts: Date.now() };
   try { localStorage.setItem(WX_CACHE_KEY, JSON.stringify(data)); } catch {}
   return data;
 }
 
+// slot dimensions
+const SLOT_W = 52;
+const SLOT_GAP = 8;
+const VISIBLE = 5;
+const STRIP_W = VISIBLE * SLOT_W + (VISIBLE - 1) * SLOT_GAP; // 292
+
 export default function Weather({ style }) {
   const [wx, setWx] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const drag = useRef({ active: false, startX: 0, startOffset: 0 });
 
   useEffect(() => {
     const cached = loadCache();
@@ -87,9 +86,30 @@ export default function Weather({ style }) {
     return () => clearInterval(id);
   }, []);
 
+  // reset offset when collapsing
+  useEffect(() => { if (!expanded) setOffset(0); }, [expanded]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onMove = (e) => {
+      if (!drag.current.active) return;
+      const delta = e.clientX - drag.current.startX;
+      const totalW = (wx?.hours?.length ?? 0) * SLOT_W + ((wx?.hours?.length ?? 1) - 1) * SLOT_GAP;
+      const maxOff = Math.max(0, totalW - STRIP_W);
+      setOffset(Math.max(-maxOff, Math.min(0, drag.current.startOffset + delta)));
+    };
+    const onUp = () => { drag.current.active = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [expanded, wx]);
+
   if (!wx) return null;
 
-  const { cur, days } = wx;
+  const { cur, hours } = wx;
   const icon = cur.weather[0].icon;
   const WxIcon = wxIcon(icon);
   const temp = Math.round(cur.main.temp);
@@ -97,6 +117,7 @@ export default function Weather({ style }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 14, borderLeft: '1px solid rgba(255,255,255,0.09)', ...style }}>
+
       {/* Current */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <WxIcon size={26} style={{ color: wxColor(icon), flexShrink: 0 }} />
@@ -114,25 +135,67 @@ export default function Weather({ style }) {
         </div>
       </div>
 
-      {/* Divider */}
-      <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', alignSelf: 'stretch', margin: '4px 0' }} />
+      {/* Toggle button */}
+      <button
+        onClick={() => setExpanded(v => !v)}
+        style={{
+          background: expanded ? 'rgba(255,255,255,0.08)' : 'transparent',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: 6,
+          padding: '4px 6px',
+          cursor: 'pointer',
+          color: expanded ? 'var(--text)' : 'var(--text3)',
+          display: 'flex',
+          alignItems: 'center',
+          transition: 'all 0.15s',
+          flexShrink: 0,
+        }}
+      >
+        <IconClock size={15} />
+      </button>
 
-      {/* Forecast strip */}
-      <div style={{ display: 'flex', gap: 16 }}>
-        {days.map(d => {
-          const FcIcon = wxIcon(d.icon);
-          return (
-            <div key={d.dt} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-              <span style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>{DAY_NAMES[new Date(d.dt*1000).getDay()]}</span>
-              <FcIcon size={20} style={{ color: wxColor(d.icon) }} />
-              <div style={{ display: 'flex', gap: 5, fontSize: 12 }}>
-                <span style={{ color: '#c9913a', fontWeight: 500 }}>{d.hi}°</span>
-                <span style={{ color: '#5a87aa' }}>{d.lo}°</span>
+      {/* Hourly strip */}
+      <div style={{
+        overflow: 'hidden',
+        width: expanded ? STRIP_W : 0,
+        transition: 'width 0.25s ease',
+        flexShrink: 0,
+      }}>
+        <div
+          onMouseDown={(e) => {
+            drag.current = { active: true, startX: e.clientX, startOffset: offset };
+            e.preventDefault();
+          }}
+          style={{
+            display: 'flex',
+            gap: SLOT_GAP,
+            transform: `translateX(${offset}px)`,
+            transition: drag.current.active ? 'none' : 'transform 0.15s ease',
+            cursor: 'grab',
+            userSelect: 'none',
+            paddingBottom: 2,
+          }}
+        >
+          {hours.map(h => {
+            const HIcon = wxIcon(h.icon);
+            return (
+              <div key={h.dt} style={{
+                width: SLOT_W,
+                flexShrink: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+              }}>
+                <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 500, letterSpacing: '0.03em' }}>{fmtHour(h.dt)}</span>
+                <HIcon size={18} style={{ color: wxColor(h.icon) }} />
+                <span style={{ fontSize: 12, fontWeight: 500, color: wxTempColor(h.temp) }}>{h.temp}°</span>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
+
     </div>
   );
 }
