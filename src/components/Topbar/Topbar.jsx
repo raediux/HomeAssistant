@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { IconUser, IconLogout, IconMail } from '@tabler/icons-react';
+import { IconUser, IconLogout, IconMail, IconSettings } from '@tabler/icons-react';
+import { AnimatePresence } from 'framer-motion';
 import { supabase } from '../../supabase.js';
 import { clearHouseholdId } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useSession } from '../../contexts/AuthContext.jsx';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
 import Weather from './Weather.jsx';
+import SettingsModal from '../Settings/SettingsModal.jsx';
 import s from './Topbar.module.css';
 
 function useClock() {
@@ -28,6 +30,7 @@ export default function Topbar() {
   const session = useSession();
   const household = useHousehold();
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const menuRef = useRef(null);
 
@@ -75,6 +78,16 @@ export default function Topbar() {
       </div>
 
       <Weather />
+      <button
+        className={s.iconBtn}
+        onClick={() => setSettingsOpen(o => !o)}
+        title="Settings"
+      >
+        <IconSettings size={20} />
+      </button>
+      <AnimatePresence>
+        {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+      </AnimatePresence>
       <a
         href="https://mail.google.com"
         target="_blank"

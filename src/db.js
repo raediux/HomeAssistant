@@ -19,9 +19,14 @@ export function clearHouseholdId() { _householdId = null; }
 
 export async function dbLoadMembers() {
   const { data, error } = await db.from('household_members')
-    .select('id, name, role').order('sort_order').order('created_at');
+    .select('id, name, role, color').order('sort_order').order('created_at');
   if (error) { console.error('dbLoadMembers:', error); return []; }
   return data || [];
+}
+
+export async function dbSaveMemberColor(memberId, color) {
+  const { error } = await db.from('household_members').update({ color }).eq('id', memberId);
+  if (error) console.error('dbSaveMemberColor:', error);
 }
 
 export async function dbLoadTier(householdId) {

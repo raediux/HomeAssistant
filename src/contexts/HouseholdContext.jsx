@@ -4,9 +4,10 @@ import { useSession } from './AuthContext.jsx';
 import { memberAccent } from '../config/members.js';
 import { memberSlug } from '../utils.js';
 
-function enrichMember(m, idx) {
+function enrichMember(m) {
   const acc = memberAccent(m.name);
-  return { ...m, slug: m.slug ?? memberSlug(m.name), color: acc.color, glow: acc.glow, tint: acc.tint, shadow: acc.shadow };
+  const color = m.color ?? acc.color;
+  return { ...m, slug: m.slug ?? memberSlug(m.name), color, glow: acc.glow, tint: acc.tint, shadow: acc.shadow };
 }
 
 // Default applies ONLY when no <HouseholdProvider> is mounted (e.g. design-tool
@@ -60,7 +61,14 @@ export function HouseholdProvider({ children }) {
     load();
   }, [session]);
 
-  return <HouseholdContext.Provider value={household}>{children}</HouseholdContext.Provider>;
+  function setMemberColor(memberId, color) {
+    setHousehold(prev => ({
+      ...prev,
+      members: prev.members.map(m => m.id === memberId ? enrichMember({ ...m, color }) : m),
+    }));
+  }
+
+  return <HouseholdContext.Provider value={household ? { ...household, setMemberColor } : null}>{children}</HouseholdContext.Provider>;
 }
 
 export function useHousehold() {

@@ -127,6 +127,19 @@
 }
 .signoutBtn:hover { background: rgba(255,255,255,0.07); color: var(--text); }
 
+.iconBtn {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  transition: color .15s, background .15s;
+}
+.iconBtn:hover { color: var(--text); background: var(--surface2); }
+
 
 @media (max-width: 600px) {
   .topbar { display: none; }
