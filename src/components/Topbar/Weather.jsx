@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   IconSun, IconMoon, IconCloud,
   IconCloudRain, IconCloudStorm, IconCloudSnow, IconCloudFog,
-  IconThermometer, IconDroplet, IconWind, IconClock,
+  IconThermometer, IconDroplet, IconWind, IconChevronRight,
 } from '@tabler/icons-react';
 import { WEATHER_KEY, WEATHER_LAT, WEATHER_LON } from '../../supabase.js';
 
@@ -151,10 +151,26 @@ export default function Weather({ style }) {
           flexShrink: 0,
         }}
       >
-        <IconClock size={15} />
+        <IconChevronRight size={15} style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
       </button>
 
       {/* Hourly strip */}
+      <div style={{ position: 'relative', flexShrink: 0 }}>
+      {(() => {
+        const totalW = hours.length * SLOT_W + (hours.length - 1) * SLOT_GAP;
+        const maxOff = Math.max(0, totalW - STRIP_W);
+        const canScrollRight = expanded && offset > -maxOff;
+        return (
+          <>
+          <div style={{
+            position: 'absolute', right: 0, top: 0, bottom: 0,
+            width: 40,
+            background: 'linear-gradient(to right, transparent, var(--bg, #0d0d14))',
+            pointerEvents: 'none',
+            zIndex: 1,
+            opacity: canScrollRight ? 1 : 0,
+            transition: 'opacity 0.2s',
+          }} />
       <div style={{
         overflow: 'hidden',
         width: expanded ? STRIP_W : 0,
@@ -194,6 +210,10 @@ export default function Weather({ style }) {
             );
           })}
         </div>
+      </div>
+          </>
+        );
+      })()}
       </div>
 
     </div>
