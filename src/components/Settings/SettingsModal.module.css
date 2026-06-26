@@ -92,3 +92,11 @@
   border-color: rgba(255,255,255,0.8);
   transform: scale(1.15);
 }
+
+.memberRowLocked { opacity: 0.5; }
+
+.locked {
+  font-size: 11px;
+  color: var(--text3);
+  font-style: italic;
+}

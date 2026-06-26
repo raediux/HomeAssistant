@@ -19,7 +19,7 @@ export function clearHouseholdId() { _householdId = null; }
 
 export async function dbLoadMembers() {
   const { data, error } = await db.from('household_members')
-    .select('id, name, role, color').order('sort_order').order('created_at');
+    .select('id, name, role, color, user_id').order('sort_order').order('created_at');
   if (error) { console.error('dbLoadMembers:', error); return []; }
   return data || [];
 }

@@ -1,7 +1,8 @@
 import { useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
+import { useSession } from '../../contexts/AuthContext.jsx';
 import { dbSaveMemberColor } from '../../db.js';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
 import ColorPicker from '../Tasks/ColorPicker.jsx';
@@ -26,8 +27,16 @@ const SWATCHES = [
 
 export default function SettingsModal({ onClose }) {
   const { members, setMemberColor } = useHousehold() ?? {};
+  const session = useSession();
   const panelRef = useRef(null);
   useClickOutside(panelRef, onClose);
+
+  const myMember = (members || []).find(m => m.user_id === session?.user?.id);
+  const isOwner  = myMember?.role === 'owner';
+
+  function canEdit(member) {
+    return isOwner || member.user_id === session?.user?.id;
+  }
 
   async function handleColorPick(memberId, color) {
     setMemberColor(memberId, color);
@@ -50,23 +59,30 @@ export default function SettingsModal({ onClose }) {
         </div>
 
         <div className={s.section}>Member colours</div>
-        {(members || []).map(member => (
-          <div key={member.id} className={s.memberRow}>
-            <div className={s.memberName} style={{ color: member.color }}>{member.name}</div>
-            <div className={s.swatches}>
-              {SWATCHES.map(color => (
-                <button
-                  key={color}
-                  className={`${s.swatch} ${member.color === color ? s.swatchActive : ''}`}
-                  style={{ background: color }}
-                  title={color}
-                  onClick={() => handleColorPick(member.id, color)}
-                />
-              ))}
-              <ColorPicker color={member.color} onChange={c => handleColorPick(member.id, c)} />
+        {(members || []).map(member => {
+          const editable = canEdit(member);
+          return (
+            <div key={member.id} className={`${s.memberRow} ${!editable ? s.memberRowLocked : ''}`}>
+              <div className={s.memberName} style={{ color: member.color }}>{member.name}</div>
+              {editable ? (
+                <div className={s.swatches}>
+                  {SWATCHES.map(color => (
+                    <button
+                      key={color}
+                      className={`${s.swatch} ${member.color === color ? s.swatchActive : ''}`}
+                      style={{ background: color }}
+                      title={color}
+                      onClick={() => handleColorPick(member.id, color)}
+                    />
+                  ))}
+                  <ColorPicker color={member.color} onChange={c => handleColorPick(member.id, c)} />
+                </div>
+              ) : (
+                <div className={s.locked}>Only {member.name} can change this</div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </motion.div>
     </div>
   );
