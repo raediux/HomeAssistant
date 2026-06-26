@@ -149,10 +149,10 @@ export default function Weather({ style }) {
         }}
       >
         <svg
-          width="10" height="32" viewBox="0 0 10 32"
-          fill="none" stroke={expanded ? 'var(--text)' : 'var(--text3)'}
+          width="8" height="24" viewBox="0 0 10 32"
+          fill="none" stroke="var(--text3)"
           strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s, stroke 0.15s' }}
+          style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
         >
           <polyline points="2,2 8,16 2,30" />
         </svg>
