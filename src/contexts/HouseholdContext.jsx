@@ -7,7 +7,7 @@ import { memberSlug } from '../utils.js';
 function enrichMember(m) {
   const acc = memberAccent(m.name);
   const color = m.color ?? acc.color;
-  return { ...m, slug: m.slug ?? memberSlug(m.name), color, glow: acc.glow, tint: acc.tint, shadow: acc.shadow };
+  return { ...m, slug: m.slug ?? memberSlug(m.name), color, glow: acc.glow, tint: acc.tint, shadow: acc.shadow, sharesMeals: !!m.shares_meals };
 }
 
 // Default applies ONLY when no <HouseholdProvider> is mounted (e.g. design-tool
@@ -68,7 +68,14 @@ export function HouseholdProvider({ children }) {
     }));
   }
 
-  return <HouseholdContext.Provider value={household ? { ...household, setMemberColor } : null}>{children}</HouseholdContext.Provider>;
+  function setMemberSharesMeals(memberId, value) {
+    setHousehold(prev => ({
+      ...prev,
+      members: prev.members.map(m => m.id === memberId ? enrichMember({ ...m, shares_meals: value }) : m),
+    }));
+  }
+
+  return <HouseholdContext.Provider value={household ? { ...household, setMemberColor, setMemberSharesMeals } : null}>{children}</HouseholdContext.Provider>;
 }
 
 export function useHousehold() {

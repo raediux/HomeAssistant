@@ -19,7 +19,7 @@ export function clearHouseholdId() { _householdId = null; }
 
 export async function dbLoadMembers() {
   const { data, error } = await db.from('household_members')
-    .select('id, name, role, color, user_id').order('sort_order').order('created_at');
+    .select('id, name, role, color, user_id, shares_meals').order('sort_order').order('created_at');
   if (error) { console.error('dbLoadMembers:', error); return []; }
   return data || [];
 }
@@ -27,6 +27,11 @@ export async function dbLoadMembers() {
 export async function dbSaveMemberColor(memberId, color) {
   const { error } = await db.from('household_members').update({ color }).eq('id', memberId);
   if (error) console.error('dbSaveMemberColor:', error);
+}
+
+export async function dbSetMemberSharesMeals(memberId, value) {
+  const { error } = await db.from('household_members').update({ shares_meals: value }).eq('id', memberId);
+  if (error) console.error('dbSetMemberSharesMeals:', error);
 }
 
 export async function dbLoadTier(householdId) {

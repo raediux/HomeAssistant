@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useSession } from '../../contexts/AuthContext.jsx';
-import { dbSaveMemberColor } from '../../db.js';
+import { dbSaveMemberColor, dbSetMemberSharesMeals } from '../../db.js';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
 import ColorPicker from '../Tasks/ColorPicker.jsx';
 import s from './SettingsModal.module.css';
@@ -26,7 +26,7 @@ const SWATCHES = [
 ];
 
 export default function SettingsModal({ onClose }) {
-  const { members, setMemberColor } = useHousehold() ?? {};
+  const { members, setMemberColor, setMemberSharesMeals } = useHousehold() ?? {};
   const session = useSession();
   const panelRef = useRef(null);
   useClickOutside(panelRef, onClose);
@@ -41,6 +41,11 @@ export default function SettingsModal({ onClose }) {
   async function handleColorPick(memberId, color) {
     setMemberColor(memberId, color);
     await dbSaveMemberColor(memberId, color);
+  }
+
+  async function handleSharesMeals(memberId, value) {
+    setMemberSharesMeals(memberId, value);
+    await dbSetMemberSharesMeals(memberId, value);
   }
 
   return (
@@ -83,6 +88,27 @@ export default function SettingsModal({ onClose }) {
             </div>
           );
         })}
+
+        {isOwner && (
+          <>
+            <div className={s.section}>Shared meals</div>
+            {(members || []).map(member => (
+              <div key={member.id} className={s.toggleRow}>
+                <span className={s.toggleName} style={{ color: member.color }}>{member.name}</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={member.sharesMeals}
+                  className={`${s.toggle} ${member.sharesMeals ? s.toggleOn : ''}`}
+                  onClick={() => handleSharesMeals(member.id, !member.sharesMeals)}
+                >
+                  <span className={s.toggleKnob} />
+                </button>
+              </div>
+            ))}
+            <div className={s.hint}>Members who share meals get one linked meal slot in the planner (needs 2 or more).</div>
+          </>
+        )}
       </motion.div>
     </div>
   );

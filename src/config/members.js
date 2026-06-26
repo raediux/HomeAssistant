@@ -1,6 +1,3 @@
-// Number of adult/couple members (first N members share linked meal slots).
-export const COUPLE_SIZE = 2;
-
 // Canonical per-member accent palette. Keyed by name (case-insensitive match).
 // Used by HouseholdContext to enrich DB members and by any component that needs
 // glow/tint/shadow variants without re-deriving them from a hex string.

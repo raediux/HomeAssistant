@@ -13,11 +13,12 @@ import ShoppingWorkingPanel from '../Shopping/ShoppingWorkingPanel.jsx';
 import ShoppingPastPanel from '../Shopping/ShoppingPastPanel.jsx';
 import ShoppingModal from '../Shopping/ShoppingModal.jsx';
 import MealPlannerParticles from './MealPlannerParticles.jsx';
-import { COUPLE_SIZE } from '../../config/members.js';
 import s from './MealPlanner.module.css';
 
 const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// DB key under which a shared (linked) meal is stored in meal_plans.person.
+const SHARED_KEY  = 'shared';
 
 function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -31,9 +32,9 @@ function weekLabel(weekStart) {
   return `Sun ${sStr} – Sat ${end.getDate()} ${MONTH_NAMES[end.getMonth()]}`;
 }
 
-function isSplit(dayData, slot, members) {
-  if (dayData['couple']?.[slot]) return false;
-  if (members.slice(0, COUPLE_SIZE).some(m => dayData[memberSlug(m.name)]?.[slot])) return true;
+function isSplit(dayData, slot, sharers) {
+  if (dayData[SHARED_KEY]?.[slot]) return false;
+  if (sharers.some(m => dayData[memberSlug(m.name)]?.[slot])) return true;
   return slot === 'lunch'; // lunch defaults to split, dinner to linked
 }
 
@@ -63,6 +64,16 @@ export default function MealPlanner() {
   const [activeMobilePanel, setActiveMobilePanel] = useState(2);
   const mobilePanelsRef = useRef(null);
   const shopData = useShop();
+
+  // Members who share linked meals are data-driven (the `sharesMeals` flag),
+  // not position-based. A shared group only forms with 2+ sharers; a lone
+  // sharer is treated as an individual. Sharers render first so the linked
+  // cell stays contiguous regardless of member sort order.
+  const sharingMembers = (members || []).filter(m => m.sharesMeals);
+  const hasSharedGroup = sharingMembers.length >= 2;
+  const sharers     = hasSharedGroup ? sharingMembers : [];
+  const individuals = hasSharedGroup ? (members || []).filter(m => !m.sharesMeals) : (members || []);
+  const orderedMembers = [...sharers, ...individuals];
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -104,7 +115,7 @@ export default function MealPlanner() {
       if (next[dk]?.[person]) {
         delete next[dk][person][slot];
         if (!next[dk][person].lunch && !next[dk][person].dinner) delete next[dk][person];
-        const allKeys = [...(members || []).map(m => memberSlug(m.name)), 'couple'];
+        const allKeys = [...(members || []).map(m => memberSlug(m.name)), SHARED_KEY];
         if (!allKeys.some(k => next[dk]?.[k])) delete next[dk];
       }
       return next;
@@ -112,36 +123,34 @@ export default function MealPlanner() {
     await dbDeleteMeal(dk, person, slot);
   }
 
-  async function splitCouple(dk, slot) {
-    const meal = meals[dk]?.['couple']?.[slot];
-    const coupleMembers = (members || []).slice(0, COUPLE_SIZE);
+  async function splitShared(dk, slot) {
+    const meal = meals[dk]?.[SHARED_KEY]?.[slot];
     setMeals(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       if (!next[dk]) next[dk] = {};
-      for (const m of coupleMembers) {
+      for (const m of sharers) {
         const p = memberSlug(m.name);
         if (!next[dk][p]) next[dk][p] = {};
         if (meal) next[dk][p][slot] = meal;
       }
-      if (next[dk]['couple']) {
-        delete next[dk]['couple'][slot];
-        if (!next[dk]['couple'].lunch && !next[dk]['couple'].dinner) delete next[dk]['couple'];
+      if (next[dk][SHARED_KEY]) {
+        delete next[dk][SHARED_KEY][slot];
+        if (!next[dk][SHARED_KEY].lunch && !next[dk][SHARED_KEY].dinner) delete next[dk][SHARED_KEY];
       }
       return next;
     });
-    const saves = meal ? coupleMembers.map(m => dbSaveMeal(dk, memberSlug(m.name), slot, meal)) : [];
-    await Promise.all([dbDeleteMeal(dk, 'couple', slot), ...saves]);
+    const saves = meal ? sharers.map(m => dbSaveMeal(dk, memberSlug(m.name), slot, meal)) : [];
+    await Promise.all([dbDeleteMeal(dk, SHARED_KEY, slot), ...saves]);
   }
 
-  async function mergeCouple(dk, slot) {
-    const coupleMembers = (members || []).slice(0, COUPLE_SIZE);
+  async function mergeShared(dk, slot) {
     let meal = null;
     const deletes = [];
     setMeals(prev => {
       const next = JSON.parse(JSON.stringify(prev));
       if (!next[dk]) next[dk] = {};
-      if (!next[dk]['couple']) next[dk]['couple'] = {};
-      for (const m of coupleMembers) {
+      if (!next[dk][SHARED_KEY]) next[dk][SHARED_KEY] = {};
+      for (const m of sharers) {
         const p = memberSlug(m.name);
         if (!meal) meal = next[dk][p]?.[slot] || null;
         if (next[dk][p]?.[slot]) {
@@ -150,10 +159,10 @@ export default function MealPlanner() {
           deletes.push(dbDeleteMeal(dk, p, slot));
         }
       }
-      if (meal) next[dk]['couple'][slot] = meal;
+      if (meal) next[dk][SHARED_KEY][slot] = meal;
       return next;
     });
-    await Promise.all([...deletes, ...(meal ? [dbSaveMeal(dk, 'couple', slot, meal)] : [])]);
+    await Promise.all([...deletes, ...(meal ? [dbSaveMeal(dk, SHARED_KEY, slot, meal)] : [])]);
   }
 
   const todayKey = dateKey(new Date());
@@ -195,28 +204,29 @@ export default function MealPlanner() {
                 </div>
 
                 <div className={s.persons}>
-                  {members.map((member, ri) => {
+                  {orderedMembers.map((member, oi) => {
                     const p = memberSlug(member.name);
-                    const isCouple = ri < COUPLE_SIZE;
-                    const isLast = ri === members.length - 1;
-                    const color = members[ri]?.color ?? members[0]?.color;
+                    const isShared = hasSharedGroup && member.sharesMeals;
+                    const isFirstShared = isShared && member === sharers[0];
+                    const isLast = oi === orderedMembers.length - 1;
 
                     return (
                       <MealPersonRow
                         key={p}
                         person={p}
                         name={member.name}
-                        color={color}
-                        isCouple={isCouple}
-                        isFirst={ri === 0}
+                        color={member.color}
+                        isShared={isShared}
+                        isFirstShared={isFirstShared}
+                        sharersCount={sharers.length}
                         isLast={isLast}
                         dayData={dayData}
                         dateKey={dk}
-                        members={members}
+                        sharers={sharers}
                         onOpen={openModal}
                         onRemove={removeCell}
-                        onSplit={splitCouple}
-                        onMerge={mergeCouple}
+                        onSplit={splitShared}
+                        onMerge={mergeShared}
                         s={s}
                       />
                     );
@@ -293,8 +303,10 @@ export default function MealPlanner() {
 }
 
 function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, onRemove, onPrev, onNext, weekLabelStr }) {
-  const coupleMembers = (members || []).slice(0, COUPLE_SIZE);
-  const otherMembers  = (members || []).slice(COUPLE_SIZE);
+  const sharingMembers = (members || []).filter(m => m.sharesMeals);
+  const hasSharedGroup = sharingMembers.length >= 2;
+  const sharers      = hasSharedGroup ? sharingMembers : [];
+  const otherMembers = hasSharedGroup ? (members || []).filter(m => !m.sharesMeals) : (members || []);
   return (
     <>
       <div className={s.mPanelHdr}>
@@ -311,7 +323,7 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
           const dk = dateKey(d);
           const dayData = meals[dk] || {};
           const isToday = dk === todayKey;
-          const slotSplit = isSplit(dayData, slot, members || []);
+          const slotSplit = isSplit(dayData, slot, sharers);
 
           return (
             <div key={dk} className={cn(s.mDay, isToday && s.mDayToday)}>
@@ -320,13 +332,13 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
                 <span className={s.mDayDate}>{d.getDate()}</span>
               </div>
               <div className={s.mDaySlots}>
-                {slotSplit ? (
-                  coupleMembers.map((m, ci) => {
+                {hasSharedGroup && (slotSplit ? (
+                  sharers.map(m => {
                     const p = memberSlug(m.name);
                     const meal = dayData[p]?.[slot];
                     return (
                       <div key={p} className={s.mSlot}>
-                        <span className={s.mName} style={{ color: members[ci]?.color }}>{m.name}</span>
+                        <span className={s.mName} style={{ color: m.color }}>{m.name}</span>
                         {meal ? (
                           <div className={s.mMeal} onClick={() => onOpen(dk, p, slot)}>
                             <span className={s.mMealText}>{meal}</span>
@@ -341,29 +353,32 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
                 ) : (
                   <div className={s.mSlot}>
                     <span className={s.mName}>
-                      <span style={{ color: coupleMembers[0]?.color }}>{coupleMembers[0]?.name}</span>
-                      {' & '}
-                      <span style={{ color: coupleMembers[1]?.color }}>{coupleMembers[1]?.name}</span>
+                      {sharers.map((m, i) => (
+                        <span key={m.id}>
+                          {i > 0 && ' & '}
+                          <span style={{ color: m.color }}>{m.name}</span>
+                        </span>
+                      ))}
                     </span>
                     {(() => {
-                      const meal = dayData['couple']?.[slot];
+                      const meal = dayData[SHARED_KEY]?.[slot];
                       return meal ? (
-                        <div className={s.mMeal} onClick={() => onOpen(dk, 'couple', slot)}>
+                        <div className={s.mMeal} onClick={() => onOpen(dk, SHARED_KEY, slot)}>
                           <span className={s.mMealText}>{meal}</span>
-                          <button className={s.mRm} onClick={e => { e.stopPropagation(); onRemove(dk, 'couple', slot); }}>×</button>
+                          <button className={s.mRm} onClick={e => { e.stopPropagation(); onRemove(dk, SHARED_KEY, slot); }}>×</button>
                         </div>
                       ) : (
-                        <button className={s.mAdd} onClick={() => onOpen(dk, 'couple', slot)}>+ Add</button>
+                        <button className={s.mAdd} onClick={() => onOpen(dk, SHARED_KEY, slot)}>+ Add</button>
                       );
                     })()}
                   </div>
-                )}
-                {otherMembers.map((m, oi) => {
+                ))}
+                {otherMembers.map(m => {
                   const p = memberSlug(m.name);
                   const meal = dayData[p]?.[slot];
                   return (
                     <div key={p} className={s.mSlot}>
-                      <span className={s.mName} style={{ color: members[COUPLE_SIZE + oi]?.color }}>{m.name}</span>
+                      <span className={s.mName} style={{ color: m.color }}>{m.name}</span>
                       {meal ? (
                         <div className={s.mMeal} onClick={() => onOpen(dk, p, slot)}>
                           <span className={s.mMealText}>{meal}</span>
@@ -384,11 +399,11 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
   );
 }
 
-function MealPersonRow({ person, name, color, isCouple, isFirst, isLast, dayData, dateKey: dk, members, onOpen, onRemove, onSplit, onMerge, s }) {
-  const nameClasses = cn(s.gname, isFirst && isCouple && s.gnameCouple, isLast && s.gnameLast);
+function MealPersonRow({ person, name, color, isShared, isFirstShared, sharersCount, isLast, dayData, dateKey: dk, sharers, onOpen, onRemove, onSplit, onMerge, s }) {
+  const nameClasses = cn(s.gname, isFirstShared && s.gnameCouple, isLast && s.gnameLast);
 
-  // Non-couple member — always individual
-  if (!isCouple) {
+  // Non-sharing member — always individual
+  if (!isShared) {
     return (
       <>
         <div className={nameClasses} style={{ '--mb': color }}>{name}</div>
@@ -411,12 +426,12 @@ function MealPersonRow({ person, name, color, isCouple, isFirst, isLast, dayData
     );
   }
 
-  // Couple member — each slot is independently split or merged
+  // Sharing member — each slot is independently split or merged
   return (
     <>
       <div className={nameClasses} style={{ '--mb': color }}>{name}</div>
       {['lunch','dinner'].map(slot => {
-        const slotSplit = isSplit(dayData, slot, members);
+        const slotSplit = isSplit(dayData, slot, sharers);
 
         if (slotSplit) {
           // Individual cells for this slot
@@ -426,7 +441,7 @@ function MealPersonRow({ person, name, color, isCouple, isFirst, isLast, dayData
               {meal ? (
                 <div className={s.cellFilled} onClick={() => onOpen(dk, person, slot)}>
                   <span className={s.cellName}>{linkify(meal)}</span>
-                  {isFirst && <button className={s.mergeBtn} onClick={e => { e.stopPropagation(); onMerge(dk, slot); }} title="Combine"><IconLink size={13} /></button>}
+                  {isFirstShared && <button className={s.mergeBtn} onClick={e => { e.stopPropagation(); onMerge(dk, slot); }} title="Combine"><IconLink size={13} /></button>}
                   <button className={s.cellRm} onClick={e => { e.stopPropagation(); onRemove(dk, person, slot); }} title="Remove"><IconX size={13} /></button>
                 </div>
               ) : (
@@ -436,19 +451,19 @@ function MealPersonRow({ person, name, color, isCouple, isFirst, isLast, dayData
           );
         }
 
-        // Couple mode — only isFirst renders the spanning cell
-        if (!isFirst) return null;
-        const meal = dayData['couple']?.[slot];
+        // Linked mode — only the first sharer renders the spanning cell
+        if (!isFirstShared) return null;
+        const meal = dayData[SHARED_KEY]?.[slot];
         return (
-          <div key={slot} className={cn(s.gcell, s.gcellCouple)} style={{ gridRow: 'span 2' }}>
+          <div key={slot} className={cn(s.gcell, s.gcellCouple)} style={{ gridRow: `span ${sharersCount}` }}>
             {meal ? (
-              <div className={s.cellFilled} onClick={() => onOpen(dk, 'couple', slot)}>
+              <div className={s.cellFilled} onClick={() => onOpen(dk, SHARED_KEY, slot)}>
                 <span className={s.cellName}>{linkify(meal)}</span>
                 <button className={s.splitBtn} onClick={e => { e.stopPropagation(); onSplit(dk, slot); }} title="Split"><IconArrowsSplit2 size={13} /></button>
-                <button className={s.cellRm} onClick={e => { e.stopPropagation(); onRemove(dk, 'couple', slot); }} title="Remove"><IconX size={13} /></button>
+                <button className={s.cellRm} onClick={e => { e.stopPropagation(); onRemove(dk, SHARED_KEY, slot); }} title="Remove"><IconX size={13} /></button>
               </div>
             ) : (
-              <button className={s.cellAdd} onClick={() => onOpen(dk, 'couple', slot)}><IconPlus size={11} /> Add</button>
+              <button className={s.cellAdd} onClick={() => onOpen(dk, SHARED_KEY, slot)}><IconPlus size={11} /> Add</button>
             )}
           </div>
         );
