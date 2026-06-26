@@ -60,6 +60,9 @@ export default function Topbar() {
             <div className={s.tier} data-tier={household?.tier || 'free'}>
               {(household?.tier || 'free').charAt(0).toUpperCase() + (household?.tier || 'free').slice(1)}
             </div>
+            <button className={s.signoutBtn} onClick={() => { setOpen(false); setSettingsOpen(true); }}>
+              <IconSettings size={15} /> Settings
+            </button>
             <button className={s.signoutBtn} onClick={() => { clearHouseholdId(); supabase.auth.signOut(); }}>
               <IconLogout size={15} /> Sign out
             </button>
@@ -78,13 +81,6 @@ export default function Topbar() {
       </div>
 
       <Weather />
-      <button
-        className={s.iconBtn}
-        onClick={() => setSettingsOpen(o => !o)}
-        title="Settings"
-      >
-        <IconSettings size={20} />
-      </button>
       <AnimatePresence>
         {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
       </AnimatePresence>

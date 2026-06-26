@@ -4,6 +4,7 @@ import { IconX } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { dbSaveMemberColor } from '../../db.js';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
+import ColorPicker from '../Tasks/ColorPicker.jsx';
 import s from './SettingsModal.module.css';
 
 const MODAL_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.9 };
@@ -62,6 +63,7 @@ export default function SettingsModal({ onClose }) {
                   onClick={() => handleColorPick(member.id, color)}
                 />
               ))}
+              <ColorPicker color={member.color} onChange={c => handleColorPick(member.id, c)} />
             </div>
           </div>
         ))}
