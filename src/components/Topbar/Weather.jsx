@@ -203,7 +203,7 @@ export default function Weather({ style }) {
                 alignItems: 'center',
                 gap: 4,
               }}>
-                <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 500, letterSpacing: '0.03em' }}>{fmtHour(h.dt)}</span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.60)', fontWeight: 500, letterSpacing: '0.03em' }}>{fmtHour(h.dt)}</span>
                 <HIcon size={18} style={{ color: wxColor(h.icon) }} />
                 <span style={{ fontSize: 12, fontWeight: 500, color: wxTempColor(h.temp) }}>{h.temp}°</span>
               </div>
