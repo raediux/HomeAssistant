@@ -13,12 +13,11 @@ import ShoppingWorkingPanel from '../Shopping/ShoppingWorkingPanel.jsx';
 import ShoppingPastPanel from '../Shopping/ShoppingPastPanel.jsx';
 import ShoppingModal from '../Shopping/ShoppingModal.jsx';
 import MealPlannerParticles from './MealPlannerParticles.jsx';
+import { COUPLE_SIZE } from '../../config/members.js';
 import s from './MealPlanner.module.css';
 
 const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const MEMBER_COLORS = ['var(--accent)', 'var(--pink)', 'var(--yellow)', '#64c882'];
-const COUPLE_SIZE = 2;
 
 function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -200,7 +199,7 @@ export default function MealPlanner() {
                     const p = memberSlug(member.name);
                     const isCouple = ri < COUPLE_SIZE;
                     const isLast = ri === members.length - 1;
-                    const color = MEMBER_COLORS[ri] || MEMBER_COLORS[0];
+                    const color = members[ri]?.color ?? members[0]?.color;
 
                     return (
                       <MealPersonRow
@@ -327,7 +326,7 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
                     const meal = dayData[p]?.[slot];
                     return (
                       <div key={p} className={s.mSlot}>
-                        <span className={s.mName} style={{ color: MEMBER_COLORS[ci] }}>{m.name}</span>
+                        <span className={s.mName} style={{ color: members[ci]?.color }}>{m.name}</span>
                         {meal ? (
                           <div className={s.mMeal} onClick={() => onOpen(dk, p, slot)}>
                             <span className={s.mMealText}>{meal}</span>
@@ -342,9 +341,9 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
                 ) : (
                   <div className={s.mSlot}>
                     <span className={s.mName}>
-                      <span style={{ color: MEMBER_COLORS[0] }}>{coupleMembers[0]?.name}</span>
+                      <span style={{ color: coupleMembers[0]?.color }}>{coupleMembers[0]?.name}</span>
                       {' & '}
-                      <span style={{ color: MEMBER_COLORS[1] }}>{coupleMembers[1]?.name}</span>
+                      <span style={{ color: coupleMembers[1]?.color }}>{coupleMembers[1]?.name}</span>
                     </span>
                     {(() => {
                       const meal = dayData['couple']?.[slot];
@@ -364,7 +363,7 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
                   const meal = dayData[p]?.[slot];
                   return (
                     <div key={p} className={s.mSlot}>
-                      <span className={s.mName} style={{ color: MEMBER_COLORS[COUPLE_SIZE + oi] }}>{m.name}</span>
+                      <span className={s.mName} style={{ color: members[COUPLE_SIZE + oi]?.color }}>{m.name}</span>
                       {meal ? (
                         <div className={s.mMeal} onClick={() => onOpen(dk, p, slot)}>
                           <span className={s.mMealText}>{meal}</span>

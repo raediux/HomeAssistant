@@ -7,8 +7,10 @@ import {
   dbSavePastItem, dbDeletePastItem,
   dbGetLastShoppingClear, dbSetLastShoppingClear,
 } from '../db.js';
+import { STORES } from '../config/stores.js';
+import { SHOPPING_CLEAR_DAY } from '../config/shopping.js';
 
-export const STORES = ['Aldi','Asian Grocer','Big W','Butcher','Chemist Warehouse','Coles','Kmart','Korean Grocer','Pharmacy 4 Less','Ray Mum','Target','Woolworths','Others'];
+export { STORES };
 
 export function useShoppingData() {
   const { scheduleDelete } = useUndo();
@@ -23,7 +25,7 @@ export function useShoppingData() {
   useEffect(() => {
     Promise.all([dbLoadWorkingItems(), dbLoadPastItems(), dbGetLastShoppingClear()]).then(([w, p, lastClear]) => {
       const today = new Date();
-      const isMonday = today.getDay() === 1;
+      const isMonday = today.getDay() === SHOPPING_CLEAR_DAY;
       const todayStr = today.toISOString().slice(0, 10);
 
       let finalWorking = w;

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
+import { STORES } from '../../config/stores.js';
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
-
-const STORES = ['Aldi','Asian Grocer','Big W','Butcher','Chemist Warehouse','Coles','Kmart','Korean Grocer','Pharmacy 4 Less','Ray Mum','Target','Woolworths','Others'];
 
 export default function ShoppingModal({ editItem, defaultStore, pastItems, onConfirm, onClose }) {
   const inputRef = useRef(null);

@@ -11,6 +11,7 @@ import s from './Calendar.module.css';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAY_HDRS    = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MAX_BADGES_PER_DAY = 3;
 const FULL_DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const BADGE_SWATCHES = [
   { color: '#4a8fd4', label: 'Blue'   },
@@ -18,7 +19,6 @@ const BADGE_SWATCHES = [
   { color: '#c9a838', label: 'Yellow' },
   { color: '#5a9e5a', label: 'Green'  },
 ];
-const MEMBER_COLORS = ['#4a8fd4', '#c46090', '#c9a838', '#64c882'];
 
 function toDateStr(d) { return d.toISOString().split('T')[0]; }
 function monDow(jsDay) { return (jsDay + 6) % 7; }
@@ -63,8 +63,8 @@ export default function Calendar() {
 
   // Member color lookup
   function memberColor(person) {
-    const idx = (members || []).findIndex(m => memberSlug(m.name) === person);
-    return MEMBER_COLORS[idx >= 0 ? idx % MEMBER_COLORS.length : 0];
+    const m = (members || []).find(m => (m.slug ?? memberSlug(m.name)) === person);
+    return m?.color ?? '#64c882';
   }
   function memberLabel(person) {
     const m = (members || []).find(m => memberSlug(m.name) === person);
@@ -111,8 +111,8 @@ export default function Calendar() {
                 ...dayTasks.map(t  => ({ label: t.title, color: memberColor(t.person) })),
                 ...dayBadges.map(b => ({ label: b.label, color: b.color })),
               ];
-              const shown    = combined.slice(0, 3);
-              const overflow = combined.length - 3;
+              const shown    = combined.slice(0, MAX_BADGES_PER_DAY);
+              const overflow = combined.length - MAX_BADGES_PER_DAY;
               const classes  = cn(s.day, ds === todayStr && s.dayToday, ds === selected && s.daySelected);
 
               return (

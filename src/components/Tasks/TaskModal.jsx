@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
+import { FREQ_LABEL as FREQ_LABELS } from '../../config/tasks.js';
 import s from './Tasks.module.css';
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
 const DOW_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-const FREQ_LABELS = { daily: 'Daily', weekly: 'Weekly', occasional: 'Occasional' };
 
 export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
   const [title, setTitle] = useState('');

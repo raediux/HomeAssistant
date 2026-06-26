@@ -8,21 +8,14 @@ import { dbSaveTask, dbDeleteTask } from '../../db.js';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
 import { memberSlug } from '../../utils.js';
 import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
+import { FREQUENCIES, FREQ_LABEL } from '../../config/tasks.js';
 import TaskModal from './TaskModal.jsx';
 import Whiteboard from './Whiteboard.jsx';
 import MemberParticles from './MemberParticles.jsx';
 import s from './Tasks.module.css';
 
-const FREQUENCIES = ['daily', 'weekly', 'occasional'];
-const FREQ_LABEL  = { daily: 'Daily', weekly: 'Weekly', occasional: 'Occasional' };
 const BADGE_ICON  = { 'ti-alert-circle': IconAlertCircle, 'ti-clock': IconClock, 'ti-calendar': IconCalendar };
 const BADGE_CLS   = { 'b-red': s.bRed, 'b-amb': s.bAmb, 'b-blue': s.bBlue };
-const ACCENTS = [
-  { col: '#4a8fd4', glow: 'rgba(74,143,212,0.22)',  tint: 'rgba(74,143,212,0.05)',  shadow: 'rgba(74,143,212,0.18)' },
-  { col: '#c46090', glow: 'rgba(196,96,144,0.15)',   tint: 'rgba(196,96,144,0.04)',  shadow: 'rgba(196,96,144,0.14)' },
-  { col: '#c9a838', glow: 'rgba(201,168,56,0.11)',   tint: 'rgba(201,168,56,0.04)',  shadow: 'rgba(201,168,56,0.12)' },
-  { col: '#64c882', glow: 'rgba(100,200,130,0.13)',  tint: 'rgba(100,200,130,0.04)', shadow: 'rgba(100,200,130,0.12)' },
-];
 
 export default function Tasks() {
   const { members } = useHousehold();
@@ -101,7 +94,7 @@ export default function Tasks() {
           <div
             key={m.name}
             className={`${s.dot} ${i === activeDot ? s.dotActive : ''}`}
-            style={{ '--dot-col': ACCENTS[i % 4].col }}
+            style={{ '--dot-col': m.color }}
           />
         ))}
         <div
@@ -112,17 +105,15 @@ export default function Tasks() {
 
       <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
         {members.map((member, idx) => {
-          const slug = memberSlug(member.name);
-          const ci   = idx % 4;
-          const acc  = ACCENTS[ci];
+          const slug = member.slug ?? memberSlug(member.name);
           return (
             <div
               key={slug}
               className={s.glowWrap}
-              style={{ '--col': acc.col, '--col-glow': acc.glow, '--col-tint': acc.tint, '--col-shadow': acc.shadow }}
+              style={{ '--col': member.color, '--col-glow': member.glow, '--col-tint': member.tint, '--col-shadow': member.shadow }}
               data-person={slug}
             >
-              <MemberParticles color={acc.col} />
+              <MemberParticles color={member.color} />
               <div className={s.column}>
                 <div className={s.colName}>{member.name}</div>
                 <div className={s.colTasks}>
