@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { getMyHouseholdId, dbLoadMembers, dbLoadTier } from '../db.js';
 import { useSession } from './AuthContext.jsx';
+import { useRealtimeSync } from '../hooks/useRealtimeSync.js';
 import { memberAccent } from '../config/members.js';
 import { memberSlug } from '../utils.js';
 
@@ -60,6 +61,26 @@ export function HouseholdProvider({ children }) {
 
     load();
   }, [session]);
+
+  // Live-sync member changes (colour, shares_meals, add/remove) across devices.
+  useRealtimeSync('household_members', (payload) => {
+    setHousehold(prev => {
+      if (!prev) return prev;
+      const { eventType, new: newRow, old: oldRow } = payload;
+      let members;
+      if (eventType === 'DELETE') {
+        members = prev.members.filter(m => m.id !== oldRow.id);
+      } else {
+        const enriched = enrichMember(newRow);
+        const exists = prev.members.some(m => m.id === enriched.id);
+        members = exists
+          ? prev.members.map(m => m.id === enriched.id ? enriched : m)
+          : [...prev.members, enriched];
+        members = [...members].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      }
+      return { ...prev, members };
+    });
+  });
 
   function setMemberColor(memberId, color) {
     setHousehold(prev => ({
