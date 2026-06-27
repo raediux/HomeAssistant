@@ -30,7 +30,7 @@ export async function onRequestGet({ request, env }) {
 
   if (!tokenRes.ok) {
     const errBody = await tokenRes.json().catch(() => ({}));
-    return fail(`token_exchange_failed:${errBody.error}:${errBody.error_description}`);
+    return fail(`token_exchange_failed:${errBody.error}:${errBody.error_description}:cid=${env.GOOGLE_CLIENT_ID?.slice(0,20)}`);
   }
   const tokens = await tokenRes.json();
 
