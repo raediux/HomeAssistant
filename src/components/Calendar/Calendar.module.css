@@ -108,6 +108,8 @@
 
 .syncedChip { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); margin-left: auto; }
 .syncedDot { width: 7px; height: 7px; border-radius: 50%; background: #5a9e5a; flex-shrink: 0; }
+.refreshBtn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; transition: color .12s; }
+.refreshBtn:hover { color: var(--text); }
 
 .googleBadge { font-size: 9px; font-weight: 500; padding: 1px 4px 1px 3px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; border-left: 2px solid #4a8fd4; }
 

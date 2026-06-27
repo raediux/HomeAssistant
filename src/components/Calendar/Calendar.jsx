@@ -53,7 +53,7 @@ export default function Calendar() {
 
   useEffect(() => {
     fetchGoogleEventsForMonth(year, month);
-  }, [year, month]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [year, month, hasGoogleToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function prevMonth() {
     if (month === 0) { setMonth(11); setYear(y => y - 1); }
@@ -124,7 +124,7 @@ export default function Calendar() {
         <button className={s.ib} onClick={nextMonth}><IconChevronRight size={16} /></button>
         {session?.user && (
           hasGoogleToken
-            ? <span className={s.syncedChip}><span className={s.syncedDot} />Google Calendar synced</span>
+            ? <span className={s.syncedChip}><span className={s.syncedDot} />Google Calendar synced<button className={s.refreshBtn} onClick={() => fetchGoogleEventsForMonth(year, month)} title="Refresh">↻</button></span>
             : <button className={s.connectBtn} onClick={() => initiateGoogleOAuth(session.user.id)}><IconCalendarEvent size={13} /> Connect Google Calendar</button>
         )}
       </div>
