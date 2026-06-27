@@ -175,7 +175,6 @@
   border-bottom: 1px solid var(--border);
 }
 .gname::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--mb, var(--accent)); }
-.gnameCouple::before { background: var(--accent); }
 .gnameLast { border-bottom: none; }
 
 .gcell {
