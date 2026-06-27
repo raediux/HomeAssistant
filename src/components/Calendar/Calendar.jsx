@@ -122,10 +122,10 @@ export default function Calendar() {
         <button className={s.ib} onClick={prevMonth}><IconChevronLeft size={16} /></button>
         <span className={s.monthLabel}>{MONTH_NAMES[month]} {year}</span>
         <button className={s.ib} onClick={nextMonth}><IconChevronRight size={16} /></button>
-        {!hasGoogleToken && session?.user && (
-          <button className={s.connectBtn} onClick={() => initiateGoogleOAuth(session.user.id)}>
-            <IconCalendarEvent size={13} /> Connect Google Calendar
-          </button>
+        {session?.user && (
+          hasGoogleToken
+            ? <span className={s.syncedChip}><span className={s.syncedDot} />Google Calendar synced</span>
+            : <button className={s.connectBtn} onClick={() => initiateGoogleOAuth(session.user.id)}><IconCalendarEvent size={13} /> Connect Google Calendar</button>
         )}
       </div>
 
