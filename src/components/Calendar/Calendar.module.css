@@ -95,3 +95,20 @@
 .swatch { width: 10px; height: 10px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .1s, border-color .1s; }
 .swatch:hover { transform: scale(1.15); }
 .swatch.selected { border-color: var(--text); }
+
+/* Google Calendar */
+.connectBtn {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(74,143,212,0.12); border: 1px solid rgba(74,143,212,0.3);
+  color: #4a8fd4; border-radius: 6px; padding: 3px 9px;
+  font-size: 11px; font-weight: 500; cursor: pointer; margin-left: auto;
+  transition: background .12s;
+}
+.connectBtn:hover { background: rgba(74,143,212,0.22); }
+
+.googleBadge { font-size: 9px; font-weight: 500; padding: 1px 4px 1px 3px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; border-left: 2px solid #4a8fd4; }
+
+.googleRow { display: flex; align-items: flex-start; gap: 7px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.googleRow:last-child { border-bottom: none; }
+.googleTitle { font-size: 12px; color: var(--text); }
+.googleTime { font-size: 10px; color: var(--text3); margin-top: 2px; }

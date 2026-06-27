@@ -77,6 +77,23 @@ export async function dbDeleteTask(id) {
   if (error) console.error('dbDeleteTask:', error);
 }
 
+// ── Google tokens ─────────────────────────────────────────────
+export async function dbGetGoogleToken() {
+  const { data, error } = await db.from('google_tokens').select('access_token, refresh_token, expires_at').maybeSingle();
+  if (error) { console.error('dbGetGoogleToken:', error); return null; }
+  return data;
+}
+
+export async function dbSaveGoogleToken({ access_token, refresh_token, expires_at }) {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) return;
+  const { error } = await db.from('google_tokens').upsert(
+    { user_id: session.user.id, access_token, refresh_token, expires_at },
+    { onConflict: 'user_id' }
+  );
+  if (error) console.error('dbSaveGoogleToken:', error);
+}
+
 // ── Calendar badges ───────────────────────────────────────────
 export async function dbLoadBadges() {
   const { data, error } = await db.from('calendar_badges').select('*').order('id');

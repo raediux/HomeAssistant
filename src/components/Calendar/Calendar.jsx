@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { IconChevronLeft, IconChevronRight, IconCalendarEvent } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
+import { useSession } from '../../contexts/AuthContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbSaveBadge, dbDeleteBadge } from '../../db.js';
 import { useCalendarData } from '../../contexts/CalendarContext.jsx';
@@ -23,15 +24,36 @@ const BADGE_SWATCHES = [
 function toDateStr(d) { return d.toISOString().split('T')[0]; }
 function monDow(jsDay) { return (jsDay + 6) % 7; }
 
+function initiateGoogleOAuth(userId) {
+  const csrf = crypto.randomUUID();
+  document.cookie = `g_csrf=${csrf}; Path=/; Max-Age=600; SameSite=Lax`;
+  const state = btoa(JSON.stringify({ userId, csrf }));
+  const params = new URLSearchParams({
+    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: 'https://homeapp.raediux.com/auth/google/callback',
+    scope: 'https://www.googleapis.com/auth/calendar.readonly',
+    access_type: 'offline',
+    prompt: 'consent',
+    state,
+  });
+  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+}
+
 export default function Calendar() {
   const { members } = useHousehold();
+  const session = useSession();
   const { scheduleDelete } = useUndo();
   const now = new Date();
   const [year,  setYear]  = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [selected, setSelected] = useState(toDateStr(now));
-  const { badges, setBadges } = useCalendarData();
+  const { badges, setBadges, googleEvents, hasGoogleToken, fetchGoogleEventsForMonth } = useCalendarData();
   const { tasks } = useTasksData();
+
+  useEffect(() => {
+    fetchGoogleEventsForMonth(year, month);
+  }, [year, month]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function prevMonth() {
     if (month === 0) { setMonth(11); setYear(y => y - 1); }
@@ -61,7 +83,14 @@ export default function Calendar() {
       (badgeMap[b.date] = badgeMap[b.date] || []).push(b);
   }
 
-  // Member color lookup
+  // Build Google event map: dateStr → events (this month)
+  const googleMap = {};
+  for (const e of googleEvents) {
+    const ds = (e.start || '').split('T')[0];
+    if (ds.startsWith(prefix))
+      (googleMap[ds] = googleMap[ds] || []).push(e);
+  }
+
   function memberColor(person) {
     const m = (members || []).find(m => (m.slug ?? memberSlug(m.name)) === person);
     return m?.color ?? '#64c882';
@@ -93,6 +122,11 @@ export default function Calendar() {
         <button className={s.ib} onClick={prevMonth}><IconChevronLeft size={16} /></button>
         <span className={s.monthLabel}>{MONTH_NAMES[month]} {year}</span>
         <button className={s.ib} onClick={nextMonth}><IconChevronRight size={16} /></button>
+        {!hasGoogleToken && session?.user && (
+          <button className={s.connectBtn} onClick={() => initiateGoogleOAuth(session.user.id)}>
+            <IconCalendarEvent size={13} /> Connect Google Calendar
+          </button>
+        )}
       </div>
 
       <div className={s.body}>
@@ -107,9 +141,11 @@ export default function Calendar() {
               const ds  = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
               const dayTasks  = taskMap[ds]  || [];
               const dayBadges = badgeMap[ds] || [];
+              const dayGoogle = googleMap[ds] || [];
               const combined  = [
                 ...dayTasks.map(t  => ({ label: t.title, color: memberColor(t.person) })),
                 ...dayBadges.map(b => ({ label: b.label, color: b.color })),
+                ...dayGoogle.map(e => ({ label: e.title, color: '#4a8fd4', google: true })),
               ];
               const shown    = combined.slice(0, MAX_BADGES_PER_DAY);
               const overflow = combined.length - MAX_BADGES_PER_DAY;
@@ -119,7 +155,7 @@ export default function Calendar() {
                 <div key={ds} className={classes} onClick={() => setSelected(ds)}>
                   <div className={s.dayNum}>{day}</div>
                   {shown.map((item, j) => (
-                    <div key={j} className={s.calBadge} style={{ background: item.color + '22', color: item.color }}>
+                    <div key={j} className={item.google ? s.googleBadge : s.calBadge} style={{ background: item.color + '22', color: item.color }}>
                       {item.label}
                     </div>
                   ))}
@@ -138,6 +174,7 @@ export default function Calendar() {
               dateStr={selected}
               tasks={taskMap[selected] || []}
               badges={badgeMap[selected] || []}
+              googleEvents={googleMap[selected] || []}
               memberColor={memberColor}
               memberLabel={memberLabel}
               onAddBadge={addBadge}
@@ -151,12 +188,11 @@ export default function Calendar() {
   );
 }
 
-function DetailPanel({ dateStr, tasks, badges, memberColor, memberLabel, onAddBadge, onDeleteBadge, s }) {
+function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, memberLabel, onAddBadge, onDeleteBadge, s }) {
   const [label, setLabel] = useState('');
   const [swatchIdx, setSwatchIdx] = useState(0);
   const inputRef = useRef(null);
 
-  // Reset form when date changes
   useEffect(() => { setLabel(''); setSwatchIdx(0); }, [dateStr]);
 
   const d = new Date(dateStr + 'T00:00:00');
@@ -196,6 +232,26 @@ function DetailPanel({ dateStr, tasks, badges, memberColor, memberLabel, onAddBa
               <button className={s.badgeDel} onClick={() => onDeleteBadge(b.id, b.label)} title="Remove">×</button>
             </div>
           ))}
+        </>
+      )}
+
+      {googleEvents.length > 0 && (
+        <>
+          <div className={s.detailSection}>Google Calendar</div>
+          {googleEvents.map(e => {
+            const timeStr = e.start.includes('T')
+              ? new Date(e.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : null;
+            return (
+              <div key={e.id} className={s.googleRow}>
+                <IconCalendarEvent size={11} style={{ color: '#4a8fd4', flexShrink: 0 }} />
+                <div>
+                  <div className={s.googleTitle}>{e.title}</div>
+                  {timeStr && <div className={s.googleTime}>{timeStr}</div>}
+                </div>
+              </div>
+            );
+          })}
         </>
       )}
 
