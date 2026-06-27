@@ -1,0 +1,2 @@
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://vvowkcqeklvfgqlbevce.supabase.co wss://vvowkcqeklvfgqlbevce.supabase.co https://api.openweathermap.org https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com;
