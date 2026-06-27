@@ -17,6 +17,7 @@ export async function onRequest({ request, next }) {
     return new Response('Access denied', { status: 403 });
   }
   const response = await next();
-  response.headers.set('Content-Security-Policy', CSP);
-  return response;
+  const newResponse = new Response(response.body, response);
+  newResponse.headers.set('Content-Security-Policy', CSP);
+  return newResponse;
 }
