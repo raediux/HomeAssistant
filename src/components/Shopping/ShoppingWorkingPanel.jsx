@@ -64,6 +64,7 @@ export default function ShoppingWorkingPanel({ shopData, showAddBtn, noWrapper }
 function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
   const controls = useAnimation();
   const firstRender = useRef(true);
+  const touchStart = useRef(null);
 
 
   useEffect(() => { controls.start({ opacity: 1, x: 0 }); }, []);
@@ -86,7 +87,17 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
       className={`${s.sItem} ${item.got ? s.done : ''}`}
       style={{ transformStyle: 'preserve-3d', transformPerspective: 800 }}
       onClick={onToggle}
-      onTouchEnd={e => { e.preventDefault(); onToggle(); }}
+      onTouchStart={e => { const t = e.touches[0]; touchStart.current = { x: t.clientX, y: t.clientY }; }}
+      onTouchEnd={e => {
+        e.preventDefault();
+        if (!touchStart.current) return;
+        const t = e.changedTouches[0];
+        const dx = Math.abs(t.clientX - touchStart.current.x);
+        const dy = Math.abs(t.clientY - touchStart.current.y);
+        touchStart.current = null;
+        if (dx > 8 || dy > 8) return;
+        onToggle();
+      }}
     >
       <motion.div
         className={`${s.circle} ${item.got ? s.checked : ''}`}

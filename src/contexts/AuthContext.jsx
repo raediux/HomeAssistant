@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabase.js';
+import { clearHouseholdId } from '../db.js';
 
 const AuthContext = createContext(null);
 
@@ -8,7 +9,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') clearHouseholdId();
       setSession(session);
     });
     return () => subscription.unsubscribe();
