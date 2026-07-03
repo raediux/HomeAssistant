@@ -224,7 +224,7 @@ export default function MealPlanner() {
                   <div className={s.dayDate}>{d.getDate()}</div>
                 </div>
 
-                <div className={s.persons}>
+                <div className={`${s.persons} glass-edge`}>
                   {orderedMembers.map((member, oi) => {
                     const p = memberSlug(member.name);
                     // Membership in this week's sharer set — not the household

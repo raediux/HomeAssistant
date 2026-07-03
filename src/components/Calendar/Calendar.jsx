@@ -116,7 +116,7 @@ export default function Calendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   return (
-    <div className={s.container}>
+    <div className={`${s.container} glass-edge`}>
       <div className={s.nav}>
         <button className={s.ib} onClick={prevMonth}><IconChevronLeft size={16} /></button>
         <span className={s.monthLabel}>{MONTH_NAMES[month]} {year}</span>
