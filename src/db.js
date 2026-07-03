@@ -1,5 +1,15 @@
 import { supabase as db } from './supabase.js';
 
+// ── Error reporting ───────────────────────────────────────────
+// The UI updates optimistically, so a failed write would otherwise vanish
+// silently. UndoProvider registers a handler that surfaces a toast.
+let _onDbError = null;
+export function setDbErrorHandler(fn) { _onDbError = fn; }
+function fail(fnName, error) {
+  console.error(`${fnName}:`, error);
+  _onDbError?.(fnName, error);
+}
+
 // ── Household ─────────────────────────────────────────────────
 let _householdId = null;
 
@@ -20,18 +30,18 @@ export function clearHouseholdId() { _householdId = null; }
 export async function dbLoadMembers() {
   const { data, error } = await db.from('household_members')
     .select('id, name, role, color, user_id, shares_meals').order('sort_order').order('created_at');
-  if (error) { console.error('dbLoadMembers:', error); return []; }
+  if (error) { fail('dbLoadMembers', error); return []; }
   return data || [];
 }
 
 export async function dbSaveMemberColor(memberId, color) {
   const { error } = await db.from('household_members').update({ color }).eq('id', memberId);
-  if (error) console.error('dbSaveMemberColor:', error);
+  if (error) fail('dbSaveMemberColor', error);
 }
 
 export async function dbSetMemberSharesMeals(memberId, value) {
   const { error } = await db.from('household_members').update({ shares_meals: value }).eq('id', memberId);
-  if (error) console.error('dbSetMemberSharesMeals:', error);
+  if (error) fail('dbSetMemberSharesMeals', error);
 }
 
 export async function dbLoadTier(householdId) {
@@ -48,7 +58,7 @@ export async function dbLoadTier(householdId) {
 // ── Tasks ─────────────────────────────────────────────────────
 export async function dbLoadTasks() {
   const { data, error } = await db.from('tasks').select('*').order('id');
-  if (error) { console.error('dbLoadTasks:', error); return []; }
+  if (error) { fail('dbLoadTasks', error); return []; }
   return data.map(row => ({
     id:           row.id,
     person:       row.person,
@@ -68,19 +78,19 @@ export async function dbSaveTask(task) {
     title: task.title, due_date: task.dueDate || null, dow: task.dow ?? null,
     done: task.done, last_done_date: task.lastDoneDate || null, household_id: hid,
   }, { onConflict: 'id' });
-  if (error) console.error('dbSaveTask:', error);
+  if (error) fail('dbSaveTask', error);
 }
 
 export async function dbDeleteTask(id) {
   const hid = await getMyHouseholdId();
   const { error } = await db.from('tasks').delete().eq('id', id).eq('household_id', hid);
-  if (error) console.error('dbDeleteTask:', error);
+  if (error) fail('dbDeleteTask', error);
 }
 
 // ── Google tokens ─────────────────────────────────────────────
 export async function dbGetGoogleToken() {
   const { data, error } = await db.from('google_tokens').select('access_token, refresh_token, expires_at').maybeSingle();
-  if (error) { console.error('dbGetGoogleToken:', error); return null; }
+  if (error) { fail('dbGetGoogleToken', error); return null; }
   return data;
 }
 
@@ -91,13 +101,13 @@ export async function dbSaveGoogleToken({ access_token, refresh_token, expires_a
     { user_id: session.user.id, access_token, refresh_token, expires_at },
     { onConflict: 'user_id' }
   );
-  if (error) console.error('dbSaveGoogleToken:', error);
+  if (error) fail('dbSaveGoogleToken', error);
 }
 
 // ── Calendar badges ───────────────────────────────────────────
 export async function dbLoadBadges() {
   const { data, error } = await db.from('calendar_badges').select('*').order('id');
-  if (error) { console.error('dbLoadBadges:', error); return []; }
+  if (error) { fail('dbLoadBadges', error); return []; }
   return data.map(row => ({ id: row.id, date: row.date, label: row.label, color: row.color }));
 }
 
@@ -106,14 +116,14 @@ export async function dbSaveBadge(badge) {
   const { data, error } = await db.from('calendar_badges').insert(
     { date: badge.date, label: badge.label, color: badge.color, household_id: hid }
   ).select().single();
-  if (error) { console.error('dbSaveBadge:', error); return null; }
+  if (error) { fail('dbSaveBadge', error); return null; }
   return data.id;
 }
 
 export async function dbDeleteBadge(id) {
   const hid = await getMyHouseholdId();
   const { error } = await db.from('calendar_badges').delete().eq('id', id).eq('household_id', hid);
-  if (error) console.error('dbDeleteBadge:', error);
+  if (error) fail('dbDeleteBadge', error);
 }
 
 // ── Shopping — weekly auto-clear ─────────────────────────────
@@ -133,7 +143,7 @@ export async function dbSetLastShoppingClear(dateStr) {
 // ── Shopping — working list ───────────────────────────────────
 export async function dbLoadWorkingItems() {
   const { data, error } = await db.from('shopping_working').select('*').order('sort_order').order('id');
-  if (error) { console.error('dbLoadWorkingItems:', error); return []; }
+  if (error) { fail('dbLoadWorkingItems', error); return []; }
   return data.map(row => ({
     id: row.id, name: row.name, qty: row.qty,
     store: row.store, got: row.got, sort_order: row.sort_order ?? 0,
@@ -147,7 +157,7 @@ export async function dbSaveWorkingItem(item) {
     store: item.store || null, got: item.got, sort_order: item.sort_order ?? 0,
     household_id: hid,
   }, { onConflict: 'id' });
-  if (error) console.error('dbSaveWorkingItem:', error);
+  if (error) fail('dbSaveWorkingItem', error);
 }
 
 export async function dbUpdateSortOrders(items) {
@@ -157,19 +167,19 @@ export async function dbUpdateSortOrders(items) {
     store: item.store || null, got: item.got, sort_order: idx, household_id: hid,
   }));
   const { error } = await db.from('shopping_working').upsert(updates, { onConflict: 'id' });
-  if (error) console.error('dbUpdateSortOrders:', error);
+  if (error) fail('dbUpdateSortOrders', error);
 }
 
 export async function dbDeleteWorkingItem(id) {
   const hid = await getMyHouseholdId();
   const { error } = await db.from('shopping_working').delete().eq('id', id).eq('household_id', hid);
-  if (error) console.error('dbDeleteWorkingItem:', error);
+  if (error) fail('dbDeleteWorkingItem', error);
 }
 
 // ── Shopping — past purchases ─────────────────────────────────
 export async function dbLoadPastItems() {
   const { data, error } = await db.from('shopping_past').select('*').order('times', { ascending: false });
-  if (error) { console.error('dbLoadPastItems:', error); return []; }
+  if (error) { fail('dbLoadPastItems', error); return []; }
   return data.map(row => ({
     id: row.id, name: row.name, store: row.store, times: row.times, category: row.category,
   }));
@@ -181,19 +191,19 @@ export async function dbSavePastItem(item) {
     id: item.id, name: item.name, store: item.store || null,
     times: item.times, category: item.category || 'Other', household_id: hid,
   }, { onConflict: 'id' });
-  if (error) console.error('dbSavePastItem:', error);
+  if (error) fail('dbSavePastItem', error);
 }
 
 export async function dbDeletePastItem(id) {
   const hid = await getMyHouseholdId();
   const { error } = await db.from('shopping_past').delete().eq('id', id).eq('household_id', hid);
-  if (error) console.error('dbDeletePastItem:', error);
+  if (error) fail('dbDeletePastItem', error);
 }
 
 // ── Meal plans ────────────────────────────────────────────────
 export async function dbLoadMeals() {
   const { data, error } = await db.from('meal_plans').select('*');
-  if (error) { console.error('dbLoadMeals:', error); return []; }
+  if (error) { fail('dbLoadMeals', error); return []; }
   return data;
 }
 
@@ -203,20 +213,20 @@ export async function dbSaveMeal(date, person, slot, meal) {
     { date, person, slot, meal, household_id: hid },
     { onConflict: 'household_id,date,person,slot' }
   );
-  if (error) console.error('dbSaveMeal:', error);
+  if (error) fail('dbSaveMeal', error);
 }
 
 export async function dbDeleteMeal(date, person, slot) {
   const hid = await getMyHouseholdId();
   const { error } = await db.from('meal_plans')
     .delete().eq('date', date).eq('person', person).eq('slot', slot).eq('household_id', hid);
-  if (error) console.error('dbDeleteMeal:', error);
+  if (error) fail('dbDeleteMeal', error);
 }
 
 // ── Per-week meal sharing ─────────────────────────────────────
 export async function dbLoadMealShareWeeks() {
   const { data, error } = await db.from('meal_share_weeks').select('week_start, member_ids');
-  if (error) { console.error('dbLoadMealShareWeeks:', error); return []; }
+  if (error) { fail('dbLoadMealShareWeeks', error); return []; }
   return data || [];
 }
 
@@ -226,20 +236,20 @@ export async function dbSetMealShareWeek(weekStart, memberIds) {
     { household_id: hid, week_start: weekStart, member_ids: memberIds },
     { onConflict: 'household_id,week_start' }
   );
-  if (error) console.error('dbSetMealShareWeek:', error);
+  if (error) fail('dbSetMealShareWeek', error);
 }
 
 export async function dbClearMealShareWeek(weekStart) {
   const hid = await getMyHouseholdId();
   const { error } = await db.from('meal_share_weeks')
     .delete().eq('week_start', weekStart).eq('household_id', hid);
-  if (error) console.error('dbClearMealShareWeek:', error);
+  if (error) fail('dbClearMealShareWeek', error);
 }
 
 export async function dbLoadWhiteboard() {
   const hid = await getMyHouseholdId();
   const { data, error } = await db.from('whiteboard').select('data').eq('household_id', hid).maybeSingle();
-  if (error) { console.error('dbLoadWhiteboard:', error); return null; }
+  if (error) { fail('dbLoadWhiteboard', error); return null; }
   return data?.data ?? null;
 }
 
@@ -249,5 +259,5 @@ export async function dbSaveWhiteboard(dataUrl) {
     { household_id: hid, data: dataUrl, updated_at: new Date().toISOString() },
     { onConflict: 'household_id' }
   );
-  if (error) console.error('dbSaveWhiteboard:', error);
+  if (error) fail('dbSaveWhiteboard', error);
 }

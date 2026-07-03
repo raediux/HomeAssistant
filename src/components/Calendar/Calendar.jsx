@@ -6,7 +6,7 @@ import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbSaveBadge, dbDeleteBadge } from '../../db.js';
 import { useCalendarData } from '../../contexts/CalendarContext.jsx';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
-import { cn, memberSlug } from '../../utils.js';
+import { cn, memberSlug, dateStr as toDateStr } from '../../utils.js';
 import { isTaskDone } from '../Tasks/taskUtils.js';
 import s from './Calendar.module.css';
 
@@ -21,12 +21,11 @@ const BADGE_SWATCHES = [
   { color: '#5a9e5a', label: 'Green'  },
 ];
 
-function toDateStr(d) { return d.toISOString().split('T')[0]; }
 function monDow(jsDay) { return (jsDay + 6) % 7; }
 
 function initiateGoogleOAuth(userId) {
   const csrf = crypto.randomUUID();
-  document.cookie = `g_csrf=${csrf}; Path=/; Max-Age=600; SameSite=Lax`;
+  document.cookie = `g_csrf=${csrf}; Path=/; Max-Age=600; SameSite=Lax; Secure`;
   const state = btoa(JSON.stringify({ userId, csrf }));
   const params = new URLSearchParams({
     client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
@@ -171,6 +170,7 @@ export default function Calendar() {
             <div className={s.detailEmpty}>Select a day</div>
           ) : (
             <DetailPanel
+              key={selected}
               dateStr={selected}
               tasks={taskMap[selected] || []}
               badges={badgeMap[selected] || []}
@@ -192,8 +192,6 @@ function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, member
   const [label, setLabel] = useState('');
   const [swatchIdx, setSwatchIdx] = useState(0);
   const inputRef = useRef(null);
-
-  useEffect(() => { setLabel(''); setSwatchIdx(0); }, [dateStr]);
 
   const d = new Date(dateStr + 'T00:00:00');
   const heading = `${FULL_DAYS[d.getDay()]}, ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;

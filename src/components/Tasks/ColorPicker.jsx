@@ -31,17 +31,21 @@ export default function ColorPicker({ color, onChange }) {
 
   useClickOutside(wrapRef, () => setOpen(false));
 
-  useEffect(() => {
+  // Sync internal state when the colour prop changes externally (preset
+  // swatches) — adjusted during render instead of in an effect.
+  const [prevColor, setPrevColor] = useState(color);
+  if (color !== prevColor) {
+    setPrevColor(color);
     setHexInput(color);
     const [r,g,b] = hexToRgb(color);
     setHsv(rgbToHsv(r,g,b));
-  }, [color]);
+  }
 
   useEffect(() => {
     if (!open) return;
     drawSV(hsv);
     drawHue(hsv);
-  }, [open, hsv[0], hsv[1], hsv[2]]);
+  }, [open, hsv]);
 
   function drawSV([h, sat, v]) {
     const canvas = svRef.current; if (!canvas) return;

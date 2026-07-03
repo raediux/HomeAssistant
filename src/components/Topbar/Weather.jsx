@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { createElement, useEffect, useRef, useState } from 'react';
 import {
   IconSun, IconMoon, IconCloud,
   IconCloudRain, IconCloudStorm, IconCloudSnow, IconCloudFog,
@@ -61,7 +61,7 @@ async function fetchWeather() {
   }));
 
   const data = { cur, hours, ts: Date.now() };
-  try { localStorage.setItem(WX_CACHE_KEY, JSON.stringify(data)); } catch {}
+  try { localStorage.setItem(WX_CACHE_KEY, JSON.stringify(data)); } catch { /* storage full/unavailable — cache is best-effort */ }
   return data;
 }
 
@@ -72,39 +72,47 @@ const VISIBLE = 5;
 const STRIP_W = VISIBLE * SLOT_W + (VISIBLE - 1) * SLOT_GAP; // 292
 
 export default function Weather({ style }) {
-  const [wx, setWx] = useState(null);
+  const [wx, setWx] = useState(loadCache); // lazy init from localStorage cache
   const [expanded, setExpanded] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const drag = useRef({ active: false, startX: 0, startOffset: 0 });
 
   useEffect(() => {
-    const cached = loadCache();
-    if (cached) { setWx(cached); return; }
-    fetchWeather().then(setWx).catch(e => console.warn('Weather fetch failed:', e));
+    if (!loadCache()) fetchWeather().then(setWx).catch(e => console.warn('Weather fetch failed:', e));
+    // Refresh on an interval even when the initial load came from cache —
+    // the dashboard stays open all day.
     const id = setInterval(() => {
       fetchWeather().then(setWx).catch(() => {});
     }, WX_TTL);
     return () => clearInterval(id);
   }, []);
 
-  // reset offset when collapsing
-  useEffect(() => { if (!expanded) setOffset(0); }, [expanded]);
+  function toggleExpanded() {
+    setOffset(0); // strip always starts at the left edge
+    setExpanded(v => !v);
+  }
 
   useEffect(() => {
     if (!expanded) return;
     const onMove = (e) => {
       if (!drag.current.active) return;
-      const delta = e.clientX - drag.current.startX;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const delta = clientX - drag.current.startX;
       const totalW = (wx?.hours?.length ?? 0) * SLOT_W + ((wx?.hours?.length ?? 1) - 1) * SLOT_GAP;
       const maxOff = Math.max(0, totalW - STRIP_W);
       setOffset(Math.max(-maxOff, Math.min(0, drag.current.startOffset + delta)));
     };
-    const onUp = () => { drag.current.active = false; };
+    const onUp = () => { drag.current.active = false; setDragging(false); };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove);
+    window.addEventListener('touchend', onUp);
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
     };
   }, [expanded, wx]);
 
@@ -114,7 +122,6 @@ export default function Weather({ style }) {
   if (!cur?.weather?.[0] || !Array.isArray(hours)) return null; // guard against malformed data
 
   const icon = cur.weather[0].icon;
-  const WxIcon = wxIcon(icon);
   const temp = Math.round(cur.main.temp);
   const cond = cur.weather[0].description.replace(/\b\w/g, c => c.toUpperCase());
 
@@ -123,7 +130,7 @@ export default function Weather({ style }) {
 
       {/* Current */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <WxIcon size={26} style={{ color: wxColor(icon), flexShrink: 0 }} />
+        {createElement(wxIcon(icon), { size: 26, style: { color: wxColor(icon), flexShrink: 0 } })}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontSize: 22, fontWeight: 600, color: wxTempColor(temp), lineHeight: 1 }}>{temp}</span>
@@ -140,7 +147,7 @@ export default function Weather({ style }) {
 
       {/* Toggle button */}
       <button
-        onClick={() => setExpanded(v => !v)}
+        onClick={toggleExpanded}
         style={{
           background: 'none',
           border: 'none',
@@ -187,13 +194,18 @@ export default function Weather({ style }) {
         <div
           onMouseDown={(e) => {
             drag.current = { active: true, startX: e.clientX, startOffset: offset };
+            setDragging(true);
             e.preventDefault();
+          }}
+          onTouchStart={(e) => {
+            drag.current = { active: true, startX: e.touches[0].clientX, startOffset: offset };
+            setDragging(true);
           }}
           style={{
             display: 'flex',
             gap: SLOT_GAP,
             transform: `translateX(${offset}px)`,
-            transition: drag.current.active ? 'none' : 'transform 0.15s ease',
+            transition: dragging ? 'none' : 'transform 0.15s ease',
             cursor: 'grab',
             userSelect: 'none',
             paddingBottom: 2,

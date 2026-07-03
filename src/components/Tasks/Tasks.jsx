@@ -6,7 +6,7 @@ import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbSaveTask, dbDeleteTask } from '../../db.js';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
-import { memberSlug } from '../../utils.js';
+import { memberSlug, newId } from '../../utils.js';
 import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
 import { FREQUENCIES, FREQ_LABEL } from '../../config/tasks.js';
 import TaskModal from './TaskModal.jsx';
@@ -23,16 +23,7 @@ export default function Tasks() {
   const { tasks, setTasks } = useTasksData();
   const [modal, setModal] = useState(null);
   const [activeDot, setActiveDot] = useState(0);
-  const nextId = useRef(200);
-  const nextIdInit = useRef(false);
   const layoutRef = useRef(null);
-
-  useEffect(() => {
-    if (!nextIdInit.current && tasks.length > 0) {
-      nextIdInit.current = true;
-      nextId.current = Math.max(...tasks.map(t => t.id)) + 1;
-    }
-  }, [tasks]);
 
   function handleScroll() {
     const el = layoutRef.current;
@@ -68,7 +59,7 @@ export default function Tasks() {
   function handleModalConfirm({ title, dueDate, dow }) {
     if (modal.mode === 'add') {
       const task = {
-        id: nextId.current++,
+        id: newId(),
         person: modal.person,
         frequency: modal.frequency,
         title, dueDate, dow,
@@ -104,7 +95,7 @@ export default function Tasks() {
       </div>
 
       <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
-        {members.map((member, idx) => {
+        {members.map(member => {
           const slug = member.slug ?? memberSlug(member.name);
           return (
             <div
@@ -118,7 +109,6 @@ export default function Tasks() {
                 <div className={s.colName}>{member.name}</div>
                 <div className={s.colTasks}>
                   {FREQUENCIES.map(freq => {
-                    const key = `${slug}-${freq}`;
                     const visible = sortTasks(
                       tasks.filter(t => t.person === slug && t.frequency === freq),
                       freq
@@ -236,7 +226,7 @@ function TiltCard({ className, onClick, done, children }) {
       boxShadow: ['0 0 0px rgba(80,200,120,0)', '0 0 22px rgba(80,200,120,0.5)', '0 0 0px rgba(80,200,120,0)'],
       transition: { duration: 0.55 },
     });
-  }, [done]);
+  }, [done, controls]);
 
   return (
     <motion.div

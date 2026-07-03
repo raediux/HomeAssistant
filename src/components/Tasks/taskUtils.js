@@ -1,6 +1,7 @@
-export function toDateStr(date) {
-  return date.toISOString().split('T')[0];
-}
+import { dateStr } from '../../utils.js';
+
+// Re-exported under the historical name used across the Tasks components.
+export const toDateStr = dateStr;
 
 export function getWeeklyResetDate(dow) {
   const target = (dow === null || dow === undefined) ? 0 : dow;

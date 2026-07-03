@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconEraser, IconArrowBackUp } from '@tabler/icons-react';
 import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
@@ -65,7 +65,16 @@ function WhiteboardCanvas() {
     setCanUndo(true);
   }
 
-  function undo() {
+  const scheduleSave = useCallback(() => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const dataUrl = canvasRef.current.toDataURL('image/png');
+      if (dataUrl.length > 1_400_000) return;
+      dbSaveWhiteboard(dataUrl);
+    }, 2000);
+  }, []);
+
+  const undo = useCallback(() => {
     if (!history.current.length) return;
     history.current.pop();
     setCanUndo(history.current.length > 0);
@@ -80,16 +89,7 @@ function WhiteboardCanvas() {
       img.src = prev;
     }
     scheduleSave();
-  }
-
-  const scheduleSave = useCallback(() => {
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      const dataUrl = canvasRef.current.toDataURL('image/png');
-      if (dataUrl.length > 1_400_000) return;
-      dbSaveWhiteboard(dataUrl);
-    }, 2000);
-  }, []);
+  }, [scheduleSave]);
 
   function getPos(e) {
     const r = canvasRef.current.getBoundingClientRect();
@@ -124,7 +124,7 @@ function WhiteboardCanvas() {
     ctx.moveTo(x, y);
   }
 
-  function endDraw(e) {
+  function endDraw() {
     if (!drawing.current) return;
     drawing.current = false;
     pushHistory();
@@ -149,7 +149,7 @@ function WhiteboardCanvas() {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [undo]);
 
   return (
     <div className={s.boardWrap}>

@@ -2,22 +2,16 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
 import { FREQ_LABEL as FREQ_LABELS } from '../../config/tasks.js';
-import s from './Tasks.module.css';
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
 const DOW_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
-  const [title, setTitle] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [dow, setDow] = useState(null);
-  useEffect(() => {
-    if (!modal) return;
-    setTitle(modal.task?.title || '');
-    setDueDate(modal.task?.dueDate || '');
-    setDow(modal.task?.dow ?? null);
-  }, [modal]);
+  // Mounted fresh per open (rendered conditionally), so initializers suffice.
+  const [title, setTitle] = useState(modal?.task?.title || '');
+  const [dueDate, setDueDate] = useState(modal?.task?.dueDate || '');
+  const [dow, setDow] = useState(modal?.task?.dow ?? null);
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }

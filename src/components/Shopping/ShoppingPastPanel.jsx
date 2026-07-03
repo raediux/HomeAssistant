@@ -6,7 +6,6 @@ import s from './Shopping.module.css';
 
 export default function ShoppingPastPanel({ shopData, noWrapper }) {
   const { filteredPast, pastGroups, search, setSearch, collapsedPast, setCollapsedPast, moveToList, deletePastItem, setModal } = shopData;
-  const isSearching = search.trim().length > 0;
   const q = search.toLowerCase();
 
   const content = (

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUndo } from '../contexts/UndoContext.jsx';
+import { dateStr, newId } from '../utils.js';
 import { useRealtimeSync } from './useRealtimeSync.js';
 import {
   dbLoadWorkingItems, dbLoadPastItems,
@@ -12,6 +13,21 @@ import { SHOPPING_CLEAR_DAY } from '../config/shopping.js';
 
 export { STORES };
 
+// Merge a working item into the past list: bump times on a name+store match,
+// otherwise prepend a new entry. Fires the DB save; returns the next list.
+// Kept outside the hook (and outside setState updaters) so updaters stay pure.
+function archiveIntoPast(pastList, item) {
+  const existing = pastList.find(p => p.name.toLowerCase() === item.name.toLowerCase() && p.store === item.store);
+  if (existing) {
+    const updated = { ...existing, times: existing.times + 1 };
+    dbSavePastItem(updated);
+    return pastList.map(p => p.id === existing.id ? updated : p);
+  }
+  const newPast = { id: item.id, name: item.name, store: item.store, times: 1 };
+  dbSavePastItem(newPast);
+  return [newPast, ...pastList];
+}
+
 export function useShoppingData() {
   const { scheduleDelete } = useUndo();
   const [working, setWorking]             = useState([]);
@@ -20,48 +36,37 @@ export function useShoppingData() {
   const [collapsedPast, setCollapsedPast] = useState({});
   const [modal, setModal]                 = useState(null);
   const [search, setSearch]               = useState('');
-  const nextId = useRef(100);
 
   useEffect(() => {
     Promise.all([dbLoadWorkingItems(), dbLoadPastItems(), dbGetLastShoppingClear()]).then(([w, p, lastClear]) => {
       const today = new Date();
       const isMonday = today.getDay() === SHOPPING_CLEAR_DAY;
-      const todayStr = today.toISOString().slice(0, 10);
+      const todayKey = dateStr(today);
 
       let finalWorking = w;
       let finalPast = p;
 
-      if (isMonday && lastClear !== todayStr && w.length > 0) {
+      if (isMonday && lastClear !== todayKey && w.length > 0) {
+        // Stamp first so a second device loading moments later skips the clear.
+        dbSetLastShoppingClear(todayKey);
         finalWorking = [];
-        w.forEach(item => {
+        for (const item of w) {
           dbDeleteWorkingItem(item.id);
-          const existing = finalPast.find(pp => pp.name.toLowerCase() === item.name.toLowerCase() && pp.store === item.store);
-          if (existing) {
-            const updated = { ...existing, times: existing.times + 1 };
-            dbSavePastItem(updated);
-            finalPast = finalPast.map(pp => pp.id === existing.id ? updated : pp);
-          } else {
-            const newPast = { id: item.id, name: item.name, store: item.store, times: 1 };
-            dbSavePastItem(newPast);
-            finalPast = [newPast, ...finalPast];
-          }
-        });
-        dbSetLastShoppingClear(todayStr);
+          finalPast = archiveIntoPast(finalPast, item);
+        }
       }
 
       setWorking(finalWorking);
       setPast(finalPast);
-      const maxId = Math.max(...w.map(i => i.id), ...finalPast.map(i => i.id), 99);
-      nextId.current = maxId + 1;
     });
   }, []);
 
   function toggleGot(id) {
-    setWorking(prev => {
-      const updated = prev.map(i => i.id === id ? { ...i, got: !i.got } : i);
-      dbSaveWorkingItem(updated.find(i => i.id === id));
-      return updated;
-    });
+    const item = working.find(i => i.id === id);
+    if (!item) return;
+    const updated = { ...item, got: !item.got };
+    setWorking(prev => prev.map(i => i.id === id ? updated : i));
+    dbSaveWorkingItem(updated);
   }
 
   function moveToArchive(id) {
@@ -69,17 +74,7 @@ export function useShoppingData() {
     if (!item) return;
     setWorking(prev => prev.filter(i => i.id !== id));
     dbDeleteWorkingItem(id);
-    setPast(prev => {
-      const existing = prev.find(p => p.name.toLowerCase() === item.name.toLowerCase() && p.store === item.store);
-      if (existing) {
-        const updated = prev.map(p => p.name.toLowerCase() === item.name.toLowerCase() ? { ...p, times: p.times + 1 } : p);
-        dbSavePastItem(updated.find(p => p.name.toLowerCase() === item.name.toLowerCase()));
-        return updated;
-      }
-      const newPast = { id: item.id, name: item.name, store: item.store, times: 1 };
-      dbSavePastItem(newPast);
-      return [newPast, ...prev];
-    });
+    setPast(archiveIntoPast(past, item));
   }
 
   function deleteWorkingItem(id, name) {
@@ -91,20 +86,12 @@ export function useShoppingData() {
     if (!working.length) return;
     const items = [...working];
     setWorking([]);
-    items.forEach(item => {
+    let nextPast = past;
+    for (const item of items) {
       dbDeleteWorkingItem(item.id);
-      setPast(prev => {
-        const existing = prev.find(p => p.name.toLowerCase() === item.name.toLowerCase() && p.store === item.store);
-        if (existing) {
-          const updated = prev.map(p => p.name.toLowerCase() === item.name.toLowerCase() ? { ...p, times: p.times + 1 } : p);
-          dbSavePastItem(updated.find(p => p.name.toLowerCase() === item.name.toLowerCase()));
-          return updated;
-        }
-        const newPast = { id: item.id, name: item.name, store: item.store, times: 1 };
-        dbSavePastItem(newPast);
-        return [newPast, ...prev];
-      });
-    });
+      nextPast = archiveIntoPast(nextPast, item);
+    }
+    setPast(nextPast);
   }
 
   function moveToList(id) {
@@ -127,20 +114,22 @@ export function useShoppingData() {
     if (modal.editItem) {
       const { id, type } = modal.editItem;
       if (type === 'working') {
-        setWorking(prev => {
-          const updated = prev.map(i => i.id === id ? { ...i, name, store } : i);
-          dbSaveWorkingItem(updated.find(i => i.id === id));
-          return updated;
-        });
+        const item = working.find(i => i.id === id);
+        if (item) {
+          const updated = { ...item, name, store };
+          setWorking(prev => prev.map(i => i.id === id ? updated : i));
+          dbSaveWorkingItem(updated);
+        }
       } else {
-        setPast(prev => {
-          const updated = prev.map(i => i.id === id ? { ...i, name, store } : i);
-          dbSavePastItem(updated.find(i => i.id === id));
-          return updated;
-        });
+        const item = past.find(i => i.id === id);
+        if (item) {
+          const updated = { ...item, name, store };
+          setPast(prev => prev.map(i => i.id === id ? updated : i));
+          dbSavePastItem(updated);
+        }
       }
     } else {
-      const item = { id: nextId.current++, name, qty: null, store, got: false, sort_order: working.length };
+      const item = { id: newId(), name, qty: null, store, got: false, sort_order: working.length };
       setWorking(prev => [...prev, item]);
       dbSaveWorkingItem(item);
     }
@@ -186,7 +175,6 @@ export function useShoppingData() {
     collapsedPast, setCollapsedPast,
     modal, setModal,
     search, setSearch,
-    nextId,
     toggleGot, moveToArchive, deleteWorkingItem, clearAll,
     moveToList, deletePastItem, handleModalConfirm,
     workingGroups, filteredPast, pastGroups,

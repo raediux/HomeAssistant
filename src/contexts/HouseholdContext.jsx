@@ -36,6 +36,7 @@ export function HouseholdProvider({ children }) {
 
     if (!session) {
       loadedUserId.current = null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot clear on logout, no cascade
       setHousehold(null);
       return;
     }

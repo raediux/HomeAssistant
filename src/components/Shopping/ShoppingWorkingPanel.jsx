@@ -67,7 +67,7 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
   const touchStart = useRef(null);
 
 
-  useEffect(() => { controls.start({ opacity: 1, x: 0 }); }, []);
+  useEffect(() => { controls.start({ opacity: 1, x: 0 }); }, [controls]);
 
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return; }
@@ -75,7 +75,7 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
       boxShadow: ['0 0 0px rgba(80,200,120,0)', '0 0 16px rgba(80,200,120,0.45)', '0 0 0px rgba(80,200,120,0)'],
       transition: { duration: 0.5 },
     });
-  }, [item.got]);
+  }, [item.got, controls]);
 
   return (
     <motion.div

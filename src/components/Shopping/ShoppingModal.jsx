@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
 import { STORES } from '../../config/stores.js';
@@ -7,23 +7,15 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
 export default function ShoppingModal({ editItem, defaultStore, pastItems, onConfirm, onClose }) {
   const inputRef = useRef(null);
-  const [name, setName]   = useState('');
-  const [store, setStore] = useState('Others');
+  // Mounted fresh per open (rendered conditionally), so initializers suffice.
+  const [name, setName]   = useState(editItem?.name || '');
+  const [store, setStore] = useState(() => {
+    if (editItem) return STORES.includes(editItem.store) ? editItem.store : 'Others';
+    return defaultStore || 'Others';
+  });
   const [suggestions, setSuggestions] = useState([]);
   const [sugIndex, setSugIndex] = useState(-1);
   const isEdit = !!editItem;
-
-  useEffect(() => {
-    if (editItem) {
-      setName(editItem.name);
-      setStore(STORES.includes(editItem.store) ? editItem.store : 'Others');
-    } else {
-      setName('');
-      setStore(defaultStore || 'Others');
-    }
-    setSuggestions([]);
-    setSugIndex(-1);
-  }, [editItem, defaultStore]);
 
   function handleNameChange(val) {
     setName(val);

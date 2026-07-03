@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Topbar from '../Topbar/Topbar.jsx';
 import TabBar from '../TabBar/TabBar.jsx';
@@ -6,8 +6,11 @@ import Tasks from '../Tasks/Tasks.jsx';
 import MealPlanner from '../MealPlanner/MealPlanner.jsx';
 import Calendar from '../Calendar/Calendar.jsx';
 import { UndoProvider } from '../../contexts/UndoContext.jsx';
-import ThreeBackground from '../shared/ThreeBackground.jsx';
 import s from './Dashboard.module.css';
+
+// Lazy: keeps three.js (~600KB) out of the critical bundle — it's only a
+// decorative background, so the UI shouldn't wait on it.
+const ThreeBackground = lazy(() => import('../shared/ThreeBackground.jsx'));
 
 const TAB_ORDER = ['tasks', 'meals', 'calendar'];
 
@@ -18,19 +21,18 @@ const variants = {
 };
 
 export default function Dashboard() {
-  const [tab, setTab] = useState('tasks');
-  const prevIdx = useRef(0);
+  // tab + slide direction as one state so direction is derived at switch
+  // time, not from a ref during render.
+  const [nav, setNav] = useState({ tab: 'tasks', dir: 0 });
+  const { tab, dir } = nav;
 
   function handleSwitch(newTab) {
-    prevIdx.current = TAB_ORDER.indexOf(tab);
-    setTab(newTab);
+    setNav(prev => ({ tab: newTab, dir: TAB_ORDER.indexOf(newTab) - TAB_ORDER.indexOf(prev.tab) }));
   }
-
-  const dir = TAB_ORDER.indexOf(tab) - prevIdx.current;
 
   return (
     <UndoProvider>
-    <ThreeBackground />
+    <Suspense fallback={null}><ThreeBackground /></Suspense>
     <div className={s.app}>
       <Topbar />
       <TabBar activeTab={tab} onSwitch={handleSwitch} />

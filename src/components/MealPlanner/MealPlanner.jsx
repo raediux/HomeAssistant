@@ -8,7 +8,7 @@ import { useSession } from '../../contexts/AuthContext.jsx';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
 import { dbSaveMeal, dbDeleteMeal, dbSetMealShareWeek, dbClearMealShareWeek } from '../../db.js';
 import { useMealsData } from '../../contexts/MealsContext.jsx';
-import { cn, memberSlug } from '../../utils.js';
+import { cn, memberSlug, dateStr } from '../../utils.js';
 import { useShop } from '../../contexts/ShoppingContext.jsx';
 import Shopping from '../Shopping/Shopping.jsx';
 import ShoppingWorkingPanel from '../Shopping/ShoppingWorkingPanel.jsx';
@@ -22,9 +22,7 @@ const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 // DB key under which a shared (linked) meal is stored in meal_plans.person.
 const SHARED_KEY  = 'shared';
 
-function dateKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+const dateKey = dateStr;
 
 function weekLabel(weekStart) {
   const end = new Date(weekStart);
@@ -130,7 +128,7 @@ export default function MealPlanner() {
 
   async function removeCell(dk, person, slot) {
     setMeals(prev => {
-      const next = JSON.parse(JSON.stringify(prev));
+      const next = structuredClone(prev);
       if (next[dk]?.[person]) {
         delete next[dk][person][slot];
         if (!next[dk][person].lunch && !next[dk][person].dinner) delete next[dk][person];
@@ -145,7 +143,7 @@ export default function MealPlanner() {
   async function splitShared(dk, slot) {
     const meal = meals[dk]?.[SHARED_KEY]?.[slot];
     setMeals(prev => {
-      const next = JSON.parse(JSON.stringify(prev));
+      const next = structuredClone(prev);
       if (!next[dk]) next[dk] = {};
       for (const m of sharers) {
         const p = memberSlug(m.name);
@@ -163,25 +161,26 @@ export default function MealPlanner() {
   }
 
   async function mergeShared(dk, slot) {
-    let meal = null;
-    const deletes = [];
+    // Decide what to merge from current state, outside the updater, so the
+    // updater stays pure (no DB calls — StrictMode runs updaters twice).
+    const dayData = meals[dk] || {};
+    const slugsWithMeal = sharers.map(m => memberSlug(m.name)).filter(p => dayData[p]?.[slot]);
+    const meal = slugsWithMeal.length ? dayData[slugsWithMeal[0]][slot] : null;
     setMeals(prev => {
-      const next = JSON.parse(JSON.stringify(prev));
+      const next = structuredClone(prev);
       if (!next[dk]) next[dk] = {};
       if (!next[dk][SHARED_KEY]) next[dk][SHARED_KEY] = {};
-      for (const m of sharers) {
-        const p = memberSlug(m.name);
-        if (!meal) meal = next[dk][p]?.[slot] || null;
-        if (next[dk][p]?.[slot]) {
-          delete next[dk][p][slot];
-          if (!next[dk][p].lunch && !next[dk][p].dinner) delete next[dk][p];
-          deletes.push(dbDeleteMeal(dk, p, slot));
-        }
+      for (const p of slugsWithMeal) {
+        delete next[dk][p][slot];
+        if (!next[dk][p].lunch && !next[dk][p].dinner) delete next[dk][p];
       }
       if (meal) next[dk][SHARED_KEY][slot] = meal;
       return next;
     });
-    await Promise.all([...deletes, ...(meal ? [dbSaveMeal(dk, SHARED_KEY, slot, meal)] : [])]);
+    await Promise.all([
+      ...slugsWithMeal.map(p => dbDeleteMeal(dk, p, slot)),
+      ...(meal ? [dbSaveMeal(dk, SHARED_KEY, slot, meal)] : []),
+    ]);
   }
 
   const todayKey = dateKey(new Date());
@@ -228,7 +227,9 @@ export default function MealPlanner() {
                 <div className={s.persons}>
                   {orderedMembers.map((member, oi) => {
                     const p = memberSlug(member.name);
-                    const isShared = hasSharedGroup && member.sharesMeals;
+                    // Membership in this week's sharer set — not the household
+                    // default flag, which a weekly override can differ from.
+                    const isShared = sharers.includes(member);
                     const isFirstShared = isShared && member === sharers[0];
                     const isLast = oi === orderedMembers.length - 1;
 
