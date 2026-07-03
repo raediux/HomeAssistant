@@ -52,7 +52,7 @@ export default function SettingsModal({ onClose }) {
     <div className={s.overlay}>
       <motion.div
         ref={panelRef}
-        className={s.panel}
+        className={`${s.panel} glass-edge`}
         initial={{ opacity: 0, scale: 0.94, y: -12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: -12 }}

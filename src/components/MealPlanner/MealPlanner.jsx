@@ -351,7 +351,7 @@ function SharingControl({ members, override, onSetWeek, onResetWeek }) {
         <IconUsers size={15} /> Sharing <IconChevronDown size={13} style={{ opacity: 0.7 }} />
       </button>
       {open && (
-        <div className={s.sharingPop}>
+        <div className={`${s.sharingPop} glass-edge`}>
           <div className={s.sharingHdr}>Sharing this week</div>
           {(members || []).map(m => {
             const on = currentIds.includes(m.id);

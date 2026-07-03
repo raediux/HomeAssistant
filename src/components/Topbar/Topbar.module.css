@@ -34,6 +34,16 @@
   text-shadow: 0 0 22px rgba(74,143,212,0.35), 0 0 48px rgba(74,143,212,0.15);
 }
 
+.digits { display: inline-flex; }
+
+.digitSlot {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.digit { display: inline-block; }
+
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -74,7 +84,7 @@
   top: calc(100% + 10px);
   left: 0;
   background: rgba(18,18,20,0.95);
-  border: 1px solid rgba(255,255,255,0.14);
+  border: 1px solid transparent;
   border-radius: var(--rl);
   padding: 8px;
   min-width: 170px;

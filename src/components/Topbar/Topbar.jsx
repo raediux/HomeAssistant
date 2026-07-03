@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconUser, IconLogout, IconMail, IconSettings } from '@tabler/icons-react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../../supabase.js';
 import { clearHouseholdId } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
@@ -17,6 +17,27 @@ function useClock() {
     return () => clearInterval(id);
   }, []);
   return time;
+}
+
+const DIGIT_SPRING = { type: 'spring', stiffness: 320, damping: 30 };
+
+function RollDigit({ value }) {
+  return (
+    <span className={s.digitSlot}>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={value}
+          className={s.digit}
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '-100%' }}
+          transition={DIGIT_SPRING}
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
 }
 
 function formatTime(now) {
@@ -55,7 +76,7 @@ export default function Topbar() {
           <IconUser size={22} />
         </button>
         {open && (
-          <div className={s.dropdown}>
+          <div className={`${s.dropdown} glass-edge`}>
             <div className={s.displayName}>{displayName}</div>
             <div className={s.tier} data-tier={household?.tier || 'free'}>
               {(household?.tier || 'free').charAt(0).toUpperCase() + (household?.tier || 'free').slice(1)}
@@ -76,7 +97,14 @@ export default function Topbar() {
           <div className={s.date}>{date}</div>
         </div>
         <div className={s.time}>
-          {h}<span className={s.colon}>:</span>{m}<span className={s.ampm}>{ampm}</span>
+          <span className={s.digits}>
+            {[...h].map((d, i) => <RollDigit key={h.length - i} value={d} />)}
+          </span>
+          <span className={s.colon}>:</span>
+          <span className={s.digits}>
+            {[...m].map((d, i) => <RollDigit key={`m${i}`} value={d} />)}
+          </span>
+          <span className={s.ampm}>{ampm}</span>
         </div>
       </div>
 

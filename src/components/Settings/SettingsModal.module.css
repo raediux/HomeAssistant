@@ -10,7 +10,7 @@
 
 .panel {
   background: rgba(18,18,20,0.96);
-  border: 1px solid rgba(255,255,255,0.14);
+  border: 1px solid transparent;
   border-radius: var(--rl);
   padding: 16px;
   width: 320px;

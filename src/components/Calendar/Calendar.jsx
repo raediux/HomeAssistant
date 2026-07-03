@@ -165,7 +165,7 @@ export default function Calendar() {
           </div>
         </div>
 
-        <div className={s.detail}>
+        <div className={`${s.detail} glass-edge`}>
           {!selected ? (
             <div className={s.detailEmpty}>Select a day</div>
           ) : (

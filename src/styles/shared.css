@@ -1,7 +1,7 @@
 /* ── Shared modal styles ── */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000; align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }
-.modal-box { background: rgba(18,18,22,0.82); border: 1px solid rgba(255,255,255,0.13); border-top: 1px solid rgba(255,255,255,0.18); border-radius: var(--rl); padding: 24px; width: 380px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); }
+.modal-box { background: rgba(18,18,22,0.82); border: 1px solid transparent; border-radius: var(--rl); padding: 24px; width: 380px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); }
 .modal-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
 .modal-hdr span { font-size: 14px; font-weight: 600; }
 .modal-x { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 18px; display: flex; padding: 2px; }
@@ -10,6 +10,22 @@
 .modal-input { width: 100%; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 8px 11px; font-size: 13px; color: var(--text); font-family: inherit; outline: none; transition: border-color .12s; }
 .modal-input:focus { border-color: var(--accent); }
 .modal-ftr { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+
+/* ── Gradient hairline edge ── */
+:where(.glass-edge, .modal-box) { position: relative; }
+.glass-edge::before, .modal-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06) 55%, rgba(255,255,255,0.11));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
 
 /* ── Shared button styles ── */
 .btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 13px; border-radius: var(--r); border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); color: var(--text); font-size: 12px; font-family: inherit; cursor: pointer; transition: background .12s; white-space: nowrap; }
