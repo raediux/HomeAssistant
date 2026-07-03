@@ -19,7 +19,7 @@ export default function Shopping({ embedded = false }) {
         </div>
       )}
 
-      <div className={s.panels} style={embedded ? { marginTop: 0, borderRadius: 0, border: 'none', borderTop: '1px solid rgba(255,255,255,0.07)', flex: 1, minHeight: 0 } : {}}>
+      <div className={`${s.panels} glass-edge`} style={embedded ? { marginTop: 0, flex: 1, minHeight: 0 } : {}}>
         <ShoppingWorkingPanel shopData={shopData} />
         <ShoppingPastPanel shopData={shopData} />
       </div>

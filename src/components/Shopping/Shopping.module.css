@@ -12,7 +12,7 @@
   gap: 0;
   flex: 1;
   min-height: 0;
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid transparent;
   border-radius: var(--rl);
   overflow: hidden;
   background: rgba(255,255,255,0.025);
