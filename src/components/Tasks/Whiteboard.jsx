@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { IconEraser, IconArrowBackUp } from '@tabler/icons-react';
+import { IconEraser, IconArrowBackUp, IconBucketDroplet } from '@tabler/icons-react';
 import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import ColorPicker from './ColorPicker.jsx';
@@ -8,6 +8,24 @@ import s from './Tasks.module.css';
 const COLORS = ['#e8eaf0', '#4a8fd4', '#c46090', '#c9a838', '#64c882', '#e05555'];
 const SIZES  = [{ stroke: 1, px: 1.5 }, { stroke: 2, px: 3 }, { stroke: 4, px: 6 }];
 const BG     = '#16161a';
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ];
+}
+
+function matches(data, i, target, tol) {
+  return (
+    Math.abs(data[i]     - target[0]) <= tol &&
+    Math.abs(data[i + 1] - target[1]) <= tol &&
+    Math.abs(data[i + 2] - target[2]) <= tol &&
+    Math.abs(data[i + 3] - target[3]) <= tol
+  );
+}
 
 export default function Whiteboard() {
   const { features } = useHousehold();
@@ -25,6 +43,7 @@ function WhiteboardCanvas() {
   const [color, setColor]   = useState(COLORS[0]);
   const [size, setSize]     = useState(0);
   const [eraser, setEraser] = useState(false);
+  const [fill, setFill]     = useState(false);
   const [canUndo, setCanUndo] = useState(false);
 
   useEffect(() => {
@@ -97,9 +116,48 @@ function WhiteboardCanvas() {
     return { x: src.clientX - r.left, y: src.clientY - r.top };
   }
 
+  function floodFill(px, py) {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const x0 = Math.floor(px), y0 = Math.floor(py);
+    if (x0 < 0 || y0 < 0 || x0 >= W || y0 >= H) return;
+
+    const img = ctx.getImageData(0, 0, W, H);
+    const data = img.data;
+    const start = (y0 * W + x0) * 4;
+    const target = [data[start], data[start + 1], data[start + 2], data[start + 3]];
+    const [fr, fg, fb] = hexToRgb(color);
+    const tol = 32;
+
+    // Already the fill colour → nothing to do.
+    if (matches(target, 0, [fr, fg, fb, 255], 0)) return;
+
+    const stack = [[x0, y0]];
+    while (stack.length) {
+      const [x, y] = stack.pop();
+      const i = (y * W + x) * 4;
+      if (!matches(data, i, target, tol)) continue;
+      data[i] = fr; data[i + 1] = fg; data[i + 2] = fb; data[i + 3] = 255;
+      if (x > 0)     stack.push([x - 1, y]);
+      if (x < W - 1) stack.push([x + 1, y]);
+      if (y > 0)     stack.push([x, y - 1]);
+      if (y < H - 1) stack.push([x, y + 1]);
+    }
+
+    ctx.putImageData(img, 0, 0);
+    pushHistory();
+    scheduleSave();
+  }
+
   function startDraw(e) {
     if (e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
+    if (fill) {
+      const { x, y } = getPos(e);
+      floodFill(x, y);
+      return;
+    }
     drawing.current = true;
     const ctx = canvasRef.current.getContext('2d');
     const { x, y } = getPos(e);
@@ -177,8 +235,15 @@ function WhiteboardCanvas() {
           </button>
         ))}
         <button
+          className={`${s.eraserBtn} ${fill ? s.eraserBtnActive : ''}`}
+          onClick={() => { setFill(f => !f); setEraser(false); }}
+          title="Fill"
+        >
+          <IconBucketDroplet size={12} />
+        </button>
+        <button
           className={`${s.eraserBtn} ${eraser ? s.eraserBtnActive : ''}`}
-          onClick={() => setEraser(e => !e)}
+          onClick={() => { setEraser(e => !e); setFill(false); }}
           title="Eraser"
         >
           <IconEraser size={12} />
