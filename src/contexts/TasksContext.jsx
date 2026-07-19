@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { dbLoadTasks } from '../db.js';
 import { useRealtimeSync } from '../hooks/useRealtimeSync.js';
+import { isDeleted } from '../utils/tombstones.js';
 
 const TasksContext = createContext(null);
 
@@ -17,6 +18,7 @@ export function TasksProvider({ children }) {
     if (eventType === 'DELETE') {
       setTasks(prev => prev.filter(t => t.id !== old.id));
     } else {
+      if (isDeleted(row.id)) return;
       const task = mapRow(row);
       setTasks(prev => prev.some(t => t.id === task.id) ? prev.map(t => t.id === task.id ? task : t) : [...prev, task]);
     }

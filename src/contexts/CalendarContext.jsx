@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { supabase } from '../supabase.js';
 import { dbGetGoogleToken, dbLoadBadges } from '../db.js';
 import { useRealtimeSync } from '../hooks/useRealtimeSync.js';
+import { isDeleted } from '../utils/tombstones.js';
 
 const CalendarContext = createContext(null);
 
@@ -87,6 +88,7 @@ export function CalendarProvider({ children }) {
     if (eventType === 'DELETE') {
       setBadges(prev => prev.filter(b => b.id !== old.id));
     } else {
+      if (isDeleted(row.id)) return;
       const badge = { id: row.id, date: row.date, label: row.label, color: row.color };
       setBadges(prev => prev.some(b => b.id === badge.id) ? prev.map(b => b.id === badge.id ? badge : b) : [...prev, badge]);
     }

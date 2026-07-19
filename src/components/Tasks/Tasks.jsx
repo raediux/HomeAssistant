@@ -7,6 +7,7 @@ import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbSaveTask, dbDeleteTask } from '../../db.js';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
 import { memberSlug, newId } from '../../utils.js';
+import { markDeleted, unmarkDeleted } from '../../utils/tombstones.js';
 import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
 import { FREQUENCIES, FREQ_LABEL } from '../../config/tasks.js';
 import TaskModal from './TaskModal.jsx';
@@ -44,8 +45,18 @@ export default function Tasks() {
   }
 
   function deleteTask(id, title) {
+    const task = tasks.find(t => t.id === id);
     setTasks(prev => prev.filter(t => t.id !== id));
-    scheduleDelete(`"${title}" deleted`, () => dbDeleteTask(id));
+    scheduleDelete(
+      `"${title}" deleted`,
+      () => { markDeleted(id); dbDeleteTask(id); },
+      () => {
+        if (!task) return;
+        unmarkDeleted(id);
+        setTasks(prev => [...prev, task]);
+        dbSaveTask(task);
+      },
+    );
   }
 
   function openAdd(person, frequency) {

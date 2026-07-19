@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useUndo } from '../contexts/UndoContext.jsx';
 import { dateStr, newId } from '../utils.js';
 import { useRealtimeSync } from './useRealtimeSync.js';
+import { markDeleted, unmarkDeleted, isDeleted } from '../utils/tombstones.js';
 import {
   dbLoadWorkingItems, dbLoadPastItems,
   dbSaveWorkingItem, dbDeleteWorkingItem,
@@ -78,8 +79,19 @@ export function useShoppingData() {
   }
 
   function deleteWorkingItem(id, name) {
+    const idx  = working.findIndex(i => i.id === id);
+    const item = working[idx];
     setWorking(prev => prev.filter(i => i.id !== id));
-    scheduleDelete(`"${name}" deleted`, () => dbDeleteWorkingItem(id));
+    scheduleDelete(
+      `"${name}" deleted`,
+      () => { markDeleted(id); dbDeleteWorkingItem(id); },
+      () => {
+        if (!item) return;
+        unmarkDeleted(id);
+        setWorking(prev => { const next = [...prev]; next.splice(idx, 0, item); return next; });
+        dbSaveWorkingItem(item);
+      },
+    );
   }
 
   function clearAll() {
@@ -106,8 +118,19 @@ export function useShoppingData() {
   }
 
   function deletePastItem(id, name) {
+    const idx  = past.findIndex(i => i.id === id);
+    const item = past[idx];
     setPast(prev => prev.filter(i => i.id !== id));
-    scheduleDelete(`"${name}" deleted`, () => dbDeletePastItem(id));
+    scheduleDelete(
+      `"${name}" deleted`,
+      () => { markDeleted(id); dbDeletePastItem(id); },
+      () => {
+        if (!item) return;
+        unmarkDeleted(id);
+        setPast(prev => { const next = [...prev]; next.splice(idx, 0, item); return next; });
+        dbSavePastItem(item);
+      },
+    );
   }
 
   function handleModalConfirm({ name, store }) {
@@ -150,6 +173,7 @@ export function useShoppingData() {
     if (eventType === 'DELETE') {
       setWorking(prev => prev.filter(i => i.id !== old.id));
     } else {
+      if (isDeleted(row.id)) return;
       const item = { id: row.id, name: row.name, qty: row.qty, store: row.store, got: row.got, sort_order: row.sort_order ?? 0 };
       setWorking(prev => prev.some(i => i.id === item.id) ? prev.map(i => i.id === item.id ? item : i) : [...prev, item]);
     }
@@ -159,6 +183,7 @@ export function useShoppingData() {
     if (eventType === 'DELETE') {
       setPast(prev => prev.filter(i => i.id !== old.id));
     } else {
+      if (isDeleted(row.id)) return;
       const item = { id: row.id, name: row.name, store: row.store, times: row.times, category: row.category };
       setPast(prev => prev.some(i => i.id === item.id) ? prev.map(i => i.id === item.id ? item : i) : [item, ...prev]);
     }

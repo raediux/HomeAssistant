@@ -9,9 +9,9 @@ export const UndoContext = createContext({ scheduleDelete: () => {} });
 export function UndoProvider({ children }) {
   const [toast, setToast] = useState(null); // { label }
   const [errToast, setErrToast] = useState(null); // string
-  const timerRef  = useRef(null);
-  const errTimer  = useRef(null);
-  const pendingFn = useRef(null);
+  const timerRef   = useRef(null);
+  const errTimer   = useRef(null);
+  const restoreRef = useRef(null);
 
   // Surface failed DB writes — the UI updates optimistically, so without
   // this a save that fails (e.g. offline) disappears silently.
@@ -24,26 +24,25 @@ export function UndoProvider({ children }) {
     return () => { setDbErrorHandler(null); clearTimeout(errTimer.current); };
   }, []);
 
-  const flush = useCallback(() => {
+  // The delete hits the DB straight away and Undo re-inserts, rather than
+  // deferring the write behind the toast — a deferred write is lost if the tab
+  // closes or a phone backgrounds the PWA inside the undo window, which left
+  // the row alive in Supabase and made deleted items reappear on next load.
+  const scheduleDelete = useCallback((label, deleteFn, restoreFn) => {
     clearTimeout(timerRef.current);
-    if (pendingFn.current) { pendingFn.current(); pendingFn.current = null; }
-    setToast(null);
-  }, []);
-
-  const scheduleDelete = useCallback((label, deleteFn) => {
-    flush();
-    pendingFn.current = deleteFn;
+    deleteFn();
+    restoreRef.current = restoreFn;
     setToast({ label });
     timerRef.current = setTimeout(() => {
-      pendingFn.current?.();
-      pendingFn.current = null;
+      restoreRef.current = null;
       setToast(null);
     }, 5000);
-  }, [flush]);
+  }, []);
 
   const undo = useCallback(() => {
     clearTimeout(timerRef.current);
-    pendingFn.current = null;
+    restoreRef.current?.();
+    restoreRef.current = null;
     setToast(null);
   }, []);
 

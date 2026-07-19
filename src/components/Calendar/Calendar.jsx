@@ -7,6 +7,7 @@ import { dbSaveBadge, dbDeleteBadge } from '../../db.js';
 import { useCalendarData } from '../../contexts/CalendarContext.jsx';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
 import { cn, memberSlug, dateStr as toDateStr } from '../../utils.js';
+import { markDeleted } from '../../utils/tombstones.js';
 import { isTaskDone } from '../Tasks/taskUtils.js';
 import s from './Calendar.module.css';
 
@@ -106,8 +107,15 @@ export default function Calendar() {
   }
 
   function deleteBadge(id, label) {
+    const badge = badges.find(b => b.id === id);
     setBadges(prev => prev.filter(b => b.id !== id));
-    scheduleDelete(`"${label}" deleted`, () => dbDeleteBadge(id));
+    scheduleDelete(
+      `"${label}" deleted`,
+      () => { markDeleted(id); dbDeleteBadge(id); },
+      // Badge ids are DB-generated, so a restore re-adds the badge under a new
+      // id. The old id stays tombstoned so the deleted row can't come back.
+      () => { if (badge) addBadge(badge.date, badge.label, badge.color); },
+    );
   }
 
   const todayStr = toDateStr(new Date());
