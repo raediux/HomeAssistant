@@ -13,7 +13,7 @@ import s from './Calendar.module.css';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAY_HDRS    = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-const MAX_BADGES_PER_DAY = 3;
+const MAX_BADGES_PER_DAY = 4;
 const FULL_DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const BADGE_SWATCHES = [
   { color: '#4a8fd4', label: 'Blue'   },
