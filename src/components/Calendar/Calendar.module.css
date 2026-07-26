@@ -66,8 +66,8 @@
 .dayNum { font-size: 11px; font-weight: 500; color: var(--text2); line-height: 1; }
 .dayToday .dayNum { color: var(--accent); font-weight: 700; }
 
-.calBadge { font-size: 9px; font-weight: 500; padding: 8px 5px; flex-shrink: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
-.calBadgeMore { font-size: 9px; font-weight: 500; color: var(--text3); padding-left: 2px; line-height: 1.4; }
+.calBadge { font-size: 11px; font-weight: 500; padding: 8px 5px; flex-shrink: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
+.calBadgeMore { font-size: 11px; font-weight: 500; color: var(--text3); padding-left: 2px; line-height: 1.4; }
 
 /* Detail panel */
 .detail {
@@ -124,7 +124,7 @@
 .refreshBtn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; transition: color .12s; }
 .refreshBtn:hover { color: var(--text); }
 
-.googleBadge { font-size: 9px; font-weight: 500; padding: 8px 5px 8px 4px; flex-shrink: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; border-left: 2px solid #4a8fd4; }
+.googleBadge { font-size: 11px; font-weight: 500; padding: 8px 5px 8px 4px; flex-shrink: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; border-left: 2px solid #4a8fd4; }
 
 .googleRow { display: flex; align-items: flex-start; gap: 7px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .googleRow:last-child { border-bottom: none; }
