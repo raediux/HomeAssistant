@@ -48,6 +48,8 @@ export default function Calendar() {
   const [year,  setYear]  = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [selected, setSelected] = useState(toDateStr(now));
+  const [sheetOpen, setSheetOpen] = useState(false);   // mobile day sheet
+  const touchStart = useRef(null);
   const { badges, setBadges, googleEvents, hasGoogleToken, fetchGoogleEventsForMonth } = useCalendarData();
   const { tasks } = useTasksData();
 
@@ -55,15 +57,42 @@ export default function Calendar() {
     fetchGoogleEventsForMonth(year, month);
   }, [year, month, hasGoogleToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function prevMonth() {
-    if (month === 0) { setMonth(11); setYear(y => y - 1); }
-    else setMonth(m => m - 1);
-    setSelected(null);
+  // Keeps the selected day-of-month across a month change (clamped to the new
+  // month's length) so the detail panel / sheet never lands on an empty state.
+  function shiftMonth(delta) {
+    const abs = month + delta;
+    const ny  = year + Math.floor(abs / 12);
+    const nm  = ((abs % 12) + 12) % 12;
+    setYear(ny);
+    setMonth(nm);
+    setSheetOpen(false);
+    setSelected(prev => {
+      if (!prev) return prev;
+      const day = Math.min(Number(prev.slice(8)), new Date(ny, nm + 1, 0).getDate());
+      return `${ny}-${String(nm + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    });
   }
-  function nextMonth() {
-    if (month === 11) { setMonth(0); setYear(y => y + 1); }
-    else setMonth(m => m + 1);
-    setSelected(null);
+
+  // Mobile: horizontal flick on the grid changes month. Guarded so vertical
+  // scrolls and taps fall through untouched.
+  function onGridTouchStart(e) {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+  }
+  function onGridTouchEnd(e) {
+    if (!touchStart.current) return;
+    const t  = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = t.clientY - touchStart.current.y;
+    touchStart.current = null;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    e.preventDefault();   // suppress the synthesised click on the day under the finger
+    shiftMonth(dx < 0 ? 1 : -1);
+  }
+
+  function openDay(ds) {
+    setSelected(ds);
+    setSheetOpen(true);
   }
 
   // Build task map: dateStr → tasks (occasional, not done, this month)
@@ -126,18 +155,18 @@ export default function Calendar() {
   return (
     <div className={`${s.container} glass-edge`}>
       <div className={s.nav}>
-        <button className={s.ib} onClick={prevMonth}><IconChevronLeft size={16} /></button>
+        <button className={s.ib} onClick={() => shiftMonth(-1)} aria-label="Previous month"><IconChevronLeft size={16} /></button>
         <span className={s.monthLabel}>{MONTH_NAMES[month]} {year}</span>
-        <button className={s.ib} onClick={nextMonth}><IconChevronRight size={16} /></button>
+        <button className={s.ib} onClick={() => shiftMonth(1)} aria-label="Next month"><IconChevronRight size={16} /></button>
         {session?.user && (
           hasGoogleToken
-            ? <span className={s.syncedChip}><span className={s.syncedDot} />Google Calendar synced<button className={s.refreshBtn} onClick={() => fetchGoogleEventsForMonth(year, month)} title="Refresh">↻</button></span>
-            : <button className={s.connectBtn} onClick={() => initiateGoogleOAuth(session.user.id)}><IconCalendarEvent size={13} /> Connect Google Calendar</button>
+            ? <span className={s.syncedChip}><span className={s.syncedDot} /><span className={s.gLabel}>Google Calendar synced</span><button className={s.refreshBtn} onClick={() => fetchGoogleEventsForMonth(year, month)} title="Refresh" aria-label="Refresh Google Calendar">↻</button></span>
+            : <button className={s.connectBtn} onClick={() => initiateGoogleOAuth(session.user.id)} aria-label="Connect Google Calendar"><IconCalendarEvent size={13} /> <span className={s.gLabel}>Connect Google Calendar</span></button>
         )}
       </div>
 
       <div className={s.body}>
-        <div className={s.gridWrap}>
+        <div className={s.gridWrap} onTouchStart={onGridTouchStart} onTouchEnd={onGridTouchEnd}>
           <div className={s.grid}>
             {DAY_HDRS.map(d => <div key={d} className={s.dayHdr}>{d}</div>)}
             {Array.from({ length: startDow }, (_, i) => (
@@ -159,8 +188,15 @@ export default function Calendar() {
               const classes  = cn(s.day, ds === todayStr && s.dayToday, ds === selected && s.daySelected);
 
               return (
-                <div key={ds} className={classes} onClick={() => setSelected(ds)}>
+                <div key={ds} className={classes} onClick={() => openDay(ds)}>
                   <div className={s.dayNum}>{day}</div>
+                  {/* Mobile: dots stand in for the text badges, which don't fit a 44px cell */}
+                  <div className={s.dotRow}>
+                    {combined.slice(0, 3).map((item, j) => (
+                      <span key={j} className={s.dot} style={{ background: item.color }} />
+                    ))}
+                    {combined.length > 3 && <span className={s.dotMore}>+</span>}
+                  </div>
                   {shown.map((item, j) => (
                     <div key={j} className={item.google ? s.googleBadge : s.calBadge} style={{ background: item.color + '22', color: item.color }}>
                       {item.label}
@@ -173,7 +209,8 @@ export default function Calendar() {
           </div>
         </div>
 
-        <div className={`${s.detail} glass-edge`}>
+        <div className={cn(s.detail, 'glass-edge', sheetOpen && s.sheetOpen)}>
+          <button className={s.sheetHandle} onClick={() => setSheetOpen(false)} aria-label="Close day details" />
           {!selected ? (
             <div className={s.detailEmpty}>Select a day</div>
           ) : (
@@ -192,6 +229,8 @@ export default function Calendar() {
           )}
         </div>
       </div>
+
+      <div className={cn(s.sheetBackdrop, sheetOpen && s.sheetOpen)} onClick={() => setSheetOpen(false)} />
     </div>
   );
 }

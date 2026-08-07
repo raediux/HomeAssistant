@@ -130,3 +130,112 @@
 .googleRow:last-child { border-bottom: none; }
 .googleTitle { font-size: 12px; color: var(--text); }
 .googleTime { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+/* ── Mobile-only elements — inert above 600px, wired up in the media query ── */
+.dotRow      { display: none; gap: 3px; height: 5px; align-items: center; }
+.dot         { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.dotMore     { font-size: 11px; line-height: 1; color: var(--text3); }
+.sheetHandle { display: none; }
+.sheetBackdrop { display: none; }
+.gLabel      { display: inline; }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .container { position: relative; padding: 14px 12px; gap: 8px; }
+
+  /* prev · month · next · google — label stays centred in the 1fr track */
+  .nav {
+    display: grid;
+    grid-template-columns: 36px 1fr 36px 36px;
+    align-items: center;
+    gap: 0;
+    padding: 0 0 8px;
+  }
+  .monthLabel { font-size: 15px; }
+  .ib { justify-content: center; height: 36px; padding: 0; }
+
+  /* Google control collapses to a single icon at the right of the nav row */
+  .gLabel { display: none; }
+  .syncedDot { display: none; }
+  .connectBtn, .syncedChip {
+    margin-left: 0;
+    justify-content: center;
+    width: 32px; height: 32px;
+    padding: 0;
+    gap: 0;
+  }
+  .syncedChip { border-radius: 6px; background: rgba(90,158,90,0.12); border: 1px solid rgba(90,158,90,0.28); }
+  .connectBtn svg { width: 17px; height: 17px; }
+  .refreshBtn { color: #5a9e5a; font-size: 17px; padding: 0; }
+
+  .body { flex-direction: column; }
+  .gridWrap { overflow-y: auto; touch-action: pan-y; }
+  .grid { gap: 3px; grid-auto-rows: minmax(40px, 1fr); }
+  .dayHdr { font-size: 10px; padding-bottom: 5px; }
+
+  .day {
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 3px 2px;
+    border-radius: 7px;
+  }
+  .dayNum { font-size: 13px; }
+  .dotRow { display: flex; }
+
+  /* Text badges can't fit a ~44px cell — the dot row carries the signal instead */
+  .calBadge, .googleBadge, .calBadgeMore { display: none; }
+
+  /* Day detail becomes a slide-up sheet over the grid */
+  .detail {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    width: auto;
+    max-height: 62%;
+    margin-left: 0;
+    z-index: 20;
+    border-radius: 16px 16px 0 0;
+    background: rgba(20,21,26,0.94);
+    padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+    transform: translateY(calc(100% + 8px));
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .detail.sheetOpen { transform: translateY(0); }
+
+  .sheetHandle {
+    display: block;
+    width: 36px; height: 4px;
+    margin: 4px auto 12px;
+    border: none;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.22);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .sheetBackdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+  .sheetBackdrop.sheetOpen { opacity: 1; pointer-events: auto; }
+
+  /* Touch targets inside the sheet */
+  .detailDate { font-size: 15px; margin-bottom: 12px; }
+  .detailSection { font-size: 11px; }
+  .taskRow, .googleRow { padding: 10px 0; }
+  .taskTitle, .googleTitle { font-size: 14px; }
+  .badgeRow { gap: 8px; margin-bottom: 6px; }
+  .badgePill { font-size: 12px; padding: 5px 9px; }
+  .badgeDel { width: 28px; height: 28px; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+  .badgeForm { gap: 12px; padding-top: 4px; }
+  /* 16px keeps iOS from zooming the page on focus */
+  .badgeInput { font-size: 16px; padding: 9px 12px; }
+  .swatches { gap: 12px; }
+  .swatch { width: 18px; height: 18px; }
+}
