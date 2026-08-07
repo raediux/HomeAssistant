@@ -133,7 +133,7 @@
 
 /* ── Mobile-only elements — inert above 600px, wired up in the media query ── */
 .barRow      { display: none; flex-direction: column; gap: 2px; }
-.bar         { height: 3px; border-radius: 2px; flex-shrink: 0; }
+.bar         { height: 6px; border-radius: 2px; flex-shrink: 0; }
 .sheetHandle { display: none; }
 .sheetBackdrop { display: none; }
 .gLabel      { display: inline; }
