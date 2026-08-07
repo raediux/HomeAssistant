@@ -190,12 +190,11 @@ export default function Calendar() {
               return (
                 <div key={ds} className={classes} onClick={() => openDay(ds)}>
                   <div className={s.dayNum}>{day}</div>
-                  {/* Mobile: dots stand in for the text badges, which don't fit a 44px cell */}
-                  <div className={s.dotRow}>
-                    {combined.slice(0, 3).map((item, j) => (
-                      <span key={j} className={s.dot} style={{ background: item.color }} />
+                  {/* Mobile: bars stand in for the text badges, which don't fit a 44px cell */}
+                  <div className={s.barRow}>
+                    {combined.slice(0, 4).map((item, j) => (
+                      <span key={j} className={s.bar} style={{ background: item.color }} />
                     ))}
-                    {combined.length > 3 && <span className={s.dotMore}>+</span>}
                   </div>
                   {shown.map((item, j) => (
                     <div key={j} className={item.google ? s.googleBadge : s.calBadge} style={{ background: item.color + '22', color: item.color }}>
