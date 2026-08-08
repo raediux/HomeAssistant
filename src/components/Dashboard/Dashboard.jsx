@@ -7,6 +7,7 @@ import MealPlanner from '../MealPlanner/MealPlanner.jsx';
 import Calendar from '../Calendar/Calendar.jsx';
 import Prices from '../Prices/Prices.jsx';
 import { UndoProvider } from '../../contexts/UndoContext.jsx';
+import ErrorBoundary from '../ErrorBoundary.jsx';
 import s from './Dashboard.module.css';
 
 // Lazy: keeps three.js (~600KB) out of the critical bundle — it's only a
@@ -49,10 +50,15 @@ export default function Dashboard() {
             exit="exit"
             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.18 }}
           >
-            {tab === 'tasks'    && <Tasks />}
-            {tab === 'meals'    && <MealPlanner />}
-            {tab === 'calendar' && <Calendar />}
-            {tab === 'prices'   && <Prices />}
+            {/* Per-tab boundary, keyed so switching tabs clears a previous
+                crash. Without it one broken tab replaces the whole app and
+                takes the other three down with it. */}
+            <ErrorBoundary key={tab}>
+              {tab === 'tasks'    && <Tasks />}
+              {tab === 'meals'    && <MealPlanner />}
+              {tab === 'calendar' && <Calendar />}
+              {tab === 'prices'   && <Prices />}
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
       </div>

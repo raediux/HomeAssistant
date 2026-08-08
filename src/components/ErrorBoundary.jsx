@@ -4,7 +4,7 @@ import { Component } from 'react';
 // entire tree, leaving only the dark background. Here we catch it and show a
 // minimal recovery screen instead.
 export default class ErrorBoundary extends Component {
-  state = { error: null };
+  state = { error: null, stack: null };
 
   static getDerivedStateFromError(error) {
     return { error };
@@ -12,6 +12,10 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('Uncaught render error:', error, info);
+    // Keep the component stack on screen too. Without it the recovery screen
+    // says nothing useful, and diagnosing a crash on someone else's device
+    // turns into guesswork.
+    this.setState({ stack: info?.componentStack ?? null });
   }
 
   render() {
@@ -33,6 +37,29 @@ export default class ErrorBoundary extends Component {
           <div style={{ fontSize: 13, color: 'var(--text2)', maxWidth: 360 }}>
             The app hit an unexpected error. Reloading usually fixes it.
           </div>
+
+          <details style={{ maxWidth: 640, width: '100%', textAlign: 'left' }}>
+            <summary style={{ fontSize: 12, color: 'var(--text3)', cursor: 'pointer', textAlign: 'center' }}>
+              Show details
+            </summary>
+            <pre style={{
+              marginTop: 10,
+              padding: 12,
+              background: 'rgba(0,0,0,0.35)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8,
+              fontSize: 11,
+              lineHeight: 1.5,
+              color: '#e88',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              maxHeight: 260,
+              overflow: 'auto',
+            }}>
+              {String(this.state.error?.stack || this.state.error)}
+              {this.state.stack}
+            </pre>
+          </details>
           <button
             onClick={() => window.location.reload()}
             style={{

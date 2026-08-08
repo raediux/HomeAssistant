@@ -48,6 +48,7 @@ function Sparkline({ points }) {
 export default function PriceCard({ item, onEdit, onDelete, onOpen, onManualPrice }) {
   const { ref, rotateX, rotateY, onMouseMove, onMouseLeave } = useTilt(5);
   const [history, setHistory] = useState([]);
+  const [imgFailed, setImgFailed] = useState(false);
 
   useEffect(() => {
     // current_price is the cheap "something moved" signal — refetch the curve only then.
@@ -72,8 +73,13 @@ export default function PriceCard({ item, onEdit, onDelete, onOpen, onManualPric
       layout
     >
       <div className={s.thumb}>
-        {item.image_url
-          ? <img src={item.image_url} alt="" loading="lazy" referrerPolicy="no-referrer" />
+        {item.image_url && !imgFailed
+          ? <img
+              src={item.image_url} alt="" loading="lazy" referrerPolicy="no-referrer"
+              // Retailer CDNs are off-origin, so the production CSP (img-src 'self')
+              // blocks them. Degrade to the initial rather than an empty box.
+              onError={() => setImgFailed(true)}
+            />
           : <span className={s.thumbFallback}>{(item.store || item.name || '?').slice(0, 1)}</span>}
       </div>
 
