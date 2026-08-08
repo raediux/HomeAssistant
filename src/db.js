@@ -261,3 +261,70 @@ export async function dbSaveWhiteboard(dataUrl) {
   );
   if (error) fail('dbSaveWhiteboard', error);
 }
+
+// ── Price tracker ─────────────────────────────────────────────
+export async function dbLoadPriceItems() {
+  const { data, error } = await db.from('price_items')
+    .select('*').order('sort_order').order('created_at');
+  if (error) { fail('dbLoadPriceItems', error); return []; }
+  return data || [];
+}
+
+export async function dbSavePriceItem(item) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('price_items').upsert({
+    id: item.id, name: item.name, url: item.url,
+    store: item.store || null, image_url: item.image_url || null,
+    current_price: item.current_price ?? null,
+    lowest_price: item.lowest_price ?? null,
+    highest_price: item.highest_price ?? null,
+    target_price: item.target_price ?? null,
+    drop_pct: item.drop_pct ?? null,
+    on_sale: item.on_sale ?? false,
+    seen: item.seen ?? true,
+    manual: item.manual ?? false,
+    price_regex: item.price_regex || null,
+    sort_order: item.sort_order ?? 0,
+    // Carried through so an item added from a successful probe reads as
+    // "checked just now" rather than "never checked" after a reload.
+    last_checked_at: item.last_checked_at ?? null,
+    last_status: item.last_status ?? null,
+    household_id: hid,
+  }, { onConflict: 'id' });
+  if (error) fail('dbSavePriceItem', error);
+}
+
+// Narrow update so a card action can't clobber a price the cron wrote moments ago.
+export async function dbPatchPriceItem(id, patch) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('price_items').update(patch).eq('id', id).eq('household_id', hid);
+  if (error) fail('dbPatchPriceItem', error);
+}
+
+export async function dbDeletePriceItem(id) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('price_items').delete().eq('id', id).eq('household_id', hid);
+  if (error) fail('dbDeletePriceItem', error);
+}
+
+export async function dbLoadPriceHistory(itemId) {
+  const { data, error } = await db.from('price_history')
+    .select('price, checked_at').eq('item_id', itemId)
+    .order('checked_at', { ascending: true }).limit(60);
+  if (error) { fail('dbLoadPriceHistory', error); return []; }
+  return data || [];
+}
+
+// Both of these hit the check-prices edge function — the same code the daily
+// cron runs, so a manual check and an automatic one can never disagree.
+export async function dbCheckPrices() {
+  const { data, error } = await db.functions.invoke('check-prices', { body: {} });
+  if (error) { fail('dbCheckPrices', error); return null; }
+  return data;
+}
+
+export async function dbProbeUrl(url) {
+  const { data, error } = await db.functions.invoke('check-prices', { body: { probe: url } });
+  if (error) { fail('dbProbeUrl', error); return null; }
+  return data;
+}

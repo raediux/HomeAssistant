@@ -24,6 +24,17 @@
 .tab:hover { color: var(--text); }
 .tab.active { color: var(--text); border-bottom-color: var(--text2); }
 
+/* Unacknowledged price drop — the only alert channel, so it has to read at a glance. */
+.dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  vertical-align: middle;
+  box-shadow: 0 0 6px var(--green);
+}
+
 .version {
   margin-left: auto;
   align-self: center;

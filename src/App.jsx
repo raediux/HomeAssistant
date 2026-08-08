@@ -4,6 +4,7 @@ import { ShoppingProvider } from './contexts/ShoppingContext.jsx';
 import { TasksProvider } from './contexts/TasksContext.jsx';
 import { MealsProvider } from './contexts/MealsContext.jsx';
 import { CalendarProvider } from './contexts/CalendarContext.jsx';
+import { PricesProvider } from './contexts/PricesContext.jsx';
 import Auth from './components/Auth/Auth.jsx';
 import Dashboard from './components/Dashboard/Dashboard.jsx';
 
@@ -21,7 +22,9 @@ function App() {
       <TasksProvider>
         <MealsProvider>
           <CalendarProvider>
-            <Dashboard />
+            <PricesProvider>
+              <Dashboard />
+            </PricesProvider>
           </CalendarProvider>
         </MealsProvider>
       </TasksProvider>

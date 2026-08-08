@@ -5,6 +5,7 @@ import TabBar from '../TabBar/TabBar.jsx';
 import Tasks from '../Tasks/Tasks.jsx';
 import MealPlanner from '../MealPlanner/MealPlanner.jsx';
 import Calendar from '../Calendar/Calendar.jsx';
+import Prices from '../Prices/Prices.jsx';
 import { UndoProvider } from '../../contexts/UndoContext.jsx';
 import s from './Dashboard.module.css';
 
@@ -12,7 +13,7 @@ import s from './Dashboard.module.css';
 // decorative background, so the UI shouldn't wait on it.
 const ThreeBackground = lazy(() => import('../shared/ThreeBackground.jsx'));
 
-const TAB_ORDER = ['tasks', 'meals', 'calendar'];
+const TAB_ORDER = ['tasks', 'meals', 'calendar', 'prices'];
 
 const variants = {
   enter: dir => ({ x: dir >= 0 ? '100%' : '-100%' }),
@@ -51,6 +52,7 @@ export default function Dashboard() {
             {tab === 'tasks'    && <Tasks />}
             {tab === 'meals'    && <MealPlanner />}
             {tab === 'calendar' && <Calendar />}
+            {tab === 'prices'   && <Prices />}
           </motion.div>
         </AnimatePresence>
       </div>

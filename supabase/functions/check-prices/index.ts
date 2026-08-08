@@ -1,0 +1,247 @@
+// check-prices — reads each tracked product page, records the current price,
+// and flags anything that has dropped.
+//
+// Two callers:
+//   • pg_cron (service_role JWT) → checks every household, once daily.
+//   • the app  (user JWT)        → checks just that user's household ("Check now"),
+//                                  or probes a single URL to prefill the add form.
+
+import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { parseHtml, storeFromUrl, type Parsed } from './parse.ts';
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+const FETCH_TIMEOUT_MS = 15_000;
+const MAX_HTML = 3_000_000;   // large product pages run ~2MB; past this is boilerplate
+const BATCH = 5;              // concurrent fetches — one slow site can't stall the run
+
+// Retailers serve a different (often price-free) page to unknown clients, so we
+// identify as a mainstream desktop browser and ask for Australian pricing.
+const REQUEST_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-AU,en;q=0.9',
+  'Upgrade-Insecure-Requests': '1',
+};
+
+// Only public web addresses — never let a saved URL point back at internal infrastructure.
+function safeUrl(raw: string): URL | null {
+  let u: URL;
+  try { u = new URL(raw); } catch { return null; }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+  const h = u.hostname.toLowerCase();
+  if (h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal')) return null;
+  if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(h)) return null;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return null;
+  if (h === '::1' || h.startsWith('[')) return null;
+  return u;
+}
+
+type FetchResult =
+  | { ok: true; parsed: Parsed }
+  | { ok: false; status: 'blocked' | 'http_error' | 'bad_url'; error: string };
+
+async function fetchAndParse(url: string, priceRegex?: string | null): Promise<FetchResult> {
+  const safe = safeUrl(url);
+  if (!safe) return { ok: false, status: 'bad_url', error: 'Not a valid public http(s) address' };
+
+  let res: Response;
+  try {
+    res = await fetch(safe.href, {
+      redirect: 'follow',
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      headers: REQUEST_HEADERS,
+    });
+  } catch (e) {
+    return { ok: false, status: 'http_error', error: `Request failed: ${(e as Error).message}` };
+  }
+
+  if (!res.ok) {
+    // 403/429/503 means the retailer turned us away, not that the link is dead —
+    // worth distinguishing, because the fix (enter the price by hand) differs.
+    const refused = res.status === 403 || res.status === 429 || res.status === 503;
+    return {
+      ok: false,
+      status: refused ? 'blocked' : 'http_error',
+      error: `HTTP ${res.status}${refused ? ' — site declined the request' : ''}`,
+    };
+  }
+
+  const html = (await res.text()).slice(0, MAX_HTML);
+  return { ok: true, parsed: parseHtml(html, safe.href, priceRegex) };
+}
+
+// ── checking one tracked item ─────────────────────────────────
+
+type Item = {
+  id: number; url: string; name: string; store: string | null; image_url: string | null;
+  current_price: number | null; lowest_price: number | null; highest_price: number | null;
+  target_price: number | null; drop_pct: number | null; on_sale: boolean;
+  price_regex: string | null; currency: string | null;
+};
+
+// deno-lint-ignore no-explicit-any
+async function checkItem(admin: any, item: Item) {
+  const now = new Date().toISOString();
+  const result = await fetchAndParse(item.url, item.price_regex);
+
+  // A failed read keeps the last known price — a stale number labelled stale
+  // is more useful than a blank card.
+  if (!result.ok) {
+    await admin.from('price_items').update({
+      last_checked_at: now, last_status: result.status, last_error: result.error,
+    }).eq('id', item.id);
+    return { id: item.id, ok: false, dropped: false, newAlert: false };
+  }
+
+  const { parsed } = result;
+  const prev = item.current_price == null ? null : Number(item.current_price);
+
+  if (parsed.price == null) {
+    await admin.from('price_items').update({
+      last_checked_at: now, last_status: 'parse_failed',
+      last_error: 'No price found on the page (JSON-LD and meta tags both empty)',
+      image_url: item.image_url ?? parsed.image,
+    }).eq('id', item.id);
+    return { id: item.id, ok: false, dropped: false, newAlert: false };
+  }
+
+  const price = parsed.price;
+
+  // A 10× swing usually means we grabbed a bundle or RRP figure, not the price.
+  if (prev != null && prev > 0 && (price / prev < 0.1 || price / prev > 10)) {
+    await admin.from('price_items').update({
+      last_checked_at: now, last_status: 'parse_failed',
+      last_error: `Implausible change ($${prev} → $${price}) — ignored`,
+    }).eq('id', item.id);
+    return { id: item.id, ok: false, dropped: false, newAlert: false };
+  }
+
+  const target  = item.target_price == null ? null : Number(item.target_price);
+  const dropPct = item.drop_pct == null ? null : Number(item.drop_pct);
+  const hitTarget = target != null && price <= target;
+  const hitDrop   = dropPct != null && prev != null && prev > 0
+    && ((prev - price) / prev) * 100 >= dropPct;
+
+  let onSale = hitTarget || hitDrop;
+  // A week-long sale shouldn't un-flag itself on day two just because the price
+  // held steady — stay flagged until it climbs back up.
+  if (!onSale && item.on_sale && prev != null && price <= prev) onSale = true;
+
+  const patch: Record<string, unknown> = {
+    current_price: price,
+    previous_price: prev,
+    lowest_price:  item.lowest_price  == null ? price : Math.min(Number(item.lowest_price), price),
+    highest_price: item.highest_price == null ? price : Math.max(Number(item.highest_price), price),
+    last_checked_at: now,
+    last_status: 'ok',
+    last_error: null,
+    on_sale: onSale,
+  };
+  if (onSale && !item.on_sale) { patch.seen = false; patch.sale_since = now; }
+  if (!onSale) patch.sale_since = null;
+  if (!item.image_url && parsed.image) patch.image_url = parsed.image;
+  if (!item.store) patch.store = storeFromUrl(item.url);
+  if (parsed.currency && !item.currency) patch.currency = parsed.currency;
+
+  await admin.from('price_items').update(patch).eq('id', item.id);
+
+  // Only record genuine movements — keeps the table small and the sparkline honest.
+  if (prev == null || price !== prev) {
+    await admin.from('price_history').insert({ item_id: item.id, price, checked_at: now });
+  }
+
+  return {
+    id: item.id, ok: true, price, prev,
+    dropped: prev != null && price < prev,
+    newAlert: onSale && !item.on_sale,
+  };
+}
+
+// ── entrypoint ────────────────────────────────────────────────
+
+function decodeJwtRole(header: string | null): string | null {
+  const token = (header ?? '').replace(/^Bearer\s+/i, '');
+  const payload = token.split('.')[1];
+  if (!payload) return null;
+  try {
+    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))).role ?? null;
+  } catch { return null; }
+}
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status, headers: { ...CORS, 'Content-Type': 'application/json' },
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+
+  const auth = req.headers.get('Authorization');
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+  const isService = decodeJwtRole(auth) === 'service_role';
+
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { /* empty body is fine */ }
+
+  // ── probe: read one URL and report back, saving nothing ──
+  if (typeof body.probe === 'string') {
+    const result = await fetchAndParse(body.probe);
+    if (!result.ok) return json({ ok: false, status: result.status, error: result.error });
+    return json({
+      ok: true,
+      price:    result.parsed.price,
+      currency: result.parsed.currency,
+      title:    result.parsed.title,
+      image:    result.parsed.image,
+      source:   result.parsed.source,
+      store:    storeFromUrl(body.probe),
+    });
+  }
+
+  // ── scope: cron sees every household, a user sees only their own ──
+  let query = admin.from('price_items')
+    .select('id, url, name, store, image_url, current_price, lowest_price, highest_price, target_price, drop_pct, on_sale, price_regex, currency')
+    .eq('manual', false);
+
+  if (!isService) {
+    const userClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: auth ?? '' } },
+      auth: { persistSession: false },
+    });
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user) return json({ error: 'Not authenticated' }, 401);
+    const { data: member } = await admin.from('household_members')
+      .select('household_id').eq('user_id', user.id).maybeSingle();
+    if (!member?.household_id) return json({ error: 'No household' }, 403);
+    query = query.eq('household_id', member.household_id);
+  }
+
+  const { data: items, error } = await query;
+  if (error) return json({ error: error.message }, 500);
+  if (!items?.length) return json({ checked: 0, ok: 0, failed: 0, drops: 0, alerts: 0 });
+
+  const results: Awaited<ReturnType<typeof checkItem>>[] = [];
+  for (let i = 0; i < items.length; i += BATCH) {
+    const slice = items.slice(i, i + BATCH) as Item[];
+    const settled = await Promise.allSettled(slice.map(item => checkItem(admin, item)));
+    for (const s of settled) if (s.status === 'fulfilled') results.push(s.value);
+  }
+
+  return json({
+    checked: results.length,
+    ok:      results.filter(r => r.ok).length,
+    failed:  results.filter(r => !r.ok).length,
+    drops:   results.filter(r => r.dropped).length,
+    alerts:  results.filter(r => r.newAlert).length,
+    source:  isService ? 'cron' : 'manual',
+  });
+});
