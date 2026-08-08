@@ -58,7 +58,9 @@ function findProductPrice(node: unknown, depth = 0): { price: number; currency?:
   if (typeof node !== 'object') return null;
   const obj = node as Record<string, unknown>;
 
-  const types = ([] as unknown[]).concat(obj['@type'] ?? []).map(t => String(t).toLowerCase());
+  // Some sites (Adairs among them) emit schema.org keys with the "@" stripped,
+  // so a strict @type lookup silently skips their Product block entirely.
+  const types = ([] as unknown[]).concat(obj['@type'] ?? obj.type ?? []).map(t => String(t).toLowerCase());
   if (types.some(t => t === 'product' || t === 'productgroup') && obj.offers) {
     const offers = ([] as unknown[]).concat(obj.offers as unknown);
     for (const offer of offers) {
@@ -72,29 +74,87 @@ function findProductPrice(node: unknown, depth = 0): { price: number; currency?:
     }
   }
 
-  for (const key of ['@graph', 'mainEntity', 'itemListElement', 'hasVariant']) {
+  for (const key of ['@graph', 'graph', 'mainEntity', 'itemListElement', 'hasVariant']) {
     const hit = findProductPrice(obj[key], depth + 1);
     if (hit) return hit;
   }
   return null;
 }
 
-// Retailers that render the price client-side leave nothing in JSON-LD or meta
-// tags, but do embed it in the page's app state. One small reader per site,
-// tried before the generic parsers.
-type Adapter = { host: RegExp; extract: (html: string) => number | null };
+// Pull one balanced JSON value out of a larger document, starting at the first
+// `open` bracket after `from`. Quote- and escape-aware, because product titles
+// routinely contain braces that would defeat naive bracket counting.
+function sliceJson(html: string, from: number, open: '[' | '{'): string | null {
+  const close = open === '[' ? ']' : '}';
+  const start = html.indexOf(open, from);
+  if (start === -1) return null;
+  let depth = 0, inStr = false, escaped = false;
+  for (let i = start; i < html.length; i++) {
+    const c = html[i];
+    if (escaped) { escaped = false; continue; }
+    if (c === '\\') { escaped = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === open) depth++;
+    else if (c === close && --depth === 0) return html.slice(start, i + 1);
+  }
+  return null;
+}
+
+export type Variant = { label: string; price: number };
+
+// Retailers that render the price client-side leave nothing usable in JSON-LD or
+// meta tags, but do embed it in the page's app state. One small reader per site,
+// tried before the generic parsers. A reader may return a list of options
+// (sizes, colours) instead of a single price.
+type AdapterResult = { price?: number | null; variants?: Variant[] };
+type Adapter = { host: RegExp; extract: (html: string) => AdapterResult };
 
 const ADAPTERS: Adapter[] = [
   {
     // Officeworks: app state carries the price in cents, keyed by SKU.
     host: /(^|\.)officeworks\.com\.au$/,
-    extract: h => toNum(Number(h.match(/"price":\{"[A-Z0-9-]+":\{"price":(\d+)/)?.[1]) / 100),
+    extract: h => ({ price: toNum(Number(h.match(/"price":\{"[A-Z0-9-]+":\{"price":(\d+)/)?.[1]) / 100) }),
   },
   {
     // Amazon: buy-box price sits in a JSON blob; the visible span is the fallback.
     host: /(^|\.)amazon\.com\.au$/,
-    extract: h => toNum(h.match(/"priceAmount":\s*([\d.]+)/)?.[1])
-               ?? toNum(h.match(/class="a-offscreen">\s*\$?([\d,.]+)/)?.[1]),
+    extract: h => ({
+      price: toNum(h.match(/"priceAmount":\s*([\d.]+)/)?.[1])
+          ?? toNum(h.match(/class="a-offscreen">\s*\$?([\d,.]+)/)?.[1]),
+    }),
+  },
+  {
+    // Adairs: per-size prices live under `prices.variantGroups`. Anchoring on that
+    // key matters — the same page also carries `sizeSelections` blocks belonging to
+    // cross-sell products (a mattress protector there lists its own "Single"), and
+    // reading those would track the wrong item with nothing looking wrong.
+    host: /(^|\.)adairs\.com\.au$/,
+    extract: h => {
+      const at = h.indexOf('"variantGroups"');
+      if (at === -1) return {};
+      const raw = sliceJson(h, at, '[');
+      if (!raw) return {};
+      let groups: unknown;
+      try { groups = JSON.parse(raw); } catch { return {}; }
+      if (!Array.isArray(groups)) return {};
+
+      const variants: Variant[] = [];
+      for (const group of groups) {
+        const items = (group as Record<string, unknown>)?.items;
+        if (!Array.isArray(items)) continue;
+        for (const item of items) {
+          const it = item as Record<string, unknown>;
+          const p = it.price as Record<string, unknown> | undefined;
+          // promotionPrice is what you'd actually pay when a sale is on;
+          // linenLoversPrice is the membership rate and is deliberately ignored.
+          const price = toNum(p?.promotionPrice ?? p?.price);
+          const label = typeof it.title === 'string' ? it.title.trim() : '';
+          if (label && price) variants.push({ label, price });
+        }
+      }
+      return variants.length ? { variants } : {};
+    },
   },
 ];
 
@@ -104,9 +164,15 @@ export type Parsed = {
   title: string | null;
   image: string | null;
   source: string | null;
+  variants?: Variant[];
+  /** A variant was pinned but the page no longer lists that label. */
+  variantMissing?: boolean;
 };
 
-export function parseHtml(html: string, url: string, priceRegex?: string | null): Parsed {
+type ParseOpts = { priceRegex?: string | null; variant?: string | null };
+
+export function parseHtml(html: string, url: string, opts: ParseOpts = {}): Parsed {
+  const { priceRegex, variant } = opts;
   const metas = metaTags(html);
   const out: Parsed = { price: null, currency: null, title: null, image: null, source: null };
 
@@ -131,8 +197,19 @@ export function parseHtml(html: string, url: string, priceRegex?: string | null)
   try { host = new URL(url).hostname.replace(/^www\./, '').toLowerCase(); } catch { /* ignore */ }
   const adapter = ADAPTERS.find(a => a.host.test(host));
   if (adapter) {
-    const price = adapter.extract(html);
-    if (price) { out.price = price; out.source = 'adapter'; return out; }
+    const res = adapter.extract(html);
+    if (res.variants?.length) {
+      out.variants = res.variants;
+      if (!variant) return out;   // caller picks one; guessing a size would be worse than no price
+      const hit = res.variants.find(v => v.label.toLowerCase() === variant.toLowerCase());
+      // Never substitute a different option — silently tracking the wrong size is
+      // the one failure that looks like success.
+      if (!hit) { out.variantMissing = true; return out; }
+      out.price = hit.price;
+      out.source = 'adapter';
+      return out;
+    }
+    if (res.price) { out.price = res.price; out.source = 'adapter'; return out; }
   }
 
   // 3. JSON-LD Product — covers most AU retailers
@@ -176,6 +253,7 @@ const STORE_NAMES: Record<string, string> = {
   'kmart.com.au': 'Kmart', 'target.com.au': 'Target', 'harveynorman.com.au': 'Harvey Norman',
   'chemistwarehouse.com.au': 'Chemist Warehouse', 'mwave.com.au': 'Mwave',
   'scorptec.com.au': 'Scorptec', 'pccasegear.com': 'PC Case Gear', 'umart.com.au': 'Umart',
+  'adairs.com.au': 'Adairs',
 };
 
 export function storeFromUrl(url: string): string | null {

@@ -48,7 +48,9 @@ type FetchResult =
   | { ok: true; parsed: Parsed }
   | { ok: false; status: 'blocked' | 'http_error' | 'bad_url'; error: string };
 
-async function fetchAndParse(url: string, priceRegex?: string | null): Promise<FetchResult> {
+type ParseOpts = { priceRegex?: string | null; variant?: string | null };
+
+async function fetchAndParse(url: string, opts: ParseOpts = {}): Promise<FetchResult> {
   const safe = safeUrl(url);
   if (!safe) return { ok: false, status: 'bad_url', error: 'Not a valid public http(s) address' };
 
@@ -75,7 +77,7 @@ async function fetchAndParse(url: string, priceRegex?: string | null): Promise<F
   }
 
   const html = (await res.text()).slice(0, MAX_HTML);
-  return { ok: true, parsed: parseHtml(html, safe.href, priceRegex) };
+  return { ok: true, parsed: parseHtml(html, safe.href, opts) };
 }
 
 // ── checking one tracked item ─────────────────────────────────
@@ -84,13 +86,16 @@ type Item = {
   id: number; url: string; name: string; store: string | null; image_url: string | null;
   current_price: number | null; lowest_price: number | null; highest_price: number | null;
   target_price: number | null; drop_pct: number | null; on_sale: boolean;
-  price_regex: string | null; currency: string | null;
+  price_regex: string | null; currency: string | null; variant: string | null;
 };
 
 // deno-lint-ignore no-explicit-any
 async function checkItem(admin: any, item: Item) {
   const now = new Date().toISOString();
-  const result = await fetchAndParse(item.url, item.price_regex);
+  const result = await fetchAndParse(item.url, {
+    priceRegex: item.price_regex,
+    variant: item.variant,
+  });
 
   // A failed read keeps the last known price — a stale number labelled stale
   // is more useful than a blank card.
@@ -105,9 +110,14 @@ async function checkItem(admin: any, item: Item) {
   const prev = item.current_price == null ? null : Number(item.current_price);
 
   if (parsed.price == null) {
+    // A pinned option that vanished gets its own message: the link still works,
+    // so "no price found" would send you hunting in the wrong place.
+    const reason = parsed.variantMissing
+      ? `Option "${item.variant}" is no longer listed — the page's options may have changed`
+      : 'No price found on the page (JSON-LD and meta tags both empty)';
     await admin.from('price_items').update({
       last_checked_at: now, last_status: 'parse_failed',
-      last_error: 'No price found on the page (JSON-LD and meta tags both empty)',
+      last_error: reason,
       image_url: item.image_url ?? parsed.image,
     }).eq('id', item.id);
     return { id: item.id, ok: false, dropped: false, newAlert: false };
@@ -194,7 +204,8 @@ Deno.serve(async (req) => {
 
   // ── probe: read one URL and report back, saving nothing ──
   if (typeof body.probe === 'string') {
-    const result = await fetchAndParse(body.probe);
+    const variant = typeof body.variant === 'string' ? body.variant : null;
+    const result = await fetchAndParse(body.probe, { variant });
     if (!result.ok) return json({ ok: false, status: result.status, error: result.error });
     return json({
       ok: true,
@@ -203,13 +214,14 @@ Deno.serve(async (req) => {
       title:    result.parsed.title,
       image:    result.parsed.image,
       source:   result.parsed.source,
+      variants: result.parsed.variants ?? null,
       store:    storeFromUrl(body.probe),
     });
   }
 
   // ── scope: cron sees every household, a user sees only their own ──
   let query = admin.from('price_items')
-    .select('id, url, name, store, image_url, current_price, lowest_price, highest_price, target_price, drop_pct, on_sale, price_regex, currency')
+    .select('id, url, name, store, image_url, current_price, lowest_price, highest_price, target_price, drop_pct, on_sale, price_regex, currency, variant')
     .eq('manual', false);
 
   if (!isService) {

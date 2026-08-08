@@ -32,24 +32,22 @@ export default function Prices() {
 
   function handleConfirm(form) {
     if (modal?.edit) {
-      const updated = {
-        ...modal.edit,
-        url: form.url, name: form.name,
+      const patch = {
+        url: form.url, name: form.name, variant: form.variant,
         target_price: form.target_price, drop_pct: form.drop_pct,
       };
-      upsertLocal(updated);
-      dbPatchPriceItem(updated.id, {
-        url: form.url, name: form.name,
-        target_price: form.target_price, drop_pct: form.drop_pct,
-      });
+      upsertLocal({ ...modal.edit, ...patch });
+      dbPatchPriceItem(modal.edit.id, patch);
     } else {
       // Seed from the probe so a new card shows a real price immediately rather
       // than sitting blank until the next check.
       const p = form.probe;
-      const price = p?.ok ? p.price ?? null : null;
+      // On a page with options the probe reports no single price — the chosen
+      // size's price comes from the option list instead.
+      const price = form.variantPrice ?? (p?.ok ? p.price ?? null : null);
       const row = {
         id: newId(),
-        name: form.name, url: form.url,
+        name: form.name, url: form.url, variant: form.variant,
         store: p?.store ?? null,
         image_url: p?.image ?? null,
         current_price: price, previous_price: null,

@@ -275,6 +275,7 @@ export async function dbSavePriceItem(item) {
   const { error } = await db.from('price_items').upsert({
     id: item.id, name: item.name, url: item.url,
     store: item.store || null, image_url: item.image_url || null,
+    variant: item.variant || null,
     current_price: item.current_price ?? null,
     lowest_price: item.lowest_price ?? null,
     highest_price: item.highest_price ?? null,

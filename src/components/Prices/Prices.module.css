@@ -119,6 +119,13 @@
   border-radius: 4px; padding: 2px 5px;
   white-space: nowrap;
 }
+/* Which size/option this card follows — accented so it can't be mistaken for the store. */
+.variantChip {
+  font-size: 10px; color: var(--accent-t);
+  background: var(--accent-l);
+  border-radius: 4px; padding: 2px 5px;
+  white-space: nowrap;
+}
 .checked { font-size: 10px; color: var(--text3); display: inline-flex; align-items: center; gap: 3px; }
 .checkedFailed { color: var(--amber); }
 

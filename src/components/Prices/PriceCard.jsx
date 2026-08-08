@@ -97,6 +97,7 @@ export default function PriceCard({ item, onEdit, onDelete, onOpen, onManualPric
 
         <div className={s.cardMeta}>
           {item.store && <span className={s.storeChip}>{item.store}</span>}
+          {item.variant && <span className={s.variantChip}>{item.variant}</span>}
           <span className={cn(s.checked, failed && s.checkedFailed)}>
             {failed && <IconAlertTriangle size={10} />}
             {failed ? `couldn't read · ${relativeTime(item.last_checked_at)}` : relativeTime(item.last_checked_at)}
