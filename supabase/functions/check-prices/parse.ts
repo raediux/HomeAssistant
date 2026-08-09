@@ -107,7 +107,7 @@ export type Variant = { label: string; price: number };
 // meta tags, but do embed it in the page's app state. One small reader per site,
 // tried before the generic parsers. A reader may return a list of options
 // (sizes, colours) instead of a single price.
-type AdapterResult = { price?: number | null; variants?: Variant[] };
+type AdapterResult = { price?: number | null; variants?: Variant[]; reason?: string };
 type Adapter = { host: RegExp; extract: (html: string) => AdapterResult };
 
 const ADAPTERS: Adapter[] = [
@@ -117,11 +117,14 @@ const ADAPTERS: Adapter[] = [
     extract: h => ({ price: toNum(Number(h.match(/"price":\{"[A-Z0-9-]+":\{"price":(\d+)/)?.[1]) / 100) }),
   },
   {
-    // Amazon: buy-box price sits in a JSON blob; the visible span is the fallback.
+    // Amazon: the buy-box JSON is the only number worth trusting. Amazon
+    // intermittently serves servers a reduced page with no priceAmount at all,
+    // whose stray visible prices belong to other offers — reading one of those
+    // is where $326.61 came from on a $399 item. No priceAmount, no price.
     host: /(^|\.)amazon\.com\.au$/,
     extract: h => ({
-      price: toNum(h.match(/"priceAmount":\s*([\d.]+)/)?.[1])
-          ?? toNum(h.match(/class="a-offscreen">\s*\$?([\d,.]+)/)?.[1]),
+      price: toNum(h.match(/"priceAmount":\s*([\d.]+)/)?.[1]),
+      reason: 'Amazon served a reduced page with no buy-box price — it does this to servers at random. Try again later, or enter the price yourself.',
     }),
   },
   {
@@ -167,6 +170,8 @@ export type Parsed = {
   variants?: Variant[];
   /** A variant was pinned but the page no longer lists that label. */
   variantMissing?: boolean;
+  /** Why a site-specific reader declined to report a price. */
+  reason?: string;
 };
 
 type ParseOpts = { priceRegex?: string | null; variant?: string | null };
@@ -210,6 +215,9 @@ export function parseHtml(html: string, url: string, opts: ParseOpts = {}): Pars
       return out;
     }
     if (res.price) { out.price = res.price; out.source = 'adapter'; return out; }
+    // The reader recognised the site but refused to vouch for a number. Carry
+    // its explanation; the generic parsers below may still find something valid.
+    if (res.reason) out.reason = res.reason;
   }
 
   // 3. JSON-LD Product — covers most AU retailers

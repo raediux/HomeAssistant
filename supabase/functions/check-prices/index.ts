@@ -31,6 +31,12 @@ const REQUEST_HEADERS = {
   'Upgrade-Insecure-Requests': '1',
 };
 
+// Tried and rejected: establishing an Australian session first (locale cookies
+// plus a Sydney delivery postcode via Amazon's glow endpoint). It changed
+// nothing — byte-for-byte the same reduced page. Amazon's decision is made on
+// the requesting IP, so the only real fix would be a residential proxy. The
+// parser refuses to guess instead.
+
 // Only public web addresses — never let a saved URL point back at internal infrastructure.
 function safeUrl(raw: string): URL | null {
   let u: URL;
@@ -135,7 +141,8 @@ async function checkSource(admin: any, src: Source): Promise<SourceOutcome> {
     // so "no price found" would send you hunting in the wrong place.
     const reason = parsed.variantMissing
       ? `Option "${src.variant}" is no longer listed — the page's options may have changed`
-      : 'No price found on the page (JSON-LD and meta tags both empty)';
+      : parsed.reason
+      ?? 'No price found on the page (JSON-LD and meta tags both empty)';
     await admin.from('price_sources').update({
       last_checked_at: now, last_status: 'parse_failed', last_error: reason,
       image_url: src.image_url ?? parsed.image,
@@ -272,6 +279,7 @@ Deno.serve(async (req) => {
       image:    result.parsed.image,
       source:   result.parsed.source,
       variants: result.parsed.variants ?? null,
+      reason:   result.parsed.reason ?? null,
       store:    storeFromUrl(body.probe),
     });
   }

@@ -269,7 +269,7 @@ function ProbeStatus({ link, variantPrice }) {
   );
   if (probe.price == null) return (
     <div className={s.probeLine} style={{ color: 'var(--amber)' }}>
-      Page loaded but no price found — you&apos;ll need to enter it yourself.
+      {probe.reason || 'Page loaded but no price found — you’ll need to enter it yourself.'}
     </div>
   );
   return (
