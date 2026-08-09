@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import {
   IconExternalLink, IconPencil, IconTrash, IconAlertTriangle,
   IconArrowDown, IconArrowUp, IconTargetArrow,
+  IconBuildingStore, IconChevronDown,
 } from '@tabler/icons-react';
 import { useTilt } from '../../hooks/useTilt.js';
 import { dbLoadPriceHistory } from '../../db.js';
@@ -10,6 +11,15 @@ import { cn } from '../../utils.js';
 import s from './Prices.module.css';
 
 const money = n => n == null ? '—' : `$${Number(n).toFixed(2)}`;
+
+// Mirrors STALE_DAYS in the edge function: a price nobody has confirmed for
+// three days stops counting toward "cheapest", so the card has to say so.
+const STALE_MS = 3 * 86_400_000;
+function isStale(source) {
+  if (source.manual || source.current_price == null) return false;
+  if (!source.last_ok_at) return true;
+  return Date.now() - new Date(source.last_ok_at).getTime() > STALE_MS;
+}
 
 function relativeTime(iso) {
   if (!iso) return 'never checked';
@@ -49,6 +59,7 @@ export default function PriceCard({ item, onEdit, onDelete, onOpen, onManualPric
   const { ref, rotateX, rotateY, onMouseMove, onMouseLeave } = useTilt(5);
   const [history, setHistory] = useState([]);
   const [imgFailed, setImgFailed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     // current_price is the cheap "something moved" signal — refetch the curve only then.
@@ -59,8 +70,20 @@ export default function PriceCard({ item, onEdit, onDelete, onOpen, onManualPric
   const prev    = item.previous_price == null ? null : Number(item.previous_price);
   const delta   = price != null && prev != null ? price - prev : null;
   const deltaPct = delta != null && prev > 0 ? (delta / prev) * 100 : null;
-  const failed  = item.last_status && item.last_status !== 'ok';
   const isLowest = price != null && item.lowest_price != null && price <= Number(item.lowest_price);
+
+  // Item-level state is derived from the links rather than stored twice: the
+  // newest check wins for the timestamp, and the card only reads as failed when
+  // there's nothing readable left anywhere.
+  const sources = item.sources ?? [];
+  const winner  = sources.find(sc => sc.id === item.best_source_id) ?? sources[0] ?? null;
+  const lastChecked = sources.reduce(
+    (acc, sc) => (sc.last_checked_at && (!acc || sc.last_checked_at > acc) ? sc.last_checked_at : acc),
+    null,
+  );
+  const failedSources = sources.filter(sc => sc.last_status && sc.last_status !== 'ok');
+  const failed = sources.length > 0 && failedSources.length === sources.length;
+  const partlyFailed = failedSources.length > 0 && !failed;
 
   return (
     <motion.div
@@ -80,18 +103,20 @@ export default function PriceCard({ item, onEdit, onDelete, onOpen, onManualPric
               // blocks them. Degrade to the initial rather than an empty box.
               onError={() => setImgFailed(true)}
             />
-          : <span className={s.thumbFallback}>{(item.store || item.name || '?').slice(0, 1)}</span>}
+          : <span className={s.thumbFallback}>{(winner?.store || item.name || '?').slice(0, 1)}</span>}
       </div>
 
       <div className={s.cardBody}>
         <div className={s.cardTop}>
           <span className={s.cardName} title={item.name}>{item.name}</span>
           <div className={s.cardActions}>
-            <a
-              className={cn(s.iconBtn, s.open)} href={item.url}
-              target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()} title="Open product page"
-            ><IconExternalLink size={13} /></a>
+            {winner && (
+              <a
+                className={cn(s.iconBtn, s.open)} href={winner.url}
+                target="_blank" rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()} title={`Open at ${winner.store || 'retailer'}`}
+              ><IconExternalLink size={13} /></a>
+            )}
             <button className={cn(s.iconBtn, s.edt)} onClick={e => { e.stopPropagation(); onEdit(item); }} title="Edit">
               <IconPencil size={13} />
             </button>
@@ -102,16 +127,34 @@ export default function PriceCard({ item, onEdit, onDelete, onOpen, onManualPric
         </div>
 
         <div className={s.cardMeta}>
-          {item.store && <span className={s.storeChip}>{item.store}</span>}
-          {item.variant && <span className={s.variantChip}>{item.variant}</span>}
-          <span className={cn(s.checked, failed && s.checkedFailed)}>
-            {failed && <IconAlertTriangle size={10} />}
-            {failed ? `couldn't read · ${relativeTime(item.last_checked_at)}` : relativeTime(item.last_checked_at)}
+          {winner?.store && <span className={s.storeChip}>{winner.store}</span>}
+          {winner?.variant && <span className={s.variantChip}>{winner.variant}</span>}
+          {sources.length > 1 && (
+            <button
+              className={s.shopsChip}
+              onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
+              title="Compare retailers"
+            >
+              <IconBuildingStore size={10} />
+              {sources.length} shops
+              <IconChevronDown size={10} className={cn(s.chev, expanded && s.chevOpen)} />
+            </button>
+          )}
+          <span className={cn(s.checked, (failed || partlyFailed) && s.checkedFailed)}>
+            {(failed || partlyFailed) && <IconAlertTriangle size={10} />}
+            {failed
+              ? `couldn't read · ${relativeTime(lastChecked)}`
+              : partlyFailed
+                ? `${failedSources.length} link${failedSources.length === 1 ? '' : 's'} failing`
+                : relativeTime(lastChecked)}
           </span>
         </div>
 
         <div className={s.priceRow}>
           <span className={cn(s.price, item.on_sale && s.priceSale)}>{money(price)}</span>
+          {sources.length > 1 && winner?.store && (
+            <span className={s.atStore}>at {winner.store}</span>
+          )}
 
           {delta != null && delta !== 0 && (
             <span className={cn(s.delta, delta < 0 ? s.down : s.up)}>
@@ -139,7 +182,41 @@ export default function PriceCard({ item, onEdit, onDelete, onOpen, onManualPric
             >Enter price manually</button>
           )}
         </div>
+
+        {expanded && sources.length > 1 && (
+          <div className={s.sourceList} onClick={e => e.stopPropagation()}>
+            {sources.map(sc => <SourceRow key={sc.id} source={sc} isBest={sc.id === winner?.id} />)}
+          </div>
+        )}
       </div>
     </motion.div>
+  );
+}
+
+// One retailer inside the expanded comparison. Deliberately read-only —
+// adding and removing links happens in the edit form, so a stray click on a
+// card can't drop a shop.
+function SourceRow({ source, isBest }) {
+  const failed = source.last_status && source.last_status !== 'ok';
+  const stale = isStale(source);
+
+  return (
+    <div className={cn(s.sourceRow, isBest && s.sourceBest)}>
+      <span className={s.sourceStore}>{source.store || 'Link'}</span>
+      {source.variant && <span className={s.variantChip}>{source.variant}</span>}
+      <span className={cn(s.sourcePrice, isBest && s.sourcePriceBest)}>
+        {source.current_price == null ? '—' : money(source.current_price)}
+      </span>
+      {(failed || stale) && (
+        <span className={s.sourceWarn} title={source.last_error || 'Price not confirmed recently'}>
+          <IconAlertTriangle size={10} />
+          {stale ? 'stale' : "can't read"}
+        </span>
+      )}
+      <a
+        className={cn(s.iconBtn, s.open)} href={source.url}
+        target="_blank" rel="noopener noreferrer" title="Open"
+      ><IconExternalLink size={12} /></a>
+    </div>
   );
 }

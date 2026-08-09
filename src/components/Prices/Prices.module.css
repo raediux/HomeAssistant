@@ -146,6 +146,40 @@
 
 .spark { margin-left: auto; flex-shrink: 0; opacity: .9; }
 
+.atStore { font-size: 11px; color: var(--text3); }
+
+/* Retailer comparison — collapsed by default so single-shop items look unchanged. */
+.shopsChip {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; color: var(--text2);
+  background: rgba(255,255,255,0.05);
+  border: none; border-radius: 4px; padding: 2px 5px;
+  font-family: inherit; cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.shopsChip:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.chev { transition: transform .18s; }
+.chevOpen { transform: rotate(180deg); }
+
+.sourceList {
+  display: flex; flex-direction: column; gap: 1px;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.sourceRow {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 6px; border-radius: 5px;
+  font-size: 11px;
+}
+.sourceRow:hover { background: rgba(255,255,255,0.03); }
+.sourceBest { background: rgba(90,158,90,0.08); }
+.sourceBest:hover { background: rgba(90,158,90,0.12); }
+
+.sourceStore { flex: 1; min-width: 0; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sourcePrice { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.sourcePriceBest { color: var(--green); }
+.sourceWarn { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; color: var(--amber); }
+
 .cardFoot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .target { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--text3); }
 
@@ -166,6 +200,38 @@
 .empty span { font-size: 11px; }
 
 .manualNote { font-size: 12px; color: var(--text2); line-height: 1.5; margin: 0 0 14px; }
+.modalNote { font-size: 11px; color: var(--text3); line-height: 1.5; margin: 0 0 4px; }
+.pctSuffix { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text3); pointer-events: none; }
+
+/* Retailer links in the add/edit form */
+.linkList { display: flex; flex-direction: column; gap: 10px; }
+.linkRow {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 9px 10px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: var(--r);
+}
+.linkTop { display: flex; align-items: center; gap: 6px; }
+.linkRemove {
+  background: none; border: none; border-radius: 5px;
+  padding: 4px 5px; cursor: pointer; color: var(--text3);
+  display: flex; align-items: center; flex-shrink: 0;
+  transition: background .12s, color .12s;
+}
+.linkRemove:hover { background: rgba(220,60,60,0.12); color: #dc3c3c; }
+
+.probeLine { font-size: 11px; min-height: 15px; display: flex; align-items: center; gap: 6px; }
+
+.addLinkBtn {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin: 8px 0 14px;
+  background: none; border: none; padding: 0;
+  font-family: inherit; font-size: 11px; font-weight: 600;
+  color: var(--accent); cursor: pointer;
+  transition: color .12s;
+}
+.addLinkBtn:hover { color: var(--accent-t); }
 
 @media (max-width: 600px) {
   .hdr { flex-direction: column; align-items: stretch; gap: 10px; }

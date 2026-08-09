@@ -6,6 +6,8 @@ import { useUndo } from '../../contexts/UndoContext.jsx';
 import { newId } from '../../utils.js';
 import {
   dbSavePriceItem, dbPatchPriceItem, dbDeletePriceItem,
+  dbSavePriceSource, dbPatchPriceSource, dbDeletePriceSource,
+  dbSeedPriceHistory,
 } from '../../db.js';
 import PriceCard from './PriceCard.jsx';
 import PriceModal from './PriceModal.jsx';
@@ -30,37 +32,73 @@ export default function Prices() {
     setItems(prev => prev.some(i => i.id === row.id) ? prev.map(i => i.id === row.id ? row : i) : [row, ...prev]);
   }
 
+  // Turn a form link into a price_sources row. A link added from a successful
+  // probe is stamped as just-checked so it counts toward the cheapest price
+  // straight away instead of waiting for the overnight run.
+  function sourceRow(link, itemId, index) {
+    const now = new Date().toISOString();
+    return {
+      id: link.id ?? newId() + index,
+      item_id: itemId,
+      url: link.url,
+      store: link.store ?? null,
+      variant: link.variant ?? null,
+      image_url: link.image ?? null,
+      current_price: link.price ?? null,
+      lowest_price: link.price ?? null,
+      manual: false,
+      sort_order: index,
+      last_checked_at: link.price != null ? now : null,
+      last_ok_at: link.price != null ? now : null,
+      last_status: link.price != null ? 'ok' : null,
+    };
+  }
+
+  function bestOf(rows) {
+    const prices = rows.map(r => r.current_price).filter(p => p != null);
+    return prices.length ? Math.min(...prices) : null;
+  }
+
   function handleConfirm(form) {
     if (modal?.edit) {
+      const item = modal.edit;
+      const rows = form.links.map((l, i) => sourceRow(l, item.id, i));
+      const kept = new Set(rows.map(r => r.id));
+      const removed = (item.sources ?? []).filter(sc => !kept.has(sc.id));
+
+      const best = bestOf(rows);
       const patch = {
-        url: form.url, name: form.name, variant: form.variant,
-        target_price: form.target_price, drop_pct: form.drop_pct,
+        name: form.name,
+        target_price: form.target_price,
+        drop_pct: form.drop_pct,
+        ...(best != null ? { current_price: best } : {}),
       };
-      upsertLocal({ ...modal.edit, ...patch });
-      dbPatchPriceItem(modal.edit.id, patch);
+      upsertLocal({ ...item, ...patch, sources: rows });
+      dbPatchPriceItem(item.id, patch);
+      rows.forEach(dbSavePriceSource);
+      removed.forEach(sc => dbDeletePriceSource(sc.id));
     } else {
-      // Seed from the probe so a new card shows a real price immediately rather
-      // than sitting blank until the next check.
-      const p = form.probe;
-      // On a page with options the probe reports no single price — the chosen
-      // size's price comes from the option list instead.
-      const price = form.variantPrice ?? (p?.ok ? p.price ?? null : null);
+      const itemId = newId();
+      const rows = form.links.map((l, i) => sourceRow(l, itemId, i));
+      const best = bestOf(rows);
       const row = {
-        id: newId(),
-        name: form.name, url: form.url, variant: form.variant,
-        store: p?.store ?? null,
-        image_url: p?.image ?? null,
-        current_price: price, previous_price: null,
-        lowest_price: price, highest_price: price,
+        id: itemId,
+        name: form.name,
+        image_url: rows.find(r => r.image_url)?.image_url ?? null,
+        current_price: best, previous_price: null,
+        lowest_price: best, highest_price: best,
         target_price: form.target_price, drop_pct: form.drop_pct,
-        on_sale: price != null && form.target_price != null && price <= form.target_price,
-        seen: true, manual: false, price_regex: null,
-        last_checked_at: price != null ? new Date().toISOString() : null,
-        last_status: price != null ? 'ok' : null,
+        on_sale: best != null && form.target_price != null && best <= form.target_price,
+        seen: true,
+        best_source_id: rows.find(r => r.current_price === best)?.id ?? null,
         sort_order: 0,
+        sources: rows,
       };
       upsertLocal(row);
       dbSavePriceItem(row);
+      rows.forEach(dbSavePriceSource);
+      // Opening point, so an item whose price never moves still has a chart.
+      dbSeedPriceHistory(itemId, best);
     }
     setModal(null);
   }
@@ -70,7 +108,14 @@ export default function Prices() {
     scheduleDelete(
       `Removed "${item.name}"`,
       () => dbDeletePriceItem(item.id),
-      () => { upsertLocal(item); dbSavePriceItem(item); },
+      // Deleting the product cascades its links away, so undo has to put them
+      // back too — and only once the product row exists again, since they key
+      // off it. Restoring the product alone would leave a card with no shops.
+      async () => {
+        upsertLocal(item);
+        await dbSavePriceItem(item);
+        await Promise.all((item.sources ?? []).map(dbSavePriceSource));
+      },
     );
   }
 
@@ -85,17 +130,36 @@ export default function Prices() {
   function saveManualPrice(item, value) {
     const price = Number(value);
     if (!Number.isFinite(price) || price <= 0) { setManual(null); return; }
-    const patch = {
+
+    // The price belongs to a shop, not the product, so it lands on the link the
+    // card is quoting. `manual` stays false so we keep retrying the page — a
+    // site that blocks us today may not tomorrow.
+    const sources = item.sources ?? [];
+    const target = sources.find(sc => sc.id === item.best_source_id) ?? sources[0];
+    if (!target) { setManual(null); return; }
+
+    const now = new Date().toISOString();
+    const srcPatch = {
       current_price: price,
-      previous_price: item.current_price ?? null,
-      lowest_price:  item.lowest_price  == null ? price : Math.min(Number(item.lowest_price), price),
-      highest_price: item.highest_price == null ? price : Math.max(Number(item.highest_price), price),
-      last_checked_at: new Date().toISOString(),
-      last_status: 'ok',
-      last_error: null,
+      previous_price: target.current_price ?? null,
+      lowest_price: target.lowest_price == null ? price : Math.min(Number(target.lowest_price), price),
+      last_checked_at: now, last_ok_at: now,
+      last_status: 'ok', last_error: null,
     };
-    upsertLocal({ ...item, ...patch });
-    dbPatchPriceItem(item.id, patch);
+    const nextSources = sources.map(sc => sc.id === target.id ? { ...sc, ...srcPatch } : sc);
+    const best = Math.min(...nextSources.map(sc => sc.current_price).filter(p => p != null).map(Number));
+
+    const itemPatch = {
+      current_price: best,
+      previous_price: item.current_price ?? null,
+      lowest_price:  item.lowest_price  == null ? best : Math.min(Number(item.lowest_price), best),
+      highest_price: item.highest_price == null ? best : Math.max(Number(item.highest_price), best),
+      best_source_id: nextSources.find(sc => Number(sc.current_price) === best)?.id ?? target.id,
+    };
+
+    upsertLocal({ ...item, ...itemPatch, sources: nextSources });
+    dbPatchPriceSource(target.id, srcPatch);
+    dbPatchPriceItem(item.id, itemPatch);
     setManual(null);
   }
 

@@ -80,97 +80,154 @@ async function fetchAndParse(url: string, opts: ParseOpts = {}): Promise<FetchRe
   return { ok: true, parsed: parseHtml(html, safe.href, opts) };
 }
 
-// ── checking one tracked item ─────────────────────────────────
+// ── checking one retailer link ────────────────────────────────
+
+// A price nobody has been able to confirm for this long stops counting toward
+// "cheapest". Quoting a bargain from a link that has been unreadable for a week
+// is worse than showing the next-best price we can actually stand behind.
+const STALE_DAYS = 3;
+
+type Source = {
+  id: number; item_id: number; url: string; store: string | null; image_url: string | null;
+  variant: string | null; price_regex: string | null; manual: boolean;
+  current_price: number | null; lowest_price: number | null; last_ok_at: string | null;
+};
 
 type Item = {
-  id: number; url: string; name: string; store: string | null; image_url: string | null;
+  id: number; name: string; image_url: string | null; currency: string | null;
   current_price: number | null; lowest_price: number | null; highest_price: number | null;
   target_price: number | null; drop_pct: number | null; on_sale: boolean;
-  price_regex: string | null; currency: string | null; variant: string | null;
+  best_source_id: number | null;
+  sources: Source[];
+};
+
+type SourceOutcome = {
+  source: Source;
+  price: number | null;     // newly read, or the retained previous price
+  okAt: string | null;      // when this price was last confirmed
+  image: string | null;
 };
 
 // deno-lint-ignore no-explicit-any
-async function checkItem(admin: any, item: Item) {
+async function checkSource(admin: any, src: Source): Promise<SourceOutcome> {
   const now = new Date().toISOString();
-  const result = await fetchAndParse(item.url, {
-    priceRegex: item.price_regex,
-    variant: item.variant,
+  const prev = src.current_price == null ? null : Number(src.current_price);
+  const keep = { source: src, price: prev, okAt: src.last_ok_at, image: null };
+
+  const result = await fetchAndParse(src.url, {
+    priceRegex: src.price_regex,
+    variant: src.variant,
   });
 
   // A failed read keeps the last known price — a stale number labelled stale
-  // is more useful than a blank card.
+  // is more useful than a blank row.
   if (!result.ok) {
-    await admin.from('price_items').update({
+    await admin.from('price_sources').update({
       last_checked_at: now, last_status: result.status, last_error: result.error,
-    }).eq('id', item.id);
-    return { id: item.id, ok: false, dropped: false, newAlert: false };
+    }).eq('id', src.id);
+    return keep;
   }
 
   const { parsed } = result;
-  const prev = item.current_price == null ? null : Number(item.current_price);
 
   if (parsed.price == null) {
     // A pinned option that vanished gets its own message: the link still works,
     // so "no price found" would send you hunting in the wrong place.
     const reason = parsed.variantMissing
-      ? `Option "${item.variant}" is no longer listed — the page's options may have changed`
+      ? `Option "${src.variant}" is no longer listed — the page's options may have changed`
       : 'No price found on the page (JSON-LD and meta tags both empty)';
-    await admin.from('price_items').update({
-      last_checked_at: now, last_status: 'parse_failed',
-      last_error: reason,
-      image_url: item.image_url ?? parsed.image,
-    }).eq('id', item.id);
-    return { id: item.id, ok: false, dropped: false, newAlert: false };
+    await admin.from('price_sources').update({
+      last_checked_at: now, last_status: 'parse_failed', last_error: reason,
+      image_url: src.image_url ?? parsed.image,
+    }).eq('id', src.id);
+    return keep;
   }
 
   const price = parsed.price;
 
   // A 10× swing usually means we grabbed a bundle or RRP figure, not the price.
   if (prev != null && prev > 0 && (price / prev < 0.1 || price / prev > 10)) {
-    await admin.from('price_items').update({
+    await admin.from('price_sources').update({
       last_checked_at: now, last_status: 'parse_failed',
       last_error: `Implausible change ($${prev} → $${price}) — ignored`,
-    }).eq('id', item.id);
-    return { id: item.id, ok: false, dropped: false, newAlert: false };
+    }).eq('id', src.id);
+    return keep;
   }
-
-  const target  = item.target_price == null ? null : Number(item.target_price);
-  const dropPct = item.drop_pct == null ? null : Number(item.drop_pct);
-  const hitTarget = target != null && price <= target;
-  const hitDrop   = dropPct != null && prev != null && prev > 0
-    && ((prev - price) / prev) * 100 >= dropPct;
-
-  let onSale = hitTarget || hitDrop;
-  // A week-long sale shouldn't un-flag itself on day two just because the price
-  // held steady — stay flagged until it climbs back up.
-  if (!onSale && item.on_sale && prev != null && price <= prev) onSale = true;
 
   const patch: Record<string, unknown> = {
     current_price: price,
     previous_price: prev,
-    lowest_price:  item.lowest_price  == null ? price : Math.min(Number(item.lowest_price), price),
-    highest_price: item.highest_price == null ? price : Math.max(Number(item.highest_price), price),
-    last_checked_at: now,
-    last_status: 'ok',
-    last_error: null,
+    lowest_price: src.lowest_price == null ? price : Math.min(Number(src.lowest_price), price),
+    last_checked_at: now, last_ok_at: now,
+    last_status: 'ok', last_error: null,
+  };
+  if (!src.image_url && parsed.image) patch.image_url = parsed.image;
+  if (!src.store) patch.store = storeFromUrl(src.url);
+
+  await admin.from('price_sources').update(patch).eq('id', src.id);
+  return { source: src, price, okAt: now, image: parsed.image };
+}
+
+// ── rolling several retailers up into one product ─────────────
+
+function isEligible(o: SourceOutcome, nowMs: number): boolean {
+  if (o.price == null) return false;
+  // A hand-entered price has no page to re-read, so it never goes stale.
+  if (o.source.manual) return true;
+  if (!o.okAt) return false;
+  return nowMs - new Date(o.okAt).getTime() <= STALE_DAYS * 86_400_000;
+}
+
+// deno-lint-ignore no-explicit-any
+async function rollUpItem(admin: any, item: Item, outcomes: SourceOutcome[]) {
+  const now = new Date().toISOString();
+  const eligible = outcomes.filter(o => isEligible(o, Date.now()));
+
+  // Every link is unreadable or stale — hold the last known figures rather than
+  // blanking the card. The per-retailer rows carry the explanation.
+  if (!eligible.length) return { id: item.id, ok: false, dropped: false, newAlert: false };
+
+  const winner = eligible.reduce((a, b) => (b.price! < a.price! ? b : a));
+  const best = winner.price!;
+  const prevBest = item.current_price == null ? null : Number(item.current_price);
+
+  const target  = item.target_price == null ? null : Number(item.target_price);
+  const dropPct = item.drop_pct == null ? null : Number(item.drop_pct);
+  const hitTarget = target != null && best <= target;
+  const hitDrop   = dropPct != null && prevBest != null && prevBest > 0
+    && ((prevBest - best) / prevBest) * 100 >= dropPct;
+
+  let onSale = hitTarget || hitDrop;
+  // A week-long sale shouldn't un-flag itself on day two just because the price
+  // held steady — stay flagged until it climbs back up.
+  if (!onSale && item.on_sale && prevBest != null && best <= prevBest) onSale = true;
+
+  const patch: Record<string, unknown> = {
+    current_price: best,
+    previous_price: prevBest,
+    lowest_price:  item.lowest_price  == null ? best : Math.min(Number(item.lowest_price), best),
+    highest_price: item.highest_price == null ? best : Math.max(Number(item.highest_price), best),
+    best_source_id: winner.source.id,
     on_sale: onSale,
   };
   if (onSale && !item.on_sale) { patch.seen = false; patch.sale_since = now; }
   if (!onSale) patch.sale_since = null;
-  if (!item.image_url && parsed.image) patch.image_url = parsed.image;
-  if (!item.store) patch.store = storeFromUrl(item.url);
-  if (parsed.currency && !item.currency) patch.currency = parsed.currency;
+  if (!item.image_url) {
+    const img = outcomes.find(o => o.image)?.image ?? outcomes.find(o => o.source.image_url)?.source.image_url;
+    if (img) patch.image_url = img;
+  }
 
   await admin.from('price_items').update(patch).eq('id', item.id);
 
-  // Only record genuine movements — keeps the table small and the sparkline honest.
-  if (prev == null || price !== prev) {
-    await admin.from('price_history').insert({ item_id: item.id, price, checked_at: now });
+  // Only record genuine movements of the headline price — keeps the table small
+  // and the sparkline honest.
+  if (prevBest == null || best !== prevBest) {
+    await admin.from('price_history').insert({ item_id: item.id, price: best, checked_at: now });
   }
 
   return {
-    id: item.id, ok: true, price, prev,
-    dropped: prev != null && price < prev,
+    id: item.id, ok: true, price: best, prev: prevBest,
+    dropped: prevBest != null && best < prevBest,
     newAlert: onSale && !item.on_sale,
   };
 }
@@ -221,8 +278,7 @@ Deno.serve(async (req) => {
 
   // ── scope: cron sees every household, a user sees only their own ──
   let query = admin.from('price_items')
-    .select('id, url, name, store, image_url, current_price, lowest_price, highest_price, target_price, drop_pct, on_sale, price_regex, currency, variant')
-    .eq('manual', false);
+    .select('id, name, image_url, currency, current_price, lowest_price, highest_price, target_price, drop_pct, on_sale, best_source_id, sources:price_sources(id, item_id, url, store, image_url, variant, price_regex, manual, current_price, lowest_price, last_ok_at)');
 
   if (!isService) {
     const userClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
@@ -237,19 +293,36 @@ Deno.serve(async (req) => {
     query = query.eq('household_id', member.household_id);
   }
 
-  const { data: items, error } = await query;
+  const { data: rows, error } = await query;
   if (error) return json({ error: error.message }, 500);
-  if (!items?.length) return json({ checked: 0, ok: 0, failed: 0, drops: 0, alerts: 0 });
+  const items = (rows ?? []).filter((i: Item) => i.sources?.length) as Item[];
+  if (!items.length) return json({ checked: 0, ok: 0, failed: 0, drops: 0, alerts: 0, sources: 0 });
 
-  const results: Awaited<ReturnType<typeof checkItem>>[] = [];
-  for (let i = 0; i < items.length; i += BATCH) {
-    const slice = items.slice(i, i + BATCH) as Item[];
-    const settled = await Promise.allSettled(slice.map(item => checkItem(admin, item)));
-    for (const s of settled) if (s.status === 'fulfilled') results.push(s.value);
+  // Fetch every retailer link across all items in one batched pass, so a product
+  // with five shops doesn't serialise behind a product with one.
+  const toCheck: Source[] = items.flatMap(i => i.sources.filter(s => !s.manual));
+  const byId = new Map<number, SourceOutcome>();
+  for (let i = 0; i < toCheck.length; i += BATCH) {
+    const slice = toCheck.slice(i, i + BATCH);
+    const settled = await Promise.allSettled(slice.map(src => checkSource(admin, src)));
+    for (const s of settled) if (s.status === 'fulfilled') byId.set(s.value.source.id, s.value);
+  }
+
+  // Manual links aren't fetched, but still count toward the cheapest price.
+  const results = [];
+  for (const item of items) {
+    const outcomes = item.sources.map(src => byId.get(src.id) ?? {
+      source: src,
+      price: src.current_price == null ? null : Number(src.current_price),
+      okAt: src.last_ok_at,
+      image: null,
+    });
+    results.push(await rollUpItem(admin, item, outcomes));
   }
 
   return json({
     checked: results.length,
+    sources: toCheck.length,
     ok:      results.filter(r => r.ok).length,
     failed:  results.filter(r => !r.ok).length,
     drops:   results.filter(r => r.dropped).length,

@@ -265,17 +265,29 @@ export async function dbSaveWhiteboard(dataUrl) {
 // ── Price tracker ─────────────────────────────────────────────
 export async function dbLoadPriceItems() {
   const { data, error } = await db.from('price_items')
-    .select('*').order('sort_order').order('created_at');
+    .select('*, sources:price_sources(*)')
+    .order('sort_order').order('created_at');
   if (error) { fail('dbLoadPriceItems', error); return []; }
-  return data || [];
+  return (data || []).map(normalisePriceItem);
+}
+
+// Sources arrive in whatever order Postgres returns them; the card wants the
+// cheapest first so the winning shop reads at a glance.
+export function sortSources(sources) {
+  return [...(sources || [])].sort(
+    (a, b) => (a.current_price ?? Infinity) - (b.current_price ?? Infinity)
+  );
+}
+
+function normalisePriceItem(row) {
+  return { ...row, sources: sortSources(row.sources) };
 }
 
 export async function dbSavePriceItem(item) {
   const hid = await getMyHouseholdId();
   const { error } = await db.from('price_items').upsert({
-    id: item.id, name: item.name, url: item.url,
-    store: item.store || null, image_url: item.image_url || null,
-    variant: item.variant || null,
+    id: item.id, name: item.name,
+    image_url: item.image_url || null,
     current_price: item.current_price ?? null,
     lowest_price: item.lowest_price ?? null,
     highest_price: item.highest_price ?? null,
@@ -283,16 +295,54 @@ export async function dbSavePriceItem(item) {
     drop_pct: item.drop_pct ?? null,
     on_sale: item.on_sale ?? false,
     seen: item.seen ?? true,
-    manual: item.manual ?? false,
-    price_regex: item.price_regex || null,
+    best_source_id: item.best_source_id ?? null,
     sort_order: item.sort_order ?? 0,
-    // Carried through so an item added from a successful probe reads as
-    // "checked just now" rather than "never checked" after a reload.
-    last_checked_at: item.last_checked_at ?? null,
-    last_status: item.last_status ?? null,
     household_id: hid,
   }, { onConflict: 'id' });
   if (error) fail('dbSavePriceItem', error);
+}
+
+// ── Price tracker: retailer links ─────────────────────────────
+export async function dbSavePriceSource(source) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('price_sources').upsert({
+    id: source.id, item_id: source.item_id,
+    url: source.url, store: source.store || null,
+    variant: source.variant || null,
+    price_regex: source.price_regex || null,
+    image_url: source.image_url || null,
+    current_price: source.current_price ?? null,
+    lowest_price: source.lowest_price ?? null,
+    manual: source.manual ?? false,
+    sort_order: source.sort_order ?? 0,
+    // Seeded from the probe so a freshly added link reads as just-checked
+    // rather than never-checked, and counts toward the cheapest price.
+    last_checked_at: source.last_checked_at ?? null,
+    last_ok_at: source.last_ok_at ?? null,
+    last_status: source.last_status ?? null,
+    household_id: hid,
+  }, { onConflict: 'id' });
+  if (error) fail('dbSavePriceSource', error);
+}
+
+export async function dbPatchPriceSource(id, patch) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('price_sources').update(patch).eq('id', id).eq('household_id', hid);
+  if (error) fail('dbPatchPriceSource', error);
+}
+
+export async function dbDeletePriceSource(id) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('price_sources').delete().eq('id', id).eq('household_id', hid);
+  if (error) fail('dbDeletePriceSource', error);
+}
+
+// Opening point for the chart. Without it an item whose price never moves has
+// no history at all, and the sparkline starts only at its first change.
+export async function dbSeedPriceHistory(itemId, price) {
+  if (price == null) return;
+  const { error } = await db.from('price_history').insert({ item_id: itemId, price });
+  if (error) fail('dbSeedPriceHistory', error);
 }
 
 // Narrow update so a card action can't clobber a price the cron wrote moments ago.

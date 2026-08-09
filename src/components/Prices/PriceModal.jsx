@@ -1,77 +1,106 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { IconX, IconLoader2 } from '@tabler/icons-react';
+import { IconX, IconLoader2, IconPlus, IconTrash } from '@tabler/icons-react';
 import { dbProbeUrl } from '../../db.js';
 import s from './Prices.module.css';
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
+let tempId = -1;
+const blankLink = () => ({
+  key: tempId--, id: null, url: '', store: null, variant: '',
+  variants: null, probe: null, probing: false, price: null, image: null,
+});
+
+function linkFromSource(src) {
+  return {
+    key: src.id, id: src.id, url: src.url, store: src.store, variant: src.variant || '',
+    variants: null, probe: null, probing: false,
+    price: src.current_price == null ? null : Number(src.current_price),
+    image: src.image_url,
+  };
+}
+
 export default function PriceModal({ editItem, onConfirm, onClose }) {
   const isEdit = !!editItem;
-  const urlRef = useRef(null);
   // Mounted fresh per open (rendered conditionally), so initializers suffice.
-  const [url,    setUrl]    = useState(editItem?.url || '');
   const [name,   setName]   = useState(editItem?.name || '');
   const [target, setTarget] = useState(editItem?.target_price ?? '');
   const [drop,   setDrop]   = useState(editItem?.drop_pct ?? 5);
-  const [variant, setVariant] = useState(editItem?.variant || '');
-  const [probing, setProbing] = useState(false);
-  const [probe,  setProbe]  = useState(null);
-  const probedUrl = useRef('');
+  const [links,  setLinks]  = useState(() =>
+    editItem?.sources?.length ? editItem.sources.map(linkFromSource) : [blankLink()]
+  );
+  const probed = useRef(new Set());
 
-  const variants = probe?.variants || null;
-  // Prices come back with the option list, so switching size needs no second fetch.
-  const variantPrice = variants?.find(v => v.label === variant)?.price ?? null;
-  const needsVariant = !!variants?.length && !variant;
-
-  // Read the page once as soon as we have a link, so the name, picture and
-  // current price are filled in before the item is even saved.
-  async function runProbe(value) {
-    const trimmed = value.trim();
-    if (!trimmed || trimmed === probedUrl.current) return;
-    if (!/^https?:\/\//i.test(trimmed)) return;
-    probedUrl.current = trimmed;
-    setProbing(true);
-    const result = await dbProbeUrl(trimmed);
-    setProbing(false);
-    setProbe(result);
-    if (result?.ok) {
-      setName(prev => prev.trim() || (result.title || '').slice(0, 90));
-      // Keep an already-chosen size only if the page still offers it.
-      if (result.variants?.length) {
-        setVariant(prev => result.variants.some(v => v.label === prev) ? prev : '');
-      }
-    }
+  function updateLink(key, patch) {
+    setLinks(prev => prev.map(l => l.key === key ? { ...l, ...patch } : l));
   }
 
-  // Opening an existing item re-reads its page, so the size list is there to
-  // change — and so items saved before size tracking existed can be given one.
-  // Deferred past the commit: the probe flips state, which an effect body may
-  // not do synchronously.
+  // Read a retailer page once per URL, so name, picture, size options and the
+  // current price are known before anything is saved.
+  async function runProbe(key, value) {
+    const url = value.trim();
+    if (!/^https?:\/\//i.test(url) || probed.current.has(url)) return;
+    probed.current.add(url);
+    updateLink(key, { probing: true });
+    const result = await dbProbeUrl(url);
+    setLinks(prev => prev.map(l => {
+      if (l.key !== key) return l;
+      const variants = result?.ok ? result.variants ?? null : null;
+      return {
+        ...l,
+        probing: false,
+        probe: result,
+        variants,
+        store: result?.ok ? result.store ?? l.store : l.store,
+        image: result?.ok ? result.image ?? l.image : l.image,
+        // Keep an already-chosen size only if this page still offers it.
+        variant: variants?.some(v => v.label === l.variant) ? l.variant : (variants ? '' : l.variant),
+        price: result?.ok ? result.price ?? l.price : l.price,
+      };
+    }));
+    if (result?.ok && result.title) setName(prev => prev.trim() || result.title.slice(0, 90));
+  }
+
+  // Opening an existing item re-reads its pages, so size lists are available to
+  // change and items saved before a feature existed can be brought up to date.
+  // Deferred past commit: probing flips state, which an effect body may not do
+  // synchronously.
   useEffect(() => {
-    if (!url) return;
-    const t = setTimeout(() => runProbe(url), 0);
+    const t = setTimeout(() => {
+      links.forEach(l => { if (l.url) runProbe(l.key, l.url); });
+    }, 0);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const filled = links.filter(l => l.url.trim());
+  // A page with size options has no single price, so saving without a choice
+  // would record whichever option the page happened to list first.
+  const needsVariant = links.some(l => l.variants?.length && !l.variant);
+  const canSave = filled.length > 0 && !needsVariant;
+
+  function priceOf(link) {
+    if (link.variants?.length) return link.variants.find(v => v.label === link.variant)?.price ?? null;
+    return link.price;
+  }
+
   function handleConfirm() {
-    const u = url.trim();
-    if (!/^https?:\/\//i.test(u)) { urlRef.current?.focus(); return; }
-    // Without a size the daily check has nothing specific to follow, and any
-    // number it recorded would belong to whichever option the page listed first.
-    if (needsVariant) return;
+    if (!canSave) return;
     const targetNum = target === '' ? null : Number(target);
     const dropNum   = drop  === '' ? null : Number(drop);
     onConfirm({
-      url: u,
-      name: name.trim() || probe?.title?.slice(0, 90) || u,
-      variant: variant || null,
+      name: name.trim() || filled[0].url,
       target_price: Number.isFinite(targetNum) ? targetNum : null,
       drop_pct: Number.isFinite(dropNum) ? dropNum : null,
-      // Only seed from the probe on create — editing must not overwrite tracked history.
-      probe: isEdit ? null : probe,
-      variantPrice,
+      links: filled.map(l => ({
+        id: l.id,
+        url: l.url.trim(),
+        store: l.store,
+        variant: l.variant || null,
+        image: l.image,
+        price: priceOf(l),
+      })),
     });
   }
 
@@ -79,6 +108,7 @@ export default function PriceModal({ editItem, onConfirm, onClose }) {
     <div className="modal-overlay open" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <motion.div
         className="modal-box"
+        style={{ width: 440 }}
         initial={{ scale: 0.88, y: 16, opacity: 0 }}
         animate={{ scale: 1, y: 0, opacity: 1 }}
         exit={{ scale: 0.88, y: 16, opacity: 0 }}
@@ -89,43 +119,26 @@ export default function PriceModal({ editItem, onConfirm, onClose }) {
           <button className="modal-x" onClick={onClose}><IconX size={18} /></button>
         </div>
 
-        <label className="modal-lbl">Product link</label>
-        <input
-          ref={urlRef}
-          autoFocus={!isEdit}
-          className="modal-input"
-          style={{ marginBottom: 6 }}
-          value={url}
-          onChange={e => setUrl(e.target.value)}
-          onBlur={e => runProbe(e.target.value)}
-          onPaste={e => {
-            const pasted = e.clipboardData.getData('text');
-            if (pasted) setTimeout(() => runProbe(pasted), 0);
-          }}
-          onKeyDown={e => { if (e.key === 'Enter') runProbe(e.currentTarget.value); }}
-          placeholder="https://www.jbhifi.com.au/products/…"
-          autoComplete="off"
-          spellCheck="false"
-        />
+        <label className="modal-lbl">
+          {links.length > 1 ? 'Retailers' : 'Product link'}
+        </label>
+        <div className={s.linkList}>
+          {links.map((link, i) => (
+            <LinkRow
+              key={link.key}
+              link={link}
+              autoFocus={!isEdit && i === 0}
+              canRemove={links.length > 1}
+              onChange={patch => updateLink(link.key, patch)}
+              onProbe={value => runProbe(link.key, value)}
+              onRemove={() => setLinks(prev => prev.filter(l => l.key !== link.key))}
+            />
+          ))}
+        </div>
 
-        <ProbeStatus probing={probing} probe={probe} variant={variant} variantPrice={variantPrice} />
-
-        {variants?.length > 0 && (
-          <>
-            <label className="modal-lbl">Size / option</label>
-            <select
-              className="modal-input"
-              style={{ marginBottom: 12 }}
-              value={variant}
-              onChange={e => setVariant(e.target.value)}
-            >
-              <option value="">Choose one…</option>
-              {variants.map(v => (
-                <option key={v.label} value={v.label}>{v.label} — ${v.price.toFixed(2)}</option>
-              ))}
-            </select>
-          </>
-        )}
+        <button className={s.addLinkBtn} onClick={() => setLinks(prev => [...prev, blankLink()])}>
+          <IconPlus size={12} /> Add another retailer
+        </button>
 
         <label className="modal-lbl">Name</label>
         <input
@@ -158,18 +171,25 @@ export default function PriceModal({ editItem, onConfirm, onClose }) {
                 onChange={e => setDrop(e.target.value)}
                 placeholder="Off"
               />
-              <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'var(--text3)', pointerEvents: 'none' }}>%</span>
+              <span className={s.pctSuffix}>%</span>
             </div>
           </div>
         </div>
+
+        {links.length > 1 && (
+          <p className={s.modalNote}>
+            Alerts use the cheapest of these, so you&apos;re told when the best price you
+            could actually pay changes.
+          </p>
+        )}
 
         <div className="modal-ftr">
           <button className="btn" onClick={onClose}>Cancel</button>
           <button
             className="btn btn-primary"
             onClick={handleConfirm}
-            disabled={needsVariant}
-            style={needsVariant ? { opacity: 0.45, cursor: 'default' } : undefined}
+            disabled={!canSave}
+            style={!canSave ? { opacity: 0.45, cursor: 'default' } : undefined}
           >
             {isEdit ? 'Save' : 'Track it'}
           </button>
@@ -179,36 +199,81 @@ export default function PriceModal({ editItem, onConfirm, onClose }) {
   );
 }
 
-function ProbeStatus({ probing, probe, variant, variantPrice }) {
-  const base = { fontSize: 11, marginBottom: 12, minHeight: 16, display: 'flex', alignItems: 'center', gap: 6 };
+function LinkRow({ link, autoFocus, canRemove, onChange, onProbe, onRemove }) {
+  const variantPrice = link.variants?.find(v => v.label === link.variant)?.price ?? null;
+
+  return (
+    <div className={s.linkRow}>
+      <div className={s.linkTop}>
+        <input
+          autoFocus={autoFocus}
+          className="modal-input"
+          value={link.url}
+          onChange={e => onChange({ url: e.target.value })}
+          onBlur={e => onProbe(e.target.value)}
+          onPaste={e => {
+            const pasted = e.clipboardData.getData('text');
+            if (pasted) setTimeout(() => onProbe(pasted), 0);
+          }}
+          onKeyDown={e => { if (e.key === 'Enter') onProbe(e.currentTarget.value); }}
+          placeholder="https://www.jbhifi.com.au/products/…"
+          autoComplete="off"
+          spellCheck="false"
+        />
+        {canRemove && (
+          <button className={s.linkRemove} onClick={onRemove} title="Remove this retailer">
+            <IconTrash size={13} />
+          </button>
+        )}
+      </div>
+
+      {link.variants?.length > 0 && (
+        <select
+          className="modal-input"
+          value={link.variant}
+          onChange={e => onChange({ variant: e.target.value })}
+        >
+          <option value="">Choose a size / option…</option>
+          {link.variants.map(v => (
+            <option key={v.label} value={v.label}>{v.label} — ${v.price.toFixed(2)}</option>
+          ))}
+        </select>
+      )}
+
+      <ProbeStatus link={link} variantPrice={variantPrice} />
+    </div>
+  );
+}
+
+function ProbeStatus({ link, variantPrice }) {
+  const { probing, probe, variant } = link;
 
   if (probing) return (
-    <div style={{ ...base, color: 'var(--text3)' }}>
+    <div className={s.probeLine} style={{ color: 'var(--text3)' }}>
       <IconLoader2 size={12} className={s.spin} /> Reading the page…
     </div>
   );
-  if (!probe) return <div style={{ ...base }} />;
+  if (!probe) return <div className={s.probeLine} />;
   if (!probe.ok) return (
-    <div style={{ ...base, color: 'var(--amber)' }}>
+    <div className={s.probeLine} style={{ color: 'var(--amber)' }}>
       Couldn&apos;t read this page — you can still track it and enter prices yourself.
     </div>
   );
-  // A page with options has no single price to report — the size picker below
-  // carries the numbers instead.
+  // A page with options has no single price to report; the picker carries them.
   if (probe.variants?.length) return (
-    <div style={{ ...base, color: variantPrice != null ? 'var(--green)' : 'var(--text3)' }}>
+    <div className={s.probeLine} style={{ color: variantPrice != null ? 'var(--green)' : 'var(--text3)' }}>
       {variantPrice != null
         ? `${variant} — $${variantPrice.toFixed(2)}${probe.store ? ` at ${probe.store}` : ''}`
         : `${probe.variants.length} options found — pick the one you want`}
     </div>
   );
   if (probe.price == null) return (
-    <div style={{ ...base, color: 'var(--amber)' }}>
+    <div className={s.probeLine} style={{ color: 'var(--amber)' }}>
       Page loaded but no price found — you&apos;ll need to enter it yourself.
     </div>
   );
   return (
-    <div style={{ ...base, color: 'var(--green)' }}>
+    <div className={s.probeLine} style={{ color: 'var(--green)' }}>
       Found ${probe.price.toFixed(2)}{probe.store ? ` at ${probe.store}` : ''}
     </div>
   );
