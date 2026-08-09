@@ -255,6 +255,10 @@ export default function Prices() {
 // the history and the alerting.
 function ManualPriceModal({ item, onConfirm, onClose }) {
   const [value, setValue] = useState(item.current_price ?? '');
+  // The shop lives on the link now, not the product — name the one the typed
+  // price will land on, which is the same one saveManualPrice targets.
+  const sources = item.sources ?? [];
+  const store = (sources.find(sc => sc.id === item.best_source_id) ?? sources[0])?.store;
 
   return (
     <div className="modal-overlay open" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -270,7 +274,7 @@ function ManualPriceModal({ item, onConfirm, onClose }) {
           <button className="modal-x" onClick={onClose}><IconX size={18} /></button>
         </div>
         <p className={s.manualNote}>
-          {item.store || 'This site'} wouldn&apos;t let us read the page. Type what it costs now
+          {store || 'This site'} wouldn&apos;t let us read the page. Type what it costs now
           and it&apos;ll be recorded like any other check.
         </p>
         <label className="modal-lbl">Price</label>
