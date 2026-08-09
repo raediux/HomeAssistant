@@ -59,7 +59,11 @@ export default function Prices() {
     return prices.length ? Math.min(...prices) : null;
   }
 
-  function handleConfirm(form) {
+  // Writes are ordered, not fired together: retailer links carry a foreign key to
+  // the product, and the price_history insert policy looks the product up by id.
+  // Firing them in parallel meant they raced the row they depend on and were
+  // rejected, while the optimistic UI kept showing links the database never had.
+  async function handleConfirm(form) {
     if (modal?.edit) {
       const item = modal.edit;
       const rows = form.links.map((l, i) => sourceRow(l, item.id, i));
@@ -74,33 +78,36 @@ export default function Prices() {
         ...(best != null ? { current_price: best } : {}),
       };
       upsertLocal({ ...item, ...patch, sources: rows });
-      dbPatchPriceItem(item.id, patch);
-      rows.forEach(dbSavePriceSource);
-      removed.forEach(sc => dbDeletePriceSource(sc.id));
-    } else {
-      const itemId = newId();
-      const rows = form.links.map((l, i) => sourceRow(l, itemId, i));
-      const best = bestOf(rows);
-      const row = {
-        id: itemId,
-        name: form.name,
-        image_url: rows.find(r => r.image_url)?.image_url ?? null,
-        current_price: best, previous_price: null,
-        lowest_price: best, highest_price: best,
-        target_price: form.target_price, drop_pct: form.drop_pct,
-        on_sale: best != null && form.target_price != null && best <= form.target_price,
-        seen: true,
-        best_source_id: rows.find(r => r.current_price === best)?.id ?? null,
-        sort_order: 0,
-        sources: rows,
-      };
-      upsertLocal(row);
-      dbSavePriceItem(row);
-      rows.forEach(dbSavePriceSource);
-      // Opening point, so an item whose price never moves still has a chart.
-      dbSeedPriceHistory(itemId, best);
+      setModal(null);
+      await dbPatchPriceItem(item.id, patch);
+      await Promise.all(rows.map(dbSavePriceSource));
+      await Promise.all(removed.map(sc => dbDeletePriceSource(sc.id)));
+      return;
     }
+    const itemId = newId();
+    const rows = form.links.map((l, i) => sourceRow(l, itemId, i));
+    const best = bestOf(rows);
+    const row = {
+      id: itemId,
+      name: form.name,
+      image_url: rows.find(r => r.image_url)?.image_url ?? null,
+      current_price: best, previous_price: null,
+      lowest_price: best, highest_price: best,
+      target_price: form.target_price, drop_pct: form.drop_pct,
+      on_sale: best != null && form.target_price != null && best <= form.target_price,
+      seen: true,
+      best_source_id: rows.find(r => r.current_price === best)?.id ?? null,
+      sort_order: 0,
+      sources: rows,
+    };
+    upsertLocal(row);
     setModal(null);
+
+    // The product first, and only then anything that points at it.
+    await dbSavePriceItem(row);
+    await Promise.all(rows.map(dbSavePriceSource));
+    // Opening point, so an item whose price never moves still has a chart.
+    await dbSeedPriceHistory(itemId, best);
   }
 
   function handleDelete(item) {
