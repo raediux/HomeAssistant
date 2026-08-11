@@ -3,7 +3,7 @@ import { IconChevronLeft, IconChevronRight, IconCalendarEvent } from '@tabler/ic
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useSession } from '../../contexts/AuthContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
-import { dbSaveBadge, dbDeleteBadge } from '../../db.js';
+import { dbSaveBadge, dbDeleteBadge, dbUpdateBadgeDate, dbSaveTask } from '../../db.js';
 import { useCalendarData } from '../../contexts/CalendarContext.jsx';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
 import { cn, memberSlug, dateStr as toDateStr } from '../../utils.js';
@@ -51,7 +51,21 @@ export default function Calendar() {
   const [sheetOpen, setSheetOpen] = useState(false);   // mobile day sheet
   const touchStart = useRef(null);
   const { badges, setBadges, googleEvents, hasGoogleToken, fetchGoogleEventsForMonth } = useCalendarData();
-  const { tasks } = useTasksData();
+  const { tasks, setTasks } = useTasksData();
+
+  // Drag-to-reschedule is desktop only — the mobile cells show colour bars, not
+  // chips, and HTML5 drag events never fire from touch anyway.
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 601px)').matches);
+  const dragRef = useRef(null);                    // live payload, read inside drag handlers
+  const [dragging, setDragging] = useState(null);  // same payload, drives the dimmed-source style
+  const [dragOver, setDragOver] = useState(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 601px)');
+    const onChange = e => setIsDesktop(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     fetchGoogleEventsForMonth(year, month);
@@ -147,6 +161,47 @@ export default function Calendar() {
     );
   }
 
+  // ── Drag to reschedule ──────────────────────────────────────
+  function startDrag(e, item, fromDate) {
+    dragRef.current = { kind: item.kind, id: item.id, fromDate };
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(item.id));  // Firefox won't start a drag without payload
+    // Deferred: restyling the source node synchronously inside dragstart
+    // cancels the drag in some browsers.
+    setTimeout(() => setDragging(dragRef.current), 0);
+  }
+
+  function endDrag() {
+    dragRef.current = null;
+    setDragging(null);
+    setDragOver(null);
+  }
+
+  function onDayDragOver(e, ds) {
+    const d = dragRef.current;
+    if (!d || d.fromDate === ds) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOver !== ds) setDragOver(ds);
+  }
+
+  function onDayDrop(e, ds) {
+    const d = dragRef.current;
+    endDrag();
+    if (!d || d.fromDate === ds) return;
+    e.preventDefault();
+    if (d.kind === 'badge') {
+      setBadges(prev => prev.map(b => b.id === d.id ? { ...b, date: ds } : b));
+      dbUpdateBadgeDate(d.id, ds);
+    } else if (d.kind === 'task') {
+      const t = tasks.find(t => t.id === d.id);
+      if (!t) return;
+      const moved = { ...t, dueDate: ds };
+      setTasks(prev => prev.map(x => x.id === d.id ? moved : x));
+      dbSaveTask(moved);
+    }
+  }
+
   const todayStr = toDateStr(new Date());
   const firstDay = new Date(year, month, 1);
   const startDow = monDow(firstDay.getDay());
@@ -179,16 +234,23 @@ export default function Calendar() {
               const dayBadges = badgeMap[ds] || [];
               const dayGoogle = googleMap[ds] || [];
               const combined  = [
-                ...dayTasks.map(t  => ({ label: t.title, color: memberColor(t.person) })),
-                ...dayBadges.map(b => ({ label: b.label, color: b.color })),
-                ...dayGoogle.map(e => ({ label: e.title, color: '#4a8fd4', google: true })),
+                ...dayTasks.map(t  => ({ kind: 'task',   id: t.id, label: t.title, color: memberColor(t.person) })),
+                ...dayBadges.map(b => ({ kind: 'badge',  id: b.id, label: b.label, color: b.color })),
+                ...dayGoogle.map(e => ({ kind: 'google', id: e.id, label: e.title, color: '#4a8fd4' })),
               ];
               const shown    = combined.slice(0, MAX_BADGES_PER_DAY);
               const overflow = combined.length - MAX_BADGES_PER_DAY;
-              const classes  = cn(s.day, ds === todayStr && s.dayToday, ds === selected && s.daySelected);
+              const classes  = cn(s.day, ds === todayStr && s.dayToday, ds === selected && s.daySelected, ds === dragOver && s.dayDropTarget);
 
               return (
-                <div key={ds} className={classes} onClick={() => openDay(ds)}>
+                <div
+                  key={ds}
+                  className={classes}
+                  onClick={() => openDay(ds)}
+                  onDragOver={isDesktop ? e => onDayDragOver(e, ds) : undefined}
+                  onDragLeave={isDesktop ? () => setDragOver(prev => prev === ds ? null : prev) : undefined}
+                  onDrop={isDesktop ? e => onDayDrop(e, ds) : undefined}
+                >
                   <div className={s.dayNum}>{day}</div>
                   {/* Mobile: bars stand in for the text badges, which don't fit a 44px cell */}
                   <div className={s.barRow}>
@@ -196,11 +258,23 @@ export default function Calendar() {
                       <span key={j} className={s.bar} style={{ background: item.color }} />
                     ))}
                   </div>
-                  {shown.map((item, j) => (
-                    <div key={j} className={item.google ? s.googleBadge : s.calBadge} style={{ background: item.color + '22', color: item.color }}>
-                      {item.label}
-                    </div>
-                  ))}
+                  {shown.map((item, j) => {
+                    // Google events are read-only (calendar.readonly scope), so they stay put.
+                    const drag = isDesktop && item.kind !== 'google';
+                    const isSource = dragging && dragging.kind === item.kind && dragging.id === item.id;
+                    return (
+                      <div
+                        key={j}
+                        className={cn(item.kind === 'google' ? s.googleBadge : s.calBadge, drag && s.draggable, isSource && s.chipDragging)}
+                        style={{ background: item.color + '22', color: item.color }}
+                        draggable={drag || undefined}
+                        onDragStart={drag ? e => startDrag(e, item, ds) : undefined}
+                        onDragEnd={drag ? endDrag : undefined}
+                      >
+                        {item.label}
+                      </div>
+                    );
+                  })}
                   {overflow > 0 && <div className={s.calBadgeMore}>+{overflow} more</div>}
                 </div>
               );

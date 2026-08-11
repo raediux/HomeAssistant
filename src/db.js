@@ -120,6 +120,12 @@ export async function dbSaveBadge(badge) {
   return data.id;
 }
 
+export async function dbUpdateBadgeDate(id, date) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('calendar_badges').update({ date }).eq('id', id).eq('household_id', hid);
+  if (error) fail('dbUpdateBadgeDate', error);
+}
+
 export async function dbDeleteBadge(id) {
   const hid = await getMyHouseholdId();
   const { error } = await db.from('calendar_badges').delete().eq('id', id).eq('household_id', hid);

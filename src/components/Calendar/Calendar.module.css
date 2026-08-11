@@ -69,6 +69,12 @@
 .calBadge { font-size: 11px; font-weight: 500; padding: 8px 5px; flex-shrink: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
 .calBadgeMore { font-size: 11px; font-weight: 500; color: var(--text3); padding-left: 2px; line-height: 1.4; }
 
+/* Drag to reschedule (desktop only) */
+.draggable { cursor: grab; }
+.draggable:active { cursor: grabbing; }
+.chipDragging { opacity: .4; }
+.dayDropTarget { background: var(--accent-l); outline: 1px dashed var(--accent); outline-offset: -2px; }
+
 /* Detail panel */
 .detail {
   width: 260px;
