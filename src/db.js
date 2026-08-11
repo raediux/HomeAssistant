@@ -120,10 +120,11 @@ export async function dbSaveBadge(badge) {
   return data.id;
 }
 
-export async function dbUpdateBadgeDate(id, date) {
+// fields is a partial row — { date } when dragged, { label, color } when renamed.
+export async function dbUpdateBadge(id, fields) {
   const hid = await getMyHouseholdId();
-  const { error } = await db.from('calendar_badges').update({ date }).eq('id', id).eq('household_id', hid);
-  if (error) fail('dbUpdateBadgeDate', error);
+  const { error } = await db.from('calendar_badges').update(fields).eq('id', id).eq('household_id', hid);
+  if (error) fail('dbUpdateBadge', error);
 }
 
 export async function dbDeleteBadge(id) {

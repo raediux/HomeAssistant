@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { IconChevronLeft, IconChevronRight, IconCalendarEvent } from '@tabler/icons-react';
+import { IconChevronLeft, IconChevronRight, IconCalendarEvent, IconEdit } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useSession } from '../../contexts/AuthContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
-import { dbSaveBadge, dbDeleteBadge, dbUpdateBadgeDate, dbSaveTask } from '../../db.js';
+import { dbSaveBadge, dbDeleteBadge, dbUpdateBadge, dbSaveTask } from '../../db.js';
 import { useCalendarData } from '../../contexts/CalendarContext.jsx';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
 import { cn, memberSlug, dateStr as toDateStr } from '../../utils.js';
@@ -149,6 +149,12 @@ export default function Calendar() {
     if (newId) setBadges(prev => [...prev, { id: newId, date: dateStr, label: label.trim(), color }]);
   }
 
+  function updateBadge(id, label, color) {
+    if (!label.trim()) return;
+    setBadges(prev => prev.map(b => b.id === id ? { ...b, label: label.trim(), color } : b));
+    dbUpdateBadge(id, { label: label.trim(), color });
+  }
+
   function deleteBadge(id, label) {
     const badge = badges.find(b => b.id === id);
     setBadges(prev => prev.filter(b => b.id !== id));
@@ -192,7 +198,7 @@ export default function Calendar() {
     e.preventDefault();
     if (d.kind === 'badge') {
       setBadges(prev => prev.map(b => b.id === d.id ? { ...b, date: ds } : b));
-      dbUpdateBadgeDate(d.id, ds);
+      dbUpdateBadge(d.id, { date: ds });
     } else if (d.kind === 'task') {
       const t = tasks.find(t => t.id === d.id);
       if (!t) return;
@@ -296,6 +302,7 @@ export default function Calendar() {
               memberColor={memberColor}
               memberLabel={memberLabel}
               onAddBadge={addBadge}
+              onUpdateBadge={updateBadge}
               onDeleteBadge={deleteBadge}
               s={s}
             />
@@ -308,16 +315,38 @@ export default function Calendar() {
   );
 }
 
-function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, memberLabel, onAddBadge, onDeleteBadge, s }) {
+function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, memberLabel, onAddBadge, onUpdateBadge, onDeleteBadge, s }) {
   const [label, setLabel] = useState('');
   const [swatchIdx, setSwatchIdx] = useState(0);
+  const [editing, setEditing] = useState(null);   // badge id, or null in add mode
   const inputRef = useRef(null);
 
   const d = new Date(dateStr + 'T00:00:00');
   const heading = `${FULL_DAYS[d.getDay()]}, ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
 
-  async function handleAdd() {
+  // A badge saved with a colour outside the swatch set (or one that was later
+  // recoloured elsewhere) falls back to the first swatch rather than no selection.
+  function startEdit(b) {
+    const i = BADGE_SWATCHES.findIndex(sw => sw.color === b.color);
+    setEditing(b.id);
+    setLabel(b.label);
+    setSwatchIdx(i === -1 ? 0 : i);
+    requestAnimationFrame(() => inputRef.current?.select());
+  }
+
+  function cancelEdit() {
+    setEditing(null);
+    setLabel('');
+    setSwatchIdx(0);
+  }
+
+  async function handleSubmit() {
     if (!label.trim()) { inputRef.current?.focus(); return; }
+    if (editing !== null) {
+      onUpdateBadge(editing, label, BADGE_SWATCHES[swatchIdx].color);
+      cancelEdit();
+      return;
+    }
     await onAddBadge(dateStr, label, BADGE_SWATCHES[swatchIdx].color);
     setLabel('');
   }
@@ -345,9 +374,10 @@ function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, member
         <>
           <div className={s.detailSection}>Badges</div>
           {badges.map(b => (
-            <div key={b.id} className={s.badgeRow}>
+            <div key={b.id} className={cn(s.badgeRow, editing === b.id && s.badgeRowEditing)}>
               <div className={s.badgePill} style={{ background: b.color + '22', color: b.color }}>{b.label}</div>
-              <button className={s.badgeDel} onClick={() => onDeleteBadge(b.id, b.label)} title="Remove">×</button>
+              <button className={s.badgeEdit} onClick={() => startEdit(b)} title="Rename"><IconEdit size={12} /></button>
+              <button className={s.badgeDel} onClick={() => { if (editing === b.id) cancelEdit(); onDeleteBadge(b.id, b.label); }} title="Remove">×</button>
             </div>
           ))}
         </>
@@ -373,7 +403,7 @@ function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, member
         </>
       )}
 
-      <div className={s.detailSection}>Add badge</div>
+      <div className={s.detailSection}>{editing !== null ? 'Edit badge' : 'Add badge'}</div>
       <div className={s.badgeForm}>
         <input
           ref={inputRef}
@@ -382,7 +412,10 @@ function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, member
           maxLength={30}
           value={label}
           onChange={e => setLabel(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') handleSubmit();
+            else if (e.key === 'Escape' && editing !== null) cancelEdit();
+          }}
         />
         <div className={s.swatches}>
           {BADGE_SWATCHES.map((sw, i) => (
@@ -396,6 +429,12 @@ function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, member
             />
           ))}
         </div>
+        {editing !== null && (
+          <div className={s.editActions}>
+            <button type="button" className={s.saveBtn} onClick={handleSubmit}>Save</button>
+            <button type="button" className={s.cancelBtn} onClick={cancelEdit}>Cancel</button>
+          </div>
+        )}
       </div>
     </>
   );

@@ -105,6 +105,17 @@
 .badgePill { font-size: 9px; font-weight: 500; padding: 1px 4px; border-radius: 3px; line-height: 1.4; flex: 1; }
 .badgeDel { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
 .badgeDel:hover { color: var(--red); }
+.badgeEdit { background: none; border: none; color: var(--text3); cursor: pointer; line-height: 1; padding: 0 2px; flex-shrink: 0; display: flex; align-items: center; }
+.badgeEdit:hover { color: var(--accent); }
+.badgeRowEditing .badgePill { outline: 1px solid var(--accent); outline-offset: 1px; }
+.badgeRowEditing .badgeEdit { color: var(--accent); }
+
+.editActions { display: flex; gap: 6px; }
+.saveBtn, .cancelBtn { border-radius: var(--r); padding: 4px 10px; font-size: 11px; font-weight: 500; font-family: inherit; cursor: pointer; transition: background .12s, border-color .12s; }
+.saveBtn { background: var(--accent-l); border: 1px solid var(--accent); color: var(--accent); }
+.saveBtn:hover { background: var(--accent); color: #fff; }
+.cancelBtn { background: none; border: 1px solid rgba(255,255,255,0.12); color: var(--text3); }
+.cancelBtn:hover { color: var(--text); border-color: rgba(255,255,255,0.24); }
 
 .badgeForm { display: flex; flex-direction: column; gap: 8px; }
 .badgeInput { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 6px 10px; font-size: 12px; color: var(--text); font-family: inherit; outline: none; transition: border-color .12s; }
