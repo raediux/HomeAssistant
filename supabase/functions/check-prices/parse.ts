@@ -159,6 +159,37 @@ const ADAPTERS: Adapter[] = [
       return variants.length ? { variants } : {};
     },
   },
+  {
+    // Chemist Warehouse renders client-side; the price sits in embedded app
+    // state. `rrp` next to it is the crossed-out figure and is deliberately
+    // ignored — on some lines it is actually *lower* than the selling price,
+    // so anything taking the smaller of the two would be wrong.
+    host: /(^|\.)chemistwarehouse\.com\.au$/,
+    extract: h => {
+      const at = h.indexOf('"prices":[');
+      if (at === -1) return {};
+      const raw = sliceJson(h, at, '[');
+      if (!raw) return {};
+      let entries: unknown;
+      try { entries = JSON.parse(raw); } catch { return {}; }
+      if (!Array.isArray(entries)) return {};
+
+      const amounts = entries
+        .map(e => (e as Record<string, unknown>)?.price as Record<string, unknown> | undefined)
+        .map(pr => (pr?.value as Record<string, unknown> | undefined)?.amount)
+        .map(toNum)
+        .filter((n): n is number => n != null);
+
+      if (amounts.length === 1) return { price: amounts[0] };
+      // Every page seen so far carries exactly one. Several means we cannot tell
+      // which belongs to the product, and guessing is how you end up tracking
+      // the wrong thing without anything looking wrong.
+      if (amounts.length > 1) {
+        return { reason: 'This page lists several prices and there is no way to tell which is the product — enter the price yourself.' };
+      }
+      return {};
+    },
+  },
 ];
 
 export type Parsed = {
