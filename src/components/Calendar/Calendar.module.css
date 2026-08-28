@@ -141,12 +141,13 @@
 .refreshBtn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; transition: color .12s; }
 .refreshBtn:hover { color: var(--text); }
 
-.googleBadge { font-size: 11px; font-weight: 500; padding: 8px 5px 8px 4px; flex-shrink: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; border-left: 2px solid #4a8fd4; }
+.googleBadge { font-size: 11px; font-weight: 500; padding: 8px 5px 8px 4px; flex-shrink: 0; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; border-left: 2px solid currentColor; }
 
 .googleRow { display: flex; align-items: flex-start; gap: 7px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .googleRow:last-child { border-bottom: none; }
 .googleTitle { font-size: 12px; color: var(--text); }
 .googleTime { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.googleCalName { font-size: 9px; color: var(--text3); opacity: .65; margin-top: 2px; text-transform: uppercase; letter-spacing: .04em; }
 
 /* ── Mobile-only elements — inert above 600px, wired up in the media query ── */
 .barRow      { display: none; flex-direction: column; gap: 2px; }

@@ -242,7 +242,7 @@ export default function Calendar() {
               const combined  = [
                 ...dayTasks.map(t  => ({ kind: 'task',   id: t.id, label: t.title, color: memberColor(t.person) })),
                 ...dayBadges.map(b => ({ kind: 'badge',  id: b.id, label: b.label, color: b.color })),
-                ...dayGoogle.map(e => ({ kind: 'google', id: e.id, label: e.title, color: '#4a8fd4' })),
+                ...dayGoogle.map(e => ({ kind: 'google', id: e.key, label: e.title, color: e.color })),
               ];
               const shown    = combined.slice(0, MAX_BADGES_PER_DAY);
               const overflow = combined.length - MAX_BADGES_PER_DAY;
@@ -391,11 +391,12 @@ function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, member
               ? new Date(e.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               : null;
             return (
-              <div key={e.id} className={s.googleRow}>
-                <IconCalendarEvent size={11} style={{ color: '#4a8fd4', flexShrink: 0 }} />
+              <div key={e.key} className={s.googleRow}>
+                <IconCalendarEvent size={11} style={{ color: e.color, flexShrink: 0 }} />
                 <div>
                   <div className={s.googleTitle}>{e.title}</div>
                   {timeStr && <div className={s.googleTime}>{timeStr}</div>}
+                  <div className={s.googleCalName}>{e.calendarName}</div>
                 </div>
               </div>
             );
