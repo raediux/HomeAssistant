@@ -68,6 +68,9 @@ export async function dbLoadTasks() {
     dow:          row.dow,
     done:         row.done,
     lastDoneDate: row.last_done_date || null,
+    // Only 'week' is offered in the UI; the unit rides along for future intervals.
+    repeatInterval: row.repeat_interval ?? null,
+    repeatUnit:     row.repeat_unit || 'week',
   }));
 }
 
@@ -77,6 +80,7 @@ export async function dbSaveTask(task) {
     id: task.id, person: task.person, frequency: task.frequency,
     title: task.title, due_date: task.dueDate || null, dow: task.dow ?? null,
     done: task.done, last_done_date: task.lastDoneDate || null, household_id: hid,
+    repeat_interval: task.repeatInterval ?? null, repeat_unit: task.repeatUnit || 'week',
   }, { onConflict: 'id' });
   if (error) fail('dbSaveTask', error);
 }

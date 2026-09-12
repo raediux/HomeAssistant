@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useAnimation } from 'framer-motion';
 import { useTilt } from '../../hooks/useTilt.js';
-import { IconPlus, IconEdit, IconTrash, IconCheck, IconAlertCircle, IconClock, IconCalendar } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconTrash, IconCheck, IconAlertCircle, IconClock, IconCalendar, IconRepeat } from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbSaveTask, dbDeleteTask } from '../../db.js';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
 import { memberSlug, newId } from '../../utils.js';
 import { markDeleted, unmarkDeleted } from '../../utils/tombstones.js';
-import { isTaskDone, getDueBadge, sortTasks, toDateStr } from './taskUtils.js';
+import { isTaskDone, getDueBadge, sortTasks, toDateStr, isRepeating, nextDueDate } from './taskUtils.js';
 import { FREQUENCIES, FREQ_LABEL } from '../../config/tasks.js';
 import TaskModal from './TaskModal.jsx';
 import Whiteboard from './Whiteboard.jsx';
@@ -17,6 +17,12 @@ import s from './Tasks.module.css';
 
 const BADGE_ICON  = { 'ti-alert-circle': IconAlertCircle, 'ti-clock': IconClock, 'ti-calendar': IconCalendar };
 const BADGE_CLS   = { 'b-red': s.bRed, 'b-amb': s.bAmb, 'b-blue': s.bBlue };
+
+// "26 Sep" for the roll-forward toast.
+function fmtDue(ds) {
+  if (!ds) return '';
+  return new Date(ds + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+}
 
 export default function Tasks() {
   const { members } = useHousehold();
@@ -34,6 +40,22 @@ export default function Tasks() {
 
   function toggleDone(task) {
     let updated;
+    if (isRepeating(task) && !task.done) {
+      // A repeating task doesn't stay checked — it rolls to its next occurrence.
+      // Undo restores the old date, since the card no longer reads as done and
+      // so can't just be un-ticked.
+      const rolled = { ...task, done: false, lastDoneDate: toDateStr(new Date()), dueDate: nextDueDate(task) };
+      setTasks(prev => prev.map(t => t.id === rolled.id ? rolled : t));
+      scheduleDelete(
+        `Done — next due ${fmtDue(rolled.dueDate)}`,
+        () => dbSaveTask(rolled),
+        () => {
+          setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+          dbSaveTask(task);
+        },
+      );
+      return;
+    }
     if (task.frequency === 'occasional') {
       updated = { ...task, done: !task.done };
     } else {
@@ -67,19 +89,20 @@ export default function Tasks() {
     setModal({ mode: 'edit', person: task.person, frequency: task.frequency, task });
   }
 
-  function handleModalConfirm({ title, dueDate, dow }) {
+  function handleModalConfirm({ title, dueDate, dow, repeatInterval }) {
     if (modal.mode === 'add') {
       const task = {
         id: newId(),
         person: modal.person,
         frequency: modal.frequency,
-        title, dueDate, dow,
+        title, dueDate, dow, repeatInterval,
         done: false, lastDoneDate: null,
       };
       setTasks(prev => [...prev, task]);
       dbSaveTask(task);
     } else {
-      const updated = { ...modal.task, title, dueDate, dow };
+      // Clearing a repeat un-checks the task, so it doesn't sit permanently done.
+      const updated = { ...modal.task, title, dueDate, dow, repeatInterval, done: repeatInterval ? false : modal.task.done };
       setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
       dbSaveTask(updated);
     }
@@ -163,11 +186,18 @@ export default function Tasks() {
                                       </motion.div>
                                       <div className={s.cardBody}>
                                         <div className={s.cardTitle}>{task.title}</div>
-                                        {badge && (
+                                        {(badge || isRepeating(task)) && (
                                           <div className={s.meta}>
-                                            <span className={`${s.badge} ${BADGE_CLS[badge.cls]}`}>
-                                              {BadgeIcon && <BadgeIcon size={10} />} {badge.text}
-                                            </span>
+                                            {badge && (
+                                              <span className={`${s.badge} ${BADGE_CLS[badge.cls]}`}>
+                                                {BadgeIcon && <BadgeIcon size={10} />} {badge.text}
+                                              </span>
+                                            )}
+                                            {isRepeating(task) && (
+                                              <span className={`${s.badge} ${s.bRepeat}`} title={`Repeats every ${task.repeatInterval} week${task.repeatInterval === 1 ? '' : 's'}`}>
+                                                <IconRepeat size={10} /> {task.repeatInterval}w
+                                              </span>
+                                            )}
                                           </div>
                                         )}
                                       </div>

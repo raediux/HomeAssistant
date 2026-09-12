@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { IconX } from '@tabler/icons-react';
 import { FREQ_LABEL as FREQ_LABELS } from '../../config/tasks.js';
+import { toDateStr } from './taskUtils.js';
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
@@ -12,6 +13,8 @@ export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
   const [title, setTitle] = useState(modal?.task?.title || '');
   const [dueDate, setDueDate] = useState(modal?.task?.dueDate || '');
   const [dow, setDow] = useState(modal?.task?.dow ?? null);
+  const [repeatOn, setRepeatOn] = useState(!!modal?.task?.repeatInterval);
+  const [repeatEvery, setRepeatEvery] = useState(String(modal?.task?.repeatInterval || 2));
 
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }
@@ -21,10 +24,15 @@ export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
 
   if (!modal) return null;
 
+  const repeats = modal?.frequency === 'occasional' && repeatOn;
+
   function handleConfirm() {
     const t = title.trim();
     if (!t) return;
-    onConfirm({ title: t, dueDate: dueDate || null, dow });
+    const every = Math.min(52, Math.max(1, parseInt(repeatEvery, 10) || 1));
+    // A repeat needs an anchor to count from, so an empty date becomes today.
+    const due = repeats ? (dueDate || toDateStr(new Date())) : (dueDate || null);
+    onConfirm({ title: t, dueDate: due, dow, repeatInterval: repeats ? every : null });
   }
 
   const isAdd = modal.mode === 'add';
@@ -54,7 +62,7 @@ export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
 
         {modal.frequency === 'occasional' && (
           <>
-            <label className="modal-lbl">Due date (optional)</label>
+            <label className="modal-lbl">{repeats ? 'Next due' : 'Due date (optional)'}</label>
             <input
               type="date"
               className="modal-input"
@@ -62,6 +70,36 @@ export default function TaskModal({ modal, memberName, onConfirm, onClose }) {
               value={dueDate}
               onChange={e => setDueDate(e.target.value)}
             />
+
+            <label className="modal-lbl">Repeat</label>
+            <div className="dow-grid" style={{ marginBottom: 12, alignItems: 'center' }}>
+              <button
+                type="button"
+                className={`dow-btn${!repeatOn ? ' selected' : ''}`}
+                onClick={() => setRepeatOn(false)}
+              >Never</button>
+              <button
+                type="button"
+                className={`dow-btn${repeatOn ? ' selected' : ''}`}
+                onClick={() => setRepeatOn(true)}
+              >Every…</button>
+              {repeatOn && (
+                <>
+                  <input
+                    type="number"
+                    min="1"
+                    max="52"
+                    className="modal-input"
+                    style={{ width: 64, flex: '0 0 auto', textAlign: 'center', padding: '7px 4px' }}
+                    value={repeatEvery}
+                    onChange={e => setRepeatEvery(e.target.value)}
+                  />
+                  <span style={{ flex: '0 0 auto', fontSize: 12, color: 'var(--text2)' }}>
+                    {Number(repeatEvery) === 1 ? 'week' : 'weeks'}
+                  </span>
+                </>
+              )}
+            </div>
           </>
         )}
 

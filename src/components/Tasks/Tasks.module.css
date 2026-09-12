@@ -190,6 +190,8 @@
 .bBlue { background: var(--accent-l); color: var(--accent-t); }
 .bRed  { background: var(--red-l);    color: var(--red); }
 .bAmb  { background: var(--amber-l);  color: var(--amber); }
+/* Repeat cadence — deliberately quieter than the due badges beside it */
+.bRepeat { background: rgba(255,255,255,0.06); color: var(--text3); }
 
 .cardActions {
   display: flex;
