@@ -258,11 +258,18 @@ export default function Calendar() {
                   onDrop={isDesktop ? e => onDayDrop(e, ds) : undefined}
                 >
                   <div className={s.dayNum}>{day}</div>
-                  {/* Mobile: bars stand in for the text badges, which don't fit a 44px cell */}
+                  {/* Mobile: compact chips stand in for the desktop text badges */}
                   <div className={s.barRow}>
-                    {combined.slice(0, 4).map((item, j) => (
-                      <span key={j} className={s.bar} style={{ background: item.color }} />
+                    {combined.slice(0, 3).map((item, j) => (
+                      <span
+                        key={j}
+                        className={s.bar}
+                        style={{ background: item.color + '26', color: item.color, borderLeftColor: item.color }}
+                      >
+                        {item.label}
+                      </span>
                     ))}
+                    {combined.length > 3 && <span className={s.barMore}>+{combined.length - 3} more</span>}
                   </div>
                   {shown.map((item, j) => {
                     // Google events are read-only (calendar.readonly scope), so they stay put.

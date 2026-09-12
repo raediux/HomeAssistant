@@ -187,7 +187,7 @@
 
   .body { flex-direction: column; }
   .gridWrap { overflow-y: auto; touch-action: pan-y; }
-  .grid { gap: 3px; grid-auto-rows: minmax(40px, 1fr); }
+  .grid { gap: 3px; grid-auto-rows: minmax(84px, auto); }
   .dayHdr { font-size: 10px; padding-bottom: 5px; }
 
   .day {
@@ -197,10 +197,27 @@
     padding: 4px;
     border-radius: 7px;
   }
-  .dayNum { font-size: 13px; text-align: center; }
-  .barRow { display: flex; margin-top: auto; }
+  .dayNum { font-size: 13px; text-align: left; padding-left: 2px; }
+  .barRow { display: flex; gap: 2px; }
 
-  /* Text badges can't fit a ~44px cell — the dot row carries the signal instead */
+  /* Chips are tall enough for a truncated title — Outlook/Google style */
+  .bar {
+    height: auto;
+    min-height: 15px;
+    padding: 0 3px 0 4px;
+    border-left: 2px solid;
+    border-radius: 3px;
+    font-size: 9.5px;
+    font-weight: 500;
+    line-height: 15px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .barMore { font-size: 9px; color: var(--text3); padding-left: 2px; line-height: 1.3; }
+
+  /* The desktop text badges are replaced by the chips above */
   .calBadge, .googleBadge, .calBadgeMore { display: none; }
 
   /* Day detail becomes a slide-up sheet over the grid */
