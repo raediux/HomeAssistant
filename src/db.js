@@ -137,20 +137,6 @@ export async function dbDeleteBadge(id) {
   if (error) fail('dbDeleteBadge', error);
 }
 
-// ── Shopping — weekly auto-clear ─────────────────────────────
-export async function dbGetLastShoppingClear() {
-  const hid = await getMyHouseholdId();
-  if (!hid) return null;
-  const { data } = await db.from('households').select('last_shopping_clear').eq('id', hid).maybeSingle();
-  return data?.last_shopping_clear ?? null;
-}
-
-export async function dbSetLastShoppingClear(dateStr) {
-  const hid = await getMyHouseholdId();
-  if (!hid) return;
-  await db.from('households').update({ last_shopping_clear: dateStr }).eq('id', hid);
-}
-
 // ── Shopping — working list ───────────────────────────────────
 export async function dbLoadWorkingItems() {
   const { data, error } = await db.from('shopping_working').select('*').order('sort_order').order('id');

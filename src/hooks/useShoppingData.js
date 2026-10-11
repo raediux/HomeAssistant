@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useUndo } from '../contexts/UndoContext.jsx';
-import { dateStr, newId } from '../utils.js';
+import { newId } from '../utils.js';
 import { useRealtimeSync } from './useRealtimeSync.js';
 import { markDeleted, unmarkDeleted, isDeleted } from '../utils/tombstones.js';
 import {
   dbLoadWorkingItems, dbLoadPastItems,
   dbSaveWorkingItem, dbDeleteWorkingItem,
   dbSavePastItem, dbDeletePastItem,
-  dbGetLastShoppingClear, dbSetLastShoppingClear,
 } from '../db.js';
 import { STORES } from '../config/stores.js';
-import { SHOPPING_CLEAR_DAY } from '../config/shopping.js';
 
 export { STORES };
 
@@ -39,26 +37,9 @@ export function useShoppingData() {
   const [search, setSearch]               = useState('');
 
   useEffect(() => {
-    Promise.all([dbLoadWorkingItems(), dbLoadPastItems(), dbGetLastShoppingClear()]).then(([w, p, lastClear]) => {
-      const today = new Date();
-      const isMonday = today.getDay() === SHOPPING_CLEAR_DAY;
-      const todayKey = dateStr(today);
-
-      let finalWorking = w;
-      let finalPast = p;
-
-      if (isMonday && lastClear !== todayKey && w.length > 0) {
-        // Stamp first so a second device loading moments later skips the clear.
-        dbSetLastShoppingClear(todayKey);
-        finalWorking = [];
-        for (const item of w) {
-          dbDeleteWorkingItem(item.id);
-          finalPast = archiveIntoPast(finalPast, item);
-        }
-      }
-
-      setWorking(finalWorking);
-      setPast(finalPast);
+    Promise.all([dbLoadWorkingItems(), dbLoadPastItems()]).then(([w, p]) => {
+      setWorking(w);
+      setPast(p);
     });
   }, []);
 
