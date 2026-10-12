@@ -56,10 +56,9 @@ export async function dbLoadTier(householdId) {
 }
 
 // ── Tasks ─────────────────────────────────────────────────────
-export async function dbLoadTasks() {
-  const { data, error } = await db.from('tasks').select('*').order('id');
-  if (error) { fail('dbLoadTasks', error); return []; }
-  return data.map(row => ({
+// Shared by the initial load and realtime updates so the two can't drift.
+export function mapTaskRow(row) {
+  return {
     id:           row.id,
     person:       row.person,
     frequency:    row.frequency,
@@ -71,7 +70,13 @@ export async function dbLoadTasks() {
     // Only 'week' is offered in the UI; the unit rides along for future intervals.
     repeatInterval: row.repeat_interval ?? null,
     repeatUnit:     row.repeat_unit || 'week',
-  }));
+  };
+}
+
+export async function dbLoadTasks() {
+  const { data, error } = await db.from('tasks').select('*').order('id');
+  if (error) { fail('dbLoadTasks', error); return []; }
+  return data.map(mapTaskRow);
 }
 
 export async function dbSaveTask(task) {
