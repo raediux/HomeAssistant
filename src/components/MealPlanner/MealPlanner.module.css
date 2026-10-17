@@ -423,9 +423,22 @@
   .mMeal, .mAdd {
     display: flex; align-items: center; gap: 6px; flex: 1; align-self: stretch; cursor: pointer;
     padding: 6px 10px; border-radius: 10px;
+    min-width: 0; overflow: hidden; /* long names must not widen the card (breaks panel swiping) */
   }
   .mMeal { background: color-mix(in srgb, var(--tint) 18%, rgba(12,10,16,0.5)); box-shadow: inset 3px 0 0 var(--tint); }
-  .mMealText { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mMealText { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* AutoScrollText: long names slide left, pause, slide back */
+  .autoScrollOn { text-overflow: clip; }
+  .autoScrollOn .autoScrollInner { display: inline-block; animation: autoScroll var(--as-dur) ease-in-out infinite alternate; }
+  @keyframes autoScroll {
+    0%, 20%   { transform: translateX(0); }
+    80%, 100% { transform: translateX(var(--as-dist)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .autoScrollOn { text-overflow: ellipsis; }
+    .autoScrollOn .autoScrollInner { display: inline; animation: none; }
+  }
 
   .mRm {
     background: none; border: none; color: var(--text3);

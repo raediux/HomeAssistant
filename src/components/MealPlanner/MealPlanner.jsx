@@ -419,7 +419,7 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
                         <span className={s.mName} style={{ color: m.color }}>{m.name}</span>
                         {meal ? (
                           <div className={s.mMeal} onClick={() => onOpen(dk, p, slot)}>
-                            <span className={s.mMealText}>{meal}</span>
+                            <AutoScrollText className={s.mMealText} text={meal} />
                             <button className={s.mRm} onClick={e => { e.stopPropagation(); onRemove(dk, p, slot); }}>×</button>
                           </div>
                         ) : (
@@ -442,7 +442,7 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
                       const meal = dayData[SHARED_KEY]?.[slot];
                       return meal ? (
                         <div className={s.mMeal} onClick={() => onOpen(dk, SHARED_KEY, slot)}>
-                          <span className={s.mMealText}>{meal}</span>
+                          <AutoScrollText className={s.mMealText} text={meal} />
                           <button className={s.mRm} onClick={e => { e.stopPropagation(); onRemove(dk, SHARED_KEY, slot); }}>×</button>
                         </div>
                       ) : (
@@ -459,7 +459,7 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
                       <span className={s.mName} style={{ color: m.color }}>{m.name}</span>
                       {meal ? (
                         <div className={s.mMeal} onClick={() => onOpen(dk, p, slot)}>
-                          <span className={s.mMealText}>{meal}</span>
+                          <AutoScrollText className={s.mMealText} text={meal} />
                           <button className={s.mRm} onClick={e => { e.stopPropagation(); onRemove(dk, p, slot); }}>×</button>
                         </div>
                       ) : (
@@ -474,6 +474,37 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
         })}
       </div>
     </>
+  );
+}
+
+// Text that slides back and forth when it doesn't fit (mobile meal chips).
+// Measures overflow on the outer span; re-measures on resize/rotate.
+function AutoScrollText({ text, className }) {
+  const ref = useRef(null);
+  const [dist, setDist] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setDist(Math.max(0, el.scrollWidth - el.clientWidth));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [text]);
+
+  const scrolls = dist > 1;
+  // ~30px/s across the middle 60% of each pass; at least 4s so short overflows still pause
+  const dur = Math.max(dist / 30 / 0.6, 4);
+
+  return (
+    <span
+      ref={ref}
+      className={cn(className, scrolls && s.autoScrollOn)}
+      style={scrolls ? { '--as-dist': `-${dist}px`, '--as-dur': `${dur}s` } : undefined}
+    >
+      <span className={s.autoScrollInner}>{text}</span>
+    </span>
   );
 }
 
