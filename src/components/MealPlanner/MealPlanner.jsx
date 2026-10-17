@@ -18,6 +18,8 @@ import MealPlannerParticles from './MealPlannerParticles.jsx';
 import s from './MealPlanner.module.css';
 
 const DAY_NAMES   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+// Pastel tint per weekday (indexed by getDay) — vars defined in MealPlanner.module.css
+const DAY_TINTS   = ['var(--lilac)','var(--lavender)','var(--mint)','var(--peach)','var(--blush)','var(--sky)','var(--cream)'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 // DB key under which a shared (linked) meal is stored in meal_plans.person.
 const SHARED_KEY  = 'shared';
@@ -218,13 +220,13 @@ export default function MealPlanner() {
             const isToday = dk === todayKey;
 
             return (
-              <div key={dk} className={s.row}>
-                <div className={`${s.dayLabel} ${isToday ? s.today : ''}`}>
+              <div key={dk} className={cn(s.row, isToday && s.today)} style={{ '--tint': DAY_TINTS[d.getDay()] }}>
+                <div className={s.dayLabel}>
                   <div className={s.dayName}>{DAY_NAMES[i]}</div>
                   <div className={s.dayDate}>{d.getDate()}</div>
                 </div>
 
-                <div className={`${s.persons} glass-edge`}>
+                <div className={s.persons}>
                   {orderedMembers.map((member, oi) => {
                     const p = memberSlug(member.name);
                     // Membership in this week's sharer set — not the household
@@ -402,7 +404,7 @@ function MobileMealPanel({ slot, meals, members, weekStart, todayKey, onOpen, on
           const slotSplit = isSplit(dayData, slot, sharers);
 
           return (
-            <div key={dk} className={cn(s.mDay, isToday && s.mDayToday)}>
+            <div key={dk} className={cn(s.mDay, isToday && s.mDayToday)} style={{ '--tint': DAY_TINTS[d.getDay()] }}>
               <div className={s.mDayMeta}>
                 <span className={s.mDayName}>{DAY_NAMES[d.getDay()]}</span>
                 <span className={s.mDayDate}>{d.getDate()}</span>
