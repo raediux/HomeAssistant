@@ -114,7 +114,7 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
         <button className={`${s.moveBtn} ${s.edt}`} title="Edit" onClick={onEdit}><IconPencil size={12} /></button>
         <button className={`${s.moveBtn} ${s.rem}`} title="Move back to All Items" onClick={onArchive}><IconArrowBackUp size={12} /></button>
       </div>
-      <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'rgba(0,0,0,0.55)', transform: 'translateZ(-6px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'var(--shop-depth, rgba(0,0,0,0.55))', transform: 'translateZ(-6px)', pointerEvents: 'none' }} />
     </motion.div>
   );
 }
