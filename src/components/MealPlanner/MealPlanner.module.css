@@ -257,9 +257,10 @@
 .shopTitle { font-size: 13px; font-weight: 600; }
 .shopTitle::before { content: '🧺 '; }
 
-/* Pastel-on-dark card — scoped to Shopping's panels so its modal is untouched.
+/* Pastel-on-dark shopping — scoped to Shopping's panels (desktop card and the
+   mobile shopping tabs) so its modal is untouched.
    Feeds the --shop-* hooks in Shopping.module.css. */
-.colShopping :global(.glass-edge) {
+.colShopping :global(.glass-edge), .mShop {
   --shop: #9cc5c6; /* dusty teal — muted so it doesn't read as a weekday colour */
   --green: var(--shop); --green-l: color-mix(in srgb, var(--shop) 35%, transparent);
   --shop-line: rgba(255,255,255,0.07); --shop-tint: rgba(255,255,255,0.02);
@@ -269,6 +270,8 @@
   --shop-item-bd: transparent; --shop-hover-bd: color-mix(in srgb, var(--shop) 45%, transparent);
   --shop-item-tx: var(--text); --shop-circle: var(--shop);
   --shop-item-shadow: none; --shop-item-r: 10px;
+}
+.colShopping :global(.glass-edge) {
   border: 1.5px solid color-mix(in srgb, var(--shop) 55%, transparent);
   border-radius: 16px;
 }

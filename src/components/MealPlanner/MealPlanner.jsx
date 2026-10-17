@@ -302,10 +302,10 @@ export default function MealPlanner() {
               sharers={sharers} otherMembers={individuals} hasSharedGroup={hasSharedGroup}
               isOwner={isOwner} override={override} onSetWeek={setWeekSharing} onResetWeek={resetWeekSharing} />
           </div>
-          <div className={s.mPanel}>
+          <div className={cn(s.mPanel, s.mShop)}>
             <ShoppingWorkingPanel shopData={shopData} showAddBtn noWrapper />
           </div>
-          <div className={s.mPanel}>
+          <div className={cn(s.mPanel, s.mShop)}>
             <ShoppingPastPanel shopData={shopData} noWrapper />
           </div>
         </div>
