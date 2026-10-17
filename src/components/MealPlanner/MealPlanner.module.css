@@ -262,8 +262,9 @@
 .colShopping :global(.glass-edge) {
   --green: var(--mint); --green-l: color-mix(in srgb, var(--mint) 35%, transparent);
   --shop-line: rgba(255,255,255,0.07); --shop-tint: rgba(255,255,255,0.02);
-  --shop-item-bg: transparent; --shop-pitem-bg: transparent; --shop-depth: transparent;
-  --shop-pitem-bg-hover: rgba(255,255,255,0.04);
+  --shop-item-bg: color-mix(in srgb, var(--mint) 14%, transparent);
+  --shop-pitem-bg: rgba(255,255,255,0.04); --shop-depth: transparent;
+  --shop-pitem-bg-hover: rgba(255,255,255,0.07);
   --shop-item-bd: transparent; --shop-hover-bd: color-mix(in srgb, var(--mint) 45%, transparent);
   --shop-item-tx: var(--text); --shop-circle: var(--mint);
   --shop-item-shadow: none; --shop-item-r: 10px;
