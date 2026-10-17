@@ -268,10 +268,8 @@
   --shop-item-bd: transparent; --shop-hover-bd: color-mix(in srgb, var(--mint) 45%, transparent);
   --shop-item-tx: var(--text); --shop-circle: var(--mint);
   --shop-item-shadow: none; --shop-item-r: 10px;
-  background: #2a2433;
   border: 1.5px solid color-mix(in srgb, var(--mint) 55%, transparent);
   border-radius: 16px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
 }
 .colShopping :global(.glass-edge)::before { display: none; }
 
