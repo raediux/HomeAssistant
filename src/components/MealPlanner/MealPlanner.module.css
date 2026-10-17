@@ -151,7 +151,7 @@
   padding-bottom: 2px;
   flex-shrink: 0;
 }
-.colHdr { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); padding-left: 10px; }
+.colHdr { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); padding-left: 10px; }
 .colHdr:first-child::before { content: '🥪 '; }
 .colHdr:last-child::before { content: '🍝 '; }
 
@@ -167,9 +167,9 @@
 
 .dayLabel {
   flex-shrink: 0; width: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  border-radius: 12px; background: var(--tint); color: var(--plum);
+  border-radius: 12px; background: color-mix(in srgb, var(--tint) 85%, transparent); color: var(--plum);
 }
-.dayName { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; line-height: 1; }
+.dayName { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; line-height: 1; }
 .dayDate { font-size: 11px; opacity: .7; line-height: 1.3; }
 .today .dayName::after { content: ' ✿'; }
 
@@ -186,7 +186,7 @@
   display: flex;
   align-items: center;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: color-mix(in srgb, var(--mb, var(--lavender)) 55%, white);
   padding-left: 10px;
 }
@@ -203,7 +203,7 @@
 .cellAdd, .cellFilled {
   display: flex; align-items: center; gap: 6px; width: 100%;
   padding: 5px 10px; border-radius: 10px;
-  background: var(--tint); cursor: pointer;
+  background: color-mix(in srgb, var(--tint) 85%, transparent); cursor: pointer;
   transition: filter .15s, color .15s;
 }
 .cellAdd {
@@ -212,7 +212,7 @@
 }
 .cellAdd:hover { color: var(--plum); filter: brightness(1.06); }
 .cellFilled:hover { filter: brightness(1.06); }
-.cellName { font-size: 13px; font-weight: 600; color: var(--plum); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cellName { font-size: 12px; font-weight: 500; color: var(--plum); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .cellRm {
   background: none; border: none; color: color-mix(in srgb, var(--plum) 60%, transparent); cursor: pointer;
@@ -253,19 +253,17 @@
 .shopTitle { font-size: 13px; font-weight: 600; }
 .shopTitle::before { content: '🧺 '; }
 
-/* Light pastel card — scoped to Shopping's panels so its modal stays dark.
-   Redefines the global tokens Shopping.module.css reads. */
+/* Pastel-on-dark card — scoped to Shopping's panels so its modal is untouched.
+   Feeds the --shop-* hooks in Shopping.module.css. */
 .colShopping :global(.glass-edge) {
-  --bg: #fbf7fc; --surface: #ffffff; --surface2: #f4eef7;
-  --border: #ece3ef; --border2: #d3c6da;
-  --text: #4a3a50; --text2: #7d6a84; --text3: #a796ad;
-  --green: #3f9a78; --green-l: #dcf5ea;
-  --accent: #8a6fd6; --accent-l: #efe9ff;
-  --amber: #c2852a; --amber-l: #fdf0dc;
-  --shop-line: #efe6f1; --shop-tint: #faf6fb;
-  --shop-item-bg: #eef9f4; --shop-item-bd: #dcf1e7; --shop-hover-bd: #a8e6cf;
-  color: var(--text);
-  background: #ffffff;
+  --green: #2f7a5e; --green-l: rgba(255,255,255,0.55);
+  --shop-line: rgba(255,255,255,0.07); --shop-tint: rgba(255,255,255,0.02);
+  --shop-item-bg: color-mix(in srgb, var(--mint) 85%, transparent);
+  --shop-pitem-bg: color-mix(in srgb, var(--lavender) 85%, transparent);
+  --shop-pitem-bg-hover: var(--lavender);
+  --shop-item-bd: transparent; --shop-hover-bd: rgba(255,255,255,0.55);
+  --shop-item-tx: var(--plum); --shop-item-tx3: rgba(58,42,64,0.55);
+  background: rgba(42,36,51,0.85);
   border: 1.5px solid color-mix(in srgb, var(--mint) 55%, transparent);
   border-radius: 16px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.35);
@@ -386,10 +384,10 @@
     padding: 3px 10px;
     margin: 0 0 4px;
     border-radius: 999px;
-    background: var(--tint);
+    background: color-mix(in srgb, var(--tint) 85%, transparent);
     color: var(--plum);
   }
-  .mDayName { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+  .mDayName { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
   .mDayToday .mDayName::after { content: ' ✿'; }
   .mDayDate { font-size: 11px; opacity: .7; }
 
@@ -402,12 +400,12 @@
     min-height: 34px;
   }
 
-  .mName { font-size: 11px; font-weight: 700; color: var(--text2); min-width: 54px; flex-shrink: 0; }
+  .mName { font-size: 11px; font-weight: 500; color: var(--text2); min-width: 54px; flex-shrink: 0; }
   .mMeal, .mAdd {
     display: flex; align-items: center; gap: 6px; flex: 1; align-self: stretch; cursor: pointer;
-    padding: 6px 10px; border-radius: 10px; background: var(--tint);
+    padding: 6px 10px; border-radius: 10px; background: color-mix(in srgb, var(--tint) 85%, transparent);
   }
-  .mMealText { font-size: 12px; font-weight: 600; color: var(--plum); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mMealText { font-size: 12px; font-weight: 500; color: var(--plum); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .mRm {
     background: none; border: none; color: color-mix(in srgb, var(--plum) 60%, transparent);
