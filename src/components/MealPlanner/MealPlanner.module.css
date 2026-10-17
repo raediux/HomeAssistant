@@ -11,7 +11,6 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: rgba(33,28,41,0.55);
 }
 
 /* ── Left: meal grid ── */
@@ -156,13 +155,26 @@
 .colHdr:last-child::before { content: '🍝 '; }
 
 .row {
+  position: relative;
   display: flex; gap: 8px; align-items: stretch; flex: 1 0 90px;
   padding: 3px; border-radius: 14px;
-  border: 1.5px solid color-mix(in srgb, var(--tint) 55%, transparent);
+  border: 1.5px solid transparent;
+  background: rgba(255,255,255,0.025);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   transition: transform .2s, box-shadow .2s;
 }
 .row:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,0,0,0.35); }
-.row.today { border-color: var(--tint); box-shadow: 0 0 0 1.5px var(--tint), 0 0 24px color-mix(in srgb, var(--tint) 50%, transparent); }
+.row.today { box-shadow: 0 0 0 1.5px var(--tint), 0 0 24px color-mix(in srgb, var(--tint) 40%, transparent); }
+
+/* Glass hairline edge (like .glass-edge) tinted with the day colour — desktop rows + mobile day cards */
+.row::before, .mDay::before {
+  content: ''; position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 55%, rgba(255,255,255,0.25)), rgba(255,255,255,0.05) 55%, color-mix(in srgb, var(--tint) 22%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
 
 .dayLabel {
   flex-shrink: 0; width: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
@@ -186,10 +198,10 @@
   align-items: center;
   font-size: 11px;
   font-weight: 500;
-  color: color-mix(in srgb, var(--mb, var(--lavender)) 55%, white);
+  color: color-mix(in srgb, var(--mb, var(--lavender)) 70%, white);
   padding-left: 10px;
 }
-.gname::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: 3px; background: color-mix(in srgb, var(--mb, var(--lavender)) 55%, white); }
+.gname::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: 3px; background: var(--mb, var(--lavender)); }
 
 .gcell {
   position: relative;
@@ -199,17 +211,17 @@
   overflow: hidden;
 }
 
-/* Soft-tint chips: faint day colour + solid accent stripe */
+/* Dark-glass chips: day colour mixed into a dark base (not into transparent, which goes milky) + solid accent stripe */
 .cellAdd, .cellFilled {
   display: flex; align-items: center; gap: 6px; width: 100%;
   padding: 4px 10px; border-radius: 9px; cursor: pointer;
   transition: background .15s, color .15s;
 }
 .cellFilled {
-  background: color-mix(in srgb, var(--tint) 22%, transparent);
+  background: color-mix(in srgb, var(--tint) 18%, rgba(12,10,16,0.5));
   box-shadow: inset 3px 0 0 var(--tint);
 }
-.cellFilled:hover { background: color-mix(in srgb, var(--tint) 30%, transparent); }
+.cellFilled:hover { background: color-mix(in srgb, var(--tint) 26%, rgba(12,10,16,0.5)); }
 .cellAdd {
   border: none; font-size: 12px; font-family: inherit;
   background: color-mix(in srgb, var(--tint) 12%, transparent);
@@ -264,18 +276,18 @@
   --shop: #9cc5c6; /* dusty teal — muted so it doesn't read as a weekday colour */
   --green: var(--shop); --green-l: color-mix(in srgb, var(--shop) 35%, transparent);
   --shop-line: rgba(255,255,255,0.07); --shop-tint: rgba(255,255,255,0.02);
-  --shop-item-bg: color-mix(in srgb, var(--shop) 14%, transparent);
-  --shop-pitem-bg: rgba(255,255,255,0.04); --shop-depth: transparent;
-  --shop-pitem-bg-hover: rgba(255,255,255,0.07);
+  --shop-item-bg: color-mix(in srgb, var(--shop) 16%, rgba(12,10,16,0.45));
+  --shop-pitem-bg: rgba(0,0,0,0.2); --shop-depth: transparent;
+  --shop-pitem-bg-hover: rgba(255,255,255,0.05);
   --shop-item-bd: transparent; --shop-hover-bd: color-mix(in srgb, var(--shop) 45%, transparent);
   --shop-item-tx: var(--text); --shop-circle: var(--shop);
   --shop-item-shadow: none; --shop-item-r: 10px;
 }
-.colShopping :global(.glass-edge) {
-  border: 1.5px solid color-mix(in srgb, var(--shop) 55%, transparent);
-  border-radius: 16px;
+.colShopping :global(.glass-edge) { border-radius: 16px; }
+/* Keep Shopping's frosted glass + hairline edge, tinted teal at the top */
+.colShopping :global(.glass-edge)::before {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--shop) 55%, rgba(255,255,255,0.25)), rgba(255,255,255,0.05) 55%, color-mix(in srgb, var(--shop) 22%, transparent));
 }
-.colShopping :global(.glass-edge)::before { display: none; }
 
 /* Mobile 4-panel layout */
 .mobileLayout { display: none; }
@@ -311,7 +323,6 @@
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    background: rgba(33,28,41,0.55);
   }
 
   .mTabs {
@@ -376,12 +387,14 @@
   .mMealList { display: flex; flex-direction: column; gap: 6px; }
 
   .mDay {
-    border: 1.5px solid color-mix(in srgb, var(--tint) 55%, transparent);
+    position: relative;
+    border: 1.5px solid transparent;
     border-radius: 16px;
-    overflow: hidden;
     padding: 5px;
+    background: rgba(255,255,255,0.025);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
-  .mDayToday { border-color: var(--tint); box-shadow: 0 0 0 1.5px var(--tint), 0 0 20px color-mix(in srgb, var(--tint) 45%, transparent); }
+  .mDayToday { box-shadow: 0 0 0 1.5px var(--tint), 0 0 20px color-mix(in srgb, var(--tint) 40%, transparent); }
 
   .mDayMeta {
     display: inline-flex;
@@ -411,7 +424,7 @@
     display: flex; align-items: center; gap: 6px; flex: 1; align-self: stretch; cursor: pointer;
     padding: 6px 10px; border-radius: 10px;
   }
-  .mMeal { background: color-mix(in srgb, var(--tint) 22%, transparent); box-shadow: inset 3px 0 0 var(--tint); }
+  .mMeal { background: color-mix(in srgb, var(--tint) 18%, rgba(12,10,16,0.5)); box-shadow: inset 3px 0 0 var(--tint); }
   .mMealText { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .mRm {
