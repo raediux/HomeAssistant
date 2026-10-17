@@ -8,7 +8,8 @@ const TasksContext = createContext(null);
 export function TasksProvider({ children }) {
   const [tasks, setTasks] = useState([]);
 
-  useEffect(() => { dbLoadTasks().then(setTasks); }, []);
+  const load = () => { dbLoadTasks().then(setTasks); };
+  useEffect(load, []);
 
   useRealtimeSync('tasks', ({ eventType, new: row, old }) => {
     if (eventType === 'DELETE') {
@@ -18,7 +19,7 @@ export function TasksProvider({ children }) {
       const task = mapTaskRow(row);
       setTasks(prev => prev.some(t => t.id === task.id) ? prev.map(t => t.id === task.id ? task : t) : [...prev, task]);
     }
-  });
+  }, load);
 
   return <TasksContext.Provider value={{ tasks, setTasks }}>{children}</TasksContext.Provider>;
 }

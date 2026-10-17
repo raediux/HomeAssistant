@@ -98,7 +98,8 @@ export function CalendarProvider({ children }) {
   const [hasGoogleToken, setHasGoogleToken] = useState(false);
   const [googleToken, setGoogleToken] = useState(null);
 
-  useEffect(() => { dbLoadBadges().then(setBadges); }, []);
+  const loadBadges = () => { dbLoadBadges().then(setBadges); };
+  useEffect(loadBadges, []);
 
   useEffect(() => {
     dbGetGoogleToken().then(token => {
@@ -145,7 +146,7 @@ export function CalendarProvider({ children }) {
       const badge = { id: row.id, date: row.date, label: row.label, color: row.color };
       setBadges(prev => prev.some(b => b.id === badge.id) ? prev.map(b => b.id === badge.id ? badge : b) : [...prev, badge]);
     }
-  });
+  }, loadBadges);
 
   return (
     <CalendarContext.Provider value={{ badges, setBadges, googleEvents, hasGoogleToken, fetchGoogleEventsForMonth }}>

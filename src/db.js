@@ -162,6 +162,20 @@ export async function dbSaveWorkingItem(item) {
   if (error) fail('dbSaveWorkingItem', error);
 }
 
+// Column-scoped updates: a device with a stale copy of the row must not
+// overwrite fields another device changed (e.g. clobbering a fresh tick).
+export async function dbSetWorkingGot(id, got) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('shopping_working').update({ got }).eq('id', id).eq('household_id', hid);
+  if (error) fail('dbSetWorkingGot', error);
+}
+
+export async function dbRenameWorkingItem(id, name, store) {
+  const hid = await getMyHouseholdId();
+  const { error } = await db.from('shopping_working').update({ name, store: store || null }).eq('id', id).eq('household_id', hid);
+  if (error) fail('dbRenameWorkingItem', error);
+}
+
 export async function dbUpdateSortOrders(items) {
   const hid = await getMyHouseholdId();
   const updates = items.map((item, idx) => ({

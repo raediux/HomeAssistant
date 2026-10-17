@@ -5,7 +5,7 @@ import { useRealtimeSync } from './useRealtimeSync.js';
 import { markDeleted, unmarkDeleted, isDeleted } from '../utils/tombstones.js';
 import {
   dbLoadWorkingItems, dbLoadPastItems,
-  dbSaveWorkingItem, dbDeleteWorkingItem,
+  dbSaveWorkingItem, dbDeleteWorkingItem, dbSetWorkingGot, dbRenameWorkingItem,
   dbSavePastItem, dbDeletePastItem,
 } from '../db.js';
 import { STORES } from '../config/stores.js';
@@ -36,19 +36,21 @@ export function useShoppingData() {
   const [modal, setModal]                 = useState(null);
   const [search, setSearch]               = useState('');
 
-  useEffect(() => {
+  function load() {
     Promise.all([dbLoadWorkingItems(), dbLoadPastItems()]).then(([w, p]) => {
       setWorking(w);
       setPast(p);
     });
-  }, []);
+  }
+
+  useEffect(load, []);
 
   function toggleGot(id) {
     const item = working.find(i => i.id === id);
     if (!item) return;
-    const updated = { ...item, got: !item.got };
-    setWorking(prev => prev.map(i => i.id === id ? updated : i));
-    dbSaveWorkingItem(updated);
+    const got = !item.got;
+    setWorking(prev => prev.map(i => i.id === id ? { ...i, got } : i));
+    dbSetWorkingGot(id, got);
   }
 
   function moveToArchive(id) {
@@ -120,9 +122,8 @@ export function useShoppingData() {
       if (type === 'working') {
         const item = working.find(i => i.id === id);
         if (item) {
-          const updated = { ...item, name, store };
-          setWorking(prev => prev.map(i => i.id === id ? updated : i));
-          dbSaveWorkingItem(updated);
+          setWorking(prev => prev.map(i => i.id === id ? { ...i, name, store } : i));
+          dbRenameWorkingItem(id, name, store);
         }
       } else {
         const item = past.find(i => i.id === id);
@@ -158,7 +159,7 @@ export function useShoppingData() {
       const item = { id: row.id, name: row.name, qty: row.qty, store: row.store, got: row.got, sort_order: row.sort_order ?? 0 };
       setWorking(prev => prev.some(i => i.id === item.id) ? prev.map(i => i.id === item.id ? item : i) : [...prev, item]);
     }
-  });
+  }, load);
 
   useRealtimeSync('shopping_past', ({ eventType, new: row, old }) => {
     if (eventType === 'DELETE') {

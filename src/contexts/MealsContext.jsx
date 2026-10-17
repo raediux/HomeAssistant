@@ -10,7 +10,7 @@ export function MealsProvider({ children }) {
   // key means that week inherits the household default (members.sharesMeals).
   const [shareWeeks, setShareWeeks] = useState({});
 
-  useEffect(() => {
+  function load() {
     dbLoadMeals().then(rows => {
       const map = {};
       for (const r of rows) {
@@ -25,7 +25,9 @@ export function MealsProvider({ children }) {
       for (const r of rows) map[r.week_start] = r.member_ids || [];
       setShareWeeks(map);
     });
-  }, []);
+  }
+
+  useEffect(load, []);
 
   useRealtimeSync('meal_plans', ({ eventType, new: row, old }) => {
     if (eventType === 'DELETE') {
@@ -42,7 +44,7 @@ export function MealsProvider({ children }) {
         [row.date]: { ...prev[row.date], [row.person]: { ...prev[row.date]?.[row.person], [row.slot]: row.meal } },
       }));
     }
-  });
+  }, load); // reloads share weeks too, so meal_share_weeks needs no resync of its own
 
   useRealtimeSync('meal_share_weeks', ({ eventType, new: row, old }) => {
     setShareWeeks(prev => {

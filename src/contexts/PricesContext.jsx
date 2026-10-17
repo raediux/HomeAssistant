@@ -9,7 +9,8 @@ export function PricesProvider({ children }) {
   const [checking, setChecking] = useState(false);
   const [lastRun, setLastRun]   = useState(null);
 
-  useEffect(() => { dbLoadPriceItems().then(setItems); }, []);
+  const load = () => { dbLoadPriceItems().then(setItems); };
+  useEffect(load, []);
 
   // The edge function writes with the service key, so its updates arrive here the
   // same way another device's would — including the overnight cron run.
@@ -23,7 +24,7 @@ export function PricesProvider({ children }) {
         ? prev.map(i => i.id === row.id ? { ...row, sources: i.sources ?? [] } : i)
         : [...prev, { ...row, sources: [] }]);
     }
-  });
+  }, load);
 
   useRealtimeSync('price_sources', ({ eventType, new: row, old }) => {
     setItems(prev => prev.map(item => {
