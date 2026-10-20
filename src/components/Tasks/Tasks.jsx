@@ -1,22 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useAnimation } from 'framer-motion';
-import { useTilt } from '../../hooks/useTilt.js';
-import { IconPlus, IconEdit, IconTrash, IconCheck, IconAlertCircle, IconClock, IconCalendar, IconRepeat } from '@tabler/icons-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  IconPlus, IconEdit, IconTrash, IconCheck, IconAlertCircle, IconClock, IconCalendar, IconRepeat,
+  IconChevronRight, IconPencil,
+} from '@tabler/icons-react';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useUndo } from '../../contexts/UndoContext.jsx';
 import { dbSaveTask, dbDeleteTask } from '../../db.js';
 import { useTasksData } from '../../contexts/TasksContext.jsx';
-import { memberSlug, newId } from '../../utils.js';
+import { useClickOutside } from '../../hooks/useClickOutside.js';
+import { memberSlug, newId, todayStr, cn } from '../../utils.js';
 import { markDeleted, unmarkDeleted } from '../../utils/tombstones.js';
-import { isTaskDone, getDueBadge, sortTasks, toDateStr, isRepeating, nextDueDate } from './taskUtils.js';
-import { FREQUENCIES, FREQ_LABEL } from '../../config/tasks.js';
+import { isTaskDone, getDueBadge, getBucket, sortByDue, BUCKETS, toDateStr, isRepeating, nextDueDate } from './taskUtils.js';
 import TaskModal from './TaskModal.jsx';
 import Whiteboard from './Whiteboard.jsx';
 import MemberParticles from './MemberParticles.jsx';
+import ProgressRing from './ProgressRing.jsx';
+import QuickAdd from './QuickAdd.jsx';
 import s from './Tasks.module.css';
 
-const BADGE_ICON  = { 'ti-alert-circle': IconAlertCircle, 'ti-clock': IconClock, 'ti-calendar': IconCalendar };
-const BADGE_CLS   = { 'b-red': s.bRed, 'b-amb': s.bAmb, 'b-blue': s.bBlue };
+const BADGE_ICON = {
+  red: <IconAlertCircle size={11} />, amber: <IconClock size={11} />,
+  week: <IconCalendar size={11} />, later: <IconCalendar size={11} />,
+};
+const BADGE_CLS  = { red: s.bRed, amber: s.bAmb, week: s.bWeek, later: s.bQuiet };
+const URGENT     = new Set(['overdue', 'today']);
+const slugOf     = m => m.slug ?? memberSlug(m.name);
 
 // "26 Sep" for the roll-forward toast.
 function fmtDue(ds) {
@@ -30,7 +39,12 @@ export default function Tasks() {
   const { tasks, setTasks } = useTasksData();
   const [modal, setModal] = useState(null);
   const [activeDot, setActiveDot] = useState(0);
+  const [quick, setQuick] = useState({ person: null, frequency: 'daily' });
+  const [wbOpen, setWbOpen] = useState(false);
   const layoutRef = useRef(null);
+  const quickRef = useRef(null);
+  const drawerRef = useRef(null);
+  useClickOutside(drawerRef, () => setWbOpen(false));
 
   function handleScroll() {
     const el = layoutRef.current;
@@ -57,7 +71,8 @@ export default function Tasks() {
       return;
     }
     if (task.frequency === 'occasional') {
-      updated = { ...task, done: !task.done };
+      // lastDoneDate lets the progress ring count it as done today.
+      updated = { ...task, done: !task.done, lastDoneDate: task.done ? null : toDateStr(new Date()) };
     } else {
       const done = isTaskDone(task);
       updated = { ...task, lastDoneDate: done ? null : toDateStr(new Date()) };
@@ -79,10 +94,6 @@ export default function Tasks() {
         dbSaveTask(task);
       },
     );
-  }
-
-  function openAdd(person, frequency) {
-    setModal({ mode: 'add', person, frequency, task: null });
   }
 
   function openEdit(task) {
@@ -109,28 +120,51 @@ export default function Tasks() {
     setModal(null);
   }
 
-
   if (!members?.length) return null;
 
+  const quickPerson = quick.person ?? slugOf(members[0]);
+
+  function quickAdd(title) {
+    const task = {
+      id: newId(), person: quickPerson, frequency: quick.frequency, title,
+      dueDate: null, dow: null, repeatInterval: null, done: false, lastDoneDate: null,
+    };
+    setTasks(prev => [...prev, task]);
+    dbSaveTask(task);
+  }
+
+  // Full modal for weekday / due date / repeat, carrying over the typed title.
+  function quickMore(title) {
+    setModal({ mode: 'add', person: quickPerson, frequency: quick.frequency, task: title ? { title } : null });
+  }
+
+  function focusQuick(person) {
+    setQuick(q => ({ ...q, person }));
+    quickRef.current?.focus();
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+    <div className={s.root}>
+      <QuickAdd
+        ref={quickRef}
+        members={members}
+        person={quickPerson}
+        frequency={quick.frequency}
+        onPerson={person => setQuick(q => ({ ...q, person }))}
+        onFrequency={frequency => setQuick(q => ({ ...q, frequency }))}
+        onAdd={quickAdd}
+        onMore={quickMore}
+      />
+
       <div className={s.dotBar}>
         {members.map((m, i) => (
-          <div
-            key={m.name}
-            className={`${s.dot} ${i === activeDot ? s.dotActive : ''}`}
-            style={{ '--dot-col': m.color }}
-          />
+          <div key={m.name} className={cn(s.dot, i === activeDot && s.dotActive)} style={{ '--dot-col': m.color }} />
         ))}
-        <div
-          className={`${s.dot} ${members.length === activeDot ? s.dotActive : ''}`}
-          style={{ '--dot-col': 'rgba(255,255,255,0.5)' }}
-        />
       </div>
 
       <div className={s.layout} ref={layoutRef} onScroll={handleScroll}>
         {members.map(member => {
-          const slug = member.slug ?? memberSlug(member.name);
+          const slug = slugOf(member);
           return (
             <div
               key={slug}
@@ -139,114 +173,32 @@ export default function Tasks() {
               data-person={slug}
             >
               <MemberParticles color={member.color} />
-              <div className={s.column}>
-                <div className={s.colName}>{member.name}</div>
-                <div className={s.colTasks}>
-                  {FREQUENCIES.map(freq => {
-                    const visible = sortTasks(
-                      tasks.filter(t => t.person === slug && t.frequency === freq),
-                      freq
-                    );
-
-                    return (
-                      <div key={freq} className={s.section}>
-                        <div className={s.rowLabel}>{FREQ_LABEL[freq]}</div>
-                        <div className={s.box}>
-                          <div className={s.boxHdr}>
-                            <div className={s.hdrBtns}>
-                              <button className={s.ib} onClick={() => openAdd(slug, freq)} title="Add task">
-                                <IconPlus size={14} />
-                              </button>
-                            </div>
-                          </div>
-
-                          {visible.length === 0 ? (
-                            <p className={s.empty}>No tasks</p>
-                          ) : (
-                            <div className={s.items}>
-                              {visible.map(task => {
-                                const done  = isTaskDone(task);
-                                const badge = getDueBadge(task);
-                                const BadgeIcon = badge ? BADGE_ICON[badge.icon] : null;
-
-                                return (
-                                  <TiltCard
-                                    key={task.id}
-                                    className={`${s.card} ${done ? s.done : ''}`}
-                                    onClick={() => toggleDone(task)}
-                                    done={done}
-                                  >
-                                    {hovered => (<>
-                                      <motion.div
-                                        className={`${s.circle} ${done ? s.checked : ''}`}
-                                        animate={{ scale: done ? [1, 1.45, 1] : 1 }}
-                                        transition={{ duration: 0.25 }}
-                                      >
-                                        {done && <IconCheck size={9} />}
-                                      </motion.div>
-                                      <div className={s.cardBody}>
-                                        <div className={s.cardTitle}>{task.title}</div>
-                                        {(badge || isRepeating(task)) && (
-                                          <div className={s.meta}>
-                                            {badge && (
-                                              <span className={`${s.badge} ${BADGE_CLS[badge.cls]}`}>
-                                                {BadgeIcon && <BadgeIcon size={10} />} {badge.text}
-                                              </span>
-                                            )}
-                                            {isRepeating(task) && (
-                                              <span className={`${s.badge} ${s.bRepeat}`} title={`Repeats every ${task.repeatInterval} week${task.repeatInterval === 1 ? '' : 's'}`}>
-                                                <IconRepeat size={10} /> {task.repeatInterval}w
-                                              </span>
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
-                                      <AnimatePresence>
-                                        {hovered && (
-                                          <motion.div
-                                            className={s.cardActions}
-                                            initial={{ opacity: 0, x: 8 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: 8 }}
-                                            transition={{ duration: 0.13 }}
-                                            onClick={e => e.stopPropagation()}
-                                          >
-                                            <button className={s.ib} onClick={() => openEdit(task)} title="Edit">
-                                              <IconEdit size={14} />
-                                            </button>
-                                            <button className={`${s.ib} ${s.ibDel}`} onClick={() => deleteTask(task.id, task.title)} title="Delete">
-                                              <IconTrash size={14} />
-                                            </button>
-                                          </motion.div>
-                                        )}
-                                      </AnimatePresence>
-                                    </>)}
-                                  </TiltCard>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <TaskColumn
+                member={member}
+                tasks={tasks.filter(t => t.person === slug)}
+                onToggle={toggleDone}
+                onEdit={openEdit}
+                onDelete={deleteTask}
+                onAdd={() => focusQuick(slug)}
+              />
             </div>
           );
         })}
+      </div>
 
-        <div className={s.glowWrap}>
-          <div className={s.column}>
-            <Whiteboard />
-          </div>
+      <div ref={drawerRef} className={cn(s.drawer, wbOpen && s.drawerOpen)}>
+        <button className={s.drawerTab} onClick={() => setWbOpen(o => !o)} title="Whiteboard">
+          <IconPencil size={16} /><span>Whiteboard</span>
+        </button>
+        <div className={s.drawerBody}>
+          <Whiteboard />
         </div>
       </div>
 
       {modal && (
         <TaskModal
           modal={modal}
-          memberName={members.find(m => memberSlug(m.name) === modal.person)?.name || modal.person}
+          memberName={members.find(m => slugOf(m) === modal.person)?.name || modal.person}
           onConfirm={handleModalConfirm}
           onClose={() => setModal(null)}
         />
@@ -255,42 +207,149 @@ export default function Tasks() {
   );
 }
 
-function TiltCard({ className, onClick, done, children }) {
-  const { ref, rotateX, rotateY, onMouseMove, onMouseLeave } = useTilt(6);
-  const [hovered, setHovered] = useState(false);
-  const controls = useAnimation();
-  const firstRender = useRef(true);
+function TaskColumn({ member, tasks, onToggle, onEdit, onDelete, onAdd }) {
+  const [doneOpen, setDoneOpen] = useState(false);
+  const [burst, setBurst] = useState(0);
+  const prevPending = useRef(null);
 
+  const today = todayStr();
+  const live = tasks.filter(t => !isTaskDone(t));
+  const doneList = tasks.filter(isTaskDone);
+  // Today's progress: what's still due/overdue, plus anything ticked off today
+  // (a repeating task rolls forward instead of staying done, so count it too).
+  const pending = live.filter(t => URGENT.has(getBucket(t))).length;
+  const doneToday = tasks.filter(t => t.lastDoneDate === today && (isTaskDone(t) || isRepeating(t))).length;
+  const total = pending + doneToday;
+  const clear = total > 0 && pending === 0;
+
+  // Celebrate the moment the last task due today is ticked (not on first load).
   useEffect(() => {
-    if (firstRender.current) { firstRender.current = false; return; }
-    if (done) controls.start({
-      boxShadow: ['0 0 0px rgba(80,200,120,0)', '0 0 22px rgba(80,200,120,0.5)', '0 0 0px rgba(80,200,120,0)'],
-      transition: { duration: 0.55 },
-    });
-  }, [done, controls]);
+    if (prevPending.current > 0 && pending === 0 && total > 0) setBurst(b => b + 1);
+    prevPending.current = pending;
+  }, [pending, total]);
+
+  const sub = !total ? 'Nothing due today' : clear ? 'All done today ✓' : `${doneToday} of ${total} done today`;
+
+  return (
+    <section className={cn(s.col, clear && s.colClear)}>
+      <div className={s.colHead}>
+        <div className={s.ringWrap}>
+          <ProgressRing pct={total ? doneToday / total : 1} label={member.name[0]} />
+          {burst > 0 && <Sparks key={burst} color={member.color} />}
+        </div>
+        <div>
+          <div className={s.colName}>{member.name}</div>
+          <div className={s.colSub}>{sub}</div>
+        </div>
+        <button className={s.colAdd} onClick={onAdd} title={`Add task for ${member.name}`}>
+          <IconPlus size={16} />
+        </button>
+      </div>
+
+      {BUCKETS.map(([key, label]) => {
+        const group = sortByDue(live.filter(t => getBucket(t) === key));
+        if (!group.length) return null;
+        return (
+          <div key={key} className={s.group}>
+            <div className={cn(s.gHead, s[`g_${key}`])}>
+              <span className={s.gDot} />{label}<span className={s.gN}>{group.length}</span>
+            </div>
+            <div className={s.cards}>
+              <AnimatePresence initial={false}>
+                {group.map(task => (
+                  <TaskCard key={task.id} task={task} onToggle={onToggle} onEdit={onEdit} onDelete={onDelete} />
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+        );
+      })}
+
+      {!live.length && <div className={s.empty}>All clear ✨</div>}
+
+      {doneList.length > 0 && (
+        <>
+          <button className={cn(s.doneRow, doneOpen && s.doneRowOpen)} onClick={() => setDoneOpen(o => !o)}>
+            <IconCheck size={14} className={s.doneTick} />{doneList.length} done
+            <IconChevronRight size={14} className={s.doneChev} />
+          </button>
+          {doneOpen && (
+            <div className={s.doneList}>
+              {doneList.map(task => (
+                <div key={task.id} className={s.doneItem} onClick={() => onToggle(task)}>
+                  <span className={cn(s.check, s.checked)}><IconCheck size={10} stroke={3} /></span>
+                  <span className={s.doneTitle}>{task.title}</span>
+                  <button
+                    className={cn(s.ib, s.ibDel)}
+                    onClick={e => { e.stopPropagation(); onDelete(task.id, task.title); }}
+                    title="Delete"
+                  >
+                    <IconTrash size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function TaskCard({ task, onToggle, onEdit, onDelete }) {
+  const bucket = getBucket(task);
+  const urgent = bucket === 'overdue' || (bucket === 'today' && task.frequency !== 'daily');
+  const badge = getDueBadge(task);
 
   return (
     <motion.div
-      ref={ref}
-      className={className}
-      style={{ rotateX, rotateY, transformPerspective: 800, transformStyle: 'preserve-3d' }}
-      animate={controls}
-      onMouseMove={e => { setHovered(true); onMouseMove(e); }}
-      onMouseLeave={e => { setHovered(false); onMouseLeave(e); }}
-      onClick={onClick}
-      whileHover={{ scale: 1.02, boxShadow: '0 14px 40px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35)' }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ scale: { type: 'spring', stiffness: 500, damping: 18 }, boxShadow: { duration: 0.15 } }}
+      layout
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.92 }}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.22 }}
+      className={cn(s.card, urgent && s.urgent, bucket === 'overdue' && s.overdue, urgent && bucket === 'today' && s.dueToday)}
+      onClick={() => onToggle(task)}
     >
-      {typeof children === 'function' ? children(hovered) : children}
-      {/* depth face — visible on tilt */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        borderRadius: 'inherit',
-        background: 'rgba(0,0,0,0.55)',
-        transform: 'translateZ(-6px)',
-        pointerEvents: 'none',
-      }} />
+      <span className={s.check}><IconCheck size={12} stroke={3} /></span>
+      <div className={s.cardBody}>
+        <div className={s.cardTitle}>{task.title}</div>
+        <div className={s.meta}>
+          {task.frequency === 'daily' && (
+            <span className={cn(s.badge, s.bQuiet)}><IconRepeat size={11} />Daily</span>
+          )}
+          {badge && (
+            <span className={cn(s.badge, BADGE_CLS[badge.tone])}>{BADGE_ICON[badge.tone]}{badge.text}</span>
+          )}
+          {isRepeating(task) && (
+            <span className={cn(s.badge, s.bQuiet)} title={`Repeats every ${task.repeatInterval} week${task.repeatInterval === 1 ? '' : 's'}`}>
+              <IconRepeat size={11} />{task.repeatInterval}w
+            </span>
+          )}
+        </div>
+      </div>
+      <div className={s.cardActions} onClick={e => e.stopPropagation()}>
+        <button className={s.ib} onClick={() => onEdit(task)} title="Edit"><IconEdit size={14} /></button>
+        <button className={cn(s.ib, s.ibDel)} onClick={() => onDelete(task.id, task.title)} title="Delete"><IconTrash size={14} /></button>
+      </div>
     </motion.div>
+  );
+}
+
+// Confetti burst from the avatar when someone clears today. The scatter
+// pattern is rolled once at load — render must stay pure.
+const SPARK_PATHS = Array.from({ length: 22 }, () => {
+  const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
+  return { '--dx': `${Math.cos(a) * d}px`, '--dy': `${Math.sin(a) * d}px`, '--r': `${Math.random() * 360}deg` };
+});
+
+function Sparks({ color }) {
+  const palette = [color, '#ffffff', '#e8c27a'];
+  return (
+    <div className={s.sparks}>
+      {SPARK_PATHS.map((p, i) => <span key={i} className={s.spark} style={{ ...p, background: palette[i % 3] }} />)}
+    </div>
   );
 }

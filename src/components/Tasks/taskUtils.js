@@ -50,54 +50,51 @@ export function isTaskDone(task) {
   return false;
 }
 
-export function getDueBadge(task) {
-  if (task.frequency === 'weekly') {
-    if (task.dow === null || task.dow === undefined) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayMF = (today.getDay() + 6) % 7;
-    const diff = task.dow - todayMF;
-    const dayShort = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][task.dow];
-    if (diff === 0) return { text: 'Due today',             cls: 'b-red',  icon: 'ti-alert-circle' };
-    if (diff > 0) {
-      if (diff === 1) return { text: `${dayShort} · Tomorrow`, cls: 'b-amb',  icon: 'ti-clock' };
-      return               { text: `${dayShort} · ${diff}d`,  cls: 'b-blue', icon: 'ti-calendar' };
-    }
-    if (!isTaskDone(task)) {
-      if (diff === -1) return { text: 'Yesterday',        cls: 'b-red', icon: 'ti-alert-circle' };
-      return                  { text: `${-diff}d overdue`, cls: 'b-red', icon: 'ti-alert-circle' };
-    }
-    const nextIn = 7 + diff;
-    if (nextIn === 1) return { text: `${dayShort} · Tomorrow`,  cls: 'b-amb',  icon: 'ti-clock' };
-    return                   { text: `${dayShort} · ${nextIn}d`, cls: 'b-blue', icon: 'ti-calendar' };
-  }
+const DOW_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-  const dueDate = task.dueDate;
-  if (!dueDate) return null;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const due = new Date(dueDate); due.setHours(0, 0, 0, 0);
-  const diff = Math.round((due - today) / (1000 * 60 * 60 * 24));
-  if (diff < -1) return { text: `${Math.abs(diff)} days overdue`, cls: 'b-red',  icon: 'ti-alert-circle' };
-  if (diff === -1) return { text: 'Yesterday',                    cls: 'b-red',  icon: 'ti-alert-circle' };
-  if (diff === 0)  return { text: 'Due today',                    cls: 'b-red',  icon: 'ti-alert-circle' };
-  if (diff === 1)  return { text: '1 day',                        cls: 'b-amb',  icon: 'ti-clock' };
-  if (diff <= 7)   return { text: `${diff} days`,                 cls: 'b-amb',  icon: 'ti-clock' };
-  return                  { text: `${diff} days`,                 cls: 'b-blue', icon: 'ti-calendar' };
+function midnightToday() {
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  return d;
 }
 
-export function sortTasks(tasks, frequency) {
-  const copy = [...tasks];
-  if (frequency === 'occasional') {
-    copy.sort((a, b) => {
-      if (!a.dueDate && !b.dueDate) return 0;
-      if (!a.dueDate) return 1;
-      if (!b.dueDate) return -1;
-      return a.dueDate < b.dueDate ? -1 : 1;
-    });
-  } else if (frequency === 'weekly') {
-    copy.sort((a, b) => (a.dow ?? 0) - (b.dow ?? 0));
-  } else if (frequency === 'daily') {
-    copy.sort((a, b) => Number(isTaskDone(a)) - Number(isTaskDone(b)));
+// Days until the task's next due date (negative = overdue), or null if it has
+// no date. A weekly task already done this week counts forward to next week.
+export function daysUntilDue(task) {
+  const today = midnightToday();
+  if (task.frequency === 'weekly') {
+    if (task.dow === null || task.dow === undefined) return null;
+    const diff = task.dow - (today.getDay() + 6) % 7;
+    return diff < 0 && isTaskDone(task) ? diff + 7 : diff;
   }
-  return copy;
+  if (task.frequency !== 'occasional' || !task.dueDate) return null;
+  return Math.round((new Date(task.dueDate + 'T00:00:00') - today) / 86400000);
+}
+
+// Which urgency group a task sits in on the Tasks board.
+export const BUCKETS = [
+  ['overdue', 'Overdue'], ['today', 'Today'], ['week', 'This week'], ['occasional', 'Occasional'],
+];
+export function getBucket(task) {
+  if (task.frequency === 'daily') return 'today';
+  const diff = daysUntilDue(task);
+  if (diff === null) return task.frequency === 'weekly' ? 'week' : 'occasional';
+  if (diff < 0) return 'overdue';
+  if (diff === 0) return 'today';
+  return diff < 7 ? 'week' : 'occasional';
+}
+
+// tone: red (overdue) · amber (due today) · week (member tint) · later (quiet)
+export function getDueBadge(task) {
+  const diff = daysUntilDue(task);
+  if (diff === null) return null;
+  if (diff < 0) return { text: `Overdue · ${-diff}d`, tone: 'red' };
+  if (diff === 0) return { text: 'Due today', tone: 'amber' };
+  const d = midnightToday(); d.setDate(d.getDate() + diff);
+  if (diff < 7) return { text: `${DOW_SHORT[(d.getDay() + 6) % 7]} · ${diff === 1 ? 'Tomorrow' : diff + 'd'}`, tone: 'week' };
+  return { text: `${d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} · ${diff}d`, tone: 'later' };
+}
+
+// Soonest first; undated tasks keep their order at the end.
+export function sortByDue(tasks) {
+  return [...tasks].sort((a, b) => (daysUntilDue(a) ?? Infinity) - (daysUntilDue(b) ?? Infinity));
 }
