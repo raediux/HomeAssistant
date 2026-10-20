@@ -20,7 +20,7 @@ export default function MealPlannerParticles() {
     canvas.height = h;
 
     // Pre-render each emoji to an offscreen canvas to avoid per-frame text cost
-    const SIZE = 22;
+    const SIZE = 44;
     const stamps = EMOJIS.map(em => {
       const oc = document.createElement('canvas');
       oc.width = SIZE * 2; oc.height = SIZE * 2;
@@ -57,9 +57,9 @@ export default function MealPlannerParticles() {
         p.x   += p.vx;
         p.y   += p.vy;
         p.rot += p.dRot;
-        if (p.x < -0.05) p.x = 1.05;
-        if (p.x > 1.05)  p.x = -0.05;
-        if (p.y < -0.05) p.y = 1.05;
+        if (p.x < -0.08) p.x = 1.08;
+        if (p.x > 1.08)  p.x = -0.08;
+        if (p.y < -0.08) p.y = 1.08;
 
         ctx.save();
         ctx.globalAlpha = p.alpha;
