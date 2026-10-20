@@ -142,7 +142,7 @@
   user-select: none;
   background: color-mix(in srgb, var(--col) 6%, rgba(255,255,255,0.025));
   border: 1px solid color-mix(in srgb, var(--col) 20%, transparent);
-  border-left: 3px solid var(--col);
+  border-left: 4px solid var(--col);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: background-color .2s;
@@ -151,8 +151,10 @@
 .card.urgent {
   background: color-mix(in srgb, var(--u) 13%, rgba(255,255,255,0.03));
   border-color: color-mix(in srgb, var(--u) 50%, transparent);
-  border-left-color: var(--u);
-  box-shadow: 0 8px 28px -12px var(--u);
+  border-left: 5px solid var(--u);
+  box-shadow:
+    0 0 22px -4px color-mix(in srgb, var(--u) 55%, transparent),
+    0 10px 32px -10px var(--u);
 }
 .card:hover { background-color: color-mix(in srgb, var(--u) 10%, rgba(255,255,255,0.03)); }
 
