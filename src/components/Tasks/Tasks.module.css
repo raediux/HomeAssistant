@@ -35,7 +35,14 @@
 .quickMore:hover { color: var(--text); border-color: rgba(255,255,255,0.14); }
 .quickAdd {
   display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 10px;
-  font: inherit; font-size: 14px; color: #111; background: var(--col); border: none; cursor: pointer;
+  font: inherit; font-size: 14px; color: var(--text); cursor: pointer;
+  background: color-mix(in srgb, var(--col) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--col) 45%, transparent);
+  transition: background .15s, box-shadow .15s;
+}
+.quickAdd:hover {
+  background: color-mix(in srgb, var(--col) 28%, transparent);
+  box-shadow: 0 0 18px -4px color-mix(in srgb, var(--col) 55%, transparent);
 }
 
 /* ── Board: fits the screen, each column scrolls on its own ── */
