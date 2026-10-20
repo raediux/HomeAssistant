@@ -310,7 +310,7 @@ function TaskCard({ task, onToggle, onEdit, onDelete }) {
       whileHover={{ y: -1 }}
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.22 }}
-      className={cn(s.card, urgent && s.urgent, bucket === 'overdue' && s.overdue, urgent && bucket === 'today' && s.dueToday)}
+      className={cn(s.card, urgent && s.urgent)}
       onClick={() => onToggle(task)}
     >
       <span className={s.check}><IconCheck size={12} stroke={3} /></span>

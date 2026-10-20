@@ -147,8 +147,7 @@
   -webkit-backdrop-filter: blur(8px);
   transition: background-color .2s;
 }
-.card.overdue  { --u: var(--red); }
-.card.dueToday { --u: var(--amber); }
+/* Overdue / due today: stronger highlight in the person's own colour — the tag carries red/amber */
 .card.urgent {
   background: color-mix(in srgb, var(--u) 13%, rgba(255,255,255,0.03));
   border-color: color-mix(in srgb, var(--u) 50%, transparent);
