@@ -1,7 +1,7 @@
 export { default as MockProviders } from './MockProviders.jsx';
 export { default as Tasks } from './Tasks/Tasks.jsx';
 export { default as Whiteboard } from './Tasks/Whiteboard.jsx';
-export { default as ColorPicker } from './Tasks/ColorPicker.jsx';
+export { default as ColorPicker } from './shared/ColorPicker.jsx';
 export { default as TaskModal } from './Tasks/TaskModal.jsx';
 export { default as Shopping } from './Shopping/Shopping.jsx';
 export { default as ShoppingWorkingPanel } from './Shopping/ShoppingWorkingPanel.jsx';

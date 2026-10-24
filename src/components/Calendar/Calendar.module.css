@@ -121,7 +121,7 @@
 .badgeInput { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r); padding: 6px 10px; font-size: 12px; color: var(--text); font-family: inherit; outline: none; transition: border-color .12s; }
 .badgeInput:focus { border-color: var(--accent); }
 
-.swatches { display: flex; gap: 6px; }
+.swatches { display: flex; align-items: center; gap: 6px; }
 .swatch { width: 10px; height: 10px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .1s, border-color .1s; }
 .swatch:hover { transform: scale(1.15); }
 .swatch.selected { border-color: var(--text); }

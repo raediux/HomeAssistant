@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconEraser, IconArrowBackUp, IconBucketDroplet } from '@tabler/icons-react';
 import { dbLoadWhiteboard, dbSaveWhiteboard } from '../../db.js';
 import { useHousehold } from '../../contexts/HouseholdContext.jsx';
-import ColorPicker from './ColorPicker.jsx';
+import ColorPicker from '../shared/ColorPicker.jsx';
 import s from './Tasks.module.css';
 
 const COLORS = ['#e8eaf0', '#4a8fd4', '#c46090', '#c9a838', '#64c882', '#e05555'];

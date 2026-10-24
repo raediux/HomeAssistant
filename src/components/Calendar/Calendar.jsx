@@ -9,6 +9,7 @@ import { useTasksData } from '../../contexts/TasksContext.jsx';
 import { cn, memberSlug, dateStr as toDateStr } from '../../utils.js';
 import { markDeleted } from '../../utils/tombstones.js';
 import { isTaskDone } from '../Tasks/taskUtils.js';
+import ColorPicker from '../shared/ColorPicker.jsx';
 import s from './Calendar.module.css';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -19,7 +20,6 @@ const BADGE_SWATCHES = [
   { color: '#4a8fd4', label: 'Blue'   },
   { color: '#c46090', label: 'Pink'   },
   { color: '#c9a838', label: 'Yellow' },
-  { color: '#5a9e5a', label: 'Green'  },
 ];
 
 function monDow(jsDay) { return (jsDay + 6) % 7; }
@@ -324,37 +324,34 @@ export default function Calendar() {
 
 function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, memberLabel, onAddBadge, onUpdateBadge, onDeleteBadge, s }) {
   const [label, setLabel] = useState('');
-  const [swatchIdx, setSwatchIdx] = useState(0);
+  const [color, setColor] = useState(BADGE_SWATCHES[0].color);
   const [editing, setEditing] = useState(null);   // badge id, or null in add mode
   const inputRef = useRef(null);
 
   const d = new Date(dateStr + 'T00:00:00');
   const heading = `${FULL_DAYS[d.getDay()]}, ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
 
-  // A badge saved with a colour outside the swatch set (or one that was later
-  // recoloured elsewhere) falls back to the first swatch rather than no selection.
   function startEdit(b) {
-    const i = BADGE_SWATCHES.findIndex(sw => sw.color === b.color);
     setEditing(b.id);
     setLabel(b.label);
-    setSwatchIdx(i === -1 ? 0 : i);
+    setColor(b.color);
     requestAnimationFrame(() => inputRef.current?.select());
   }
 
   function cancelEdit() {
     setEditing(null);
     setLabel('');
-    setSwatchIdx(0);
+    setColor(BADGE_SWATCHES[0].color);
   }
 
   async function handleSubmit() {
     if (!label.trim()) { inputRef.current?.focus(); return; }
     if (editing !== null) {
-      onUpdateBadge(editing, label, BADGE_SWATCHES[swatchIdx].color);
+      onUpdateBadge(editing, label, color);
       cancelEdit();
       return;
     }
-    await onAddBadge(dateStr, label, BADGE_SWATCHES[swatchIdx].color);
+    await onAddBadge(dateStr, label, color);
     setLabel('');
   }
 
@@ -426,16 +423,17 @@ function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, member
           }}
         />
         <div className={s.swatches}>
-          {BADGE_SWATCHES.map((sw, i) => (
+          {BADGE_SWATCHES.map(sw => (
             <button
-              key={i}
+              key={sw.color}
               type="button"
-              className={`${s.swatch} ${i === swatchIdx ? s.selected : ''}`}
+              className={`${s.swatch} ${sw.color === color ? s.selected : ''}`}
               style={{ background: sw.color }}
               title={sw.label}
-              onClick={() => setSwatchIdx(i)}
+              onClick={() => setColor(sw.color)}
             />
           ))}
+          <ColorPicker color={color} onChange={setColor} align="left" />
         </div>
         {editing !== null && (
           <div className={s.editActions}>

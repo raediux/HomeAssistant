@@ -20,7 +20,9 @@ function rgbToHsv(r,g,b){
   return [h*360,sv,v];
 }
 
-export default function ColorPicker({ color, onChange }) {
+// align="left" anchors the popover to the trigger's left edge, for triggers
+// that sit near the left of a narrow container.
+export default function ColorPicker({ color, onChange, align = 'center' }) {
   const [open, setOpen]       = useState(false);
   const [hsv, setHsv]         = useState(() => { const [r,g,b]=hexToRgb(color); return rgbToHsv(r,g,b); });
   const [hexInput, setHexInput] = useState(color);
@@ -99,13 +101,22 @@ export default function ColorPicker({ color, onChange }) {
     onChange(hex);
   }
 
+  // Mouse and touch share one path; touchmove is non-passive so dragging
+  // inside the popover doesn't scroll the page.
   function startDrag(type, firstEvent) {
     dragging.current = type;
     if (type === 'sv') pickSV(firstEvent); else pickHue(firstEvent);
-    function onMove(e) { if(dragging.current==='sv') pickSV(e); else pickHue(e); }
-    function onUp() { dragging.current=null; window.removeEventListener('mousemove',onMove); window.removeEventListener('mouseup',onUp); }
+    function onMove(e) { if (e.touches) e.preventDefault(); if(dragging.current==='sv') pickSV(e); else pickHue(e); }
+    function onUp() {
+      dragging.current=null;
+      window.removeEventListener('mousemove',onMove); window.removeEventListener('mouseup',onUp);
+      window.removeEventListener('touchmove',onMove); window.removeEventListener('touchend',onUp); window.removeEventListener('touchcancel',onUp);
+    }
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('touchcancel', onUp);
   }
 
   function onHexInput(e) {
@@ -125,12 +136,12 @@ export default function ColorPicker({ color, onChange }) {
         <IconPalette size={15} />
       </div>
       {open && (
-        <div className={s.popover}>
+        <div className={`${s.popover} ${align === 'left' ? s.alignLeft : ''}`}>
           <div className={s.canvases}>
             <canvas ref={svRef} width={180} height={160} className={s.svCanvas}
-              onMouseDown={e => startDrag('sv', e)} />
+              onMouseDown={e => startDrag('sv', e)} onTouchStart={e => startDrag('sv', e)} />
             <canvas ref={hueRef} width={14} height={160} className={s.hueCanvas}
-              onMouseDown={e => startDrag('hue', e)} />
+              onMouseDown={e => startDrag('hue', e)} onTouchStart={e => startDrag('hue', e)} />
           </div>
           <div className={s.footer}>
             <div className={s.swatch} style={{ background: hexInput }} />

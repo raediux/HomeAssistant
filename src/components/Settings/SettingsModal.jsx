@@ -5,7 +5,7 @@ import { useHousehold } from '../../contexts/HouseholdContext.jsx';
 import { useSession } from '../../contexts/AuthContext.jsx';
 import { dbSaveMemberColor, dbSetMemberSharesMeals } from '../../db.js';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
-import ColorPicker from '../Tasks/ColorPicker.jsx';
+import ColorPicker from '../shared/ColorPicker.jsx';
 import s from './SettingsModal.module.css';
 
 const MODAL_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.9 };
