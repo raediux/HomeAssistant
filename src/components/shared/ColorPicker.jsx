@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { IconPalette } from '@tabler/icons-react';
 import { useClickOutside } from '../../hooks/useClickOutside.js';
 import s from './ColorPicker.module.css';
@@ -20,18 +21,47 @@ function rgbToHsv(r,g,b){
   return [h*360,sv,v];
 }
 
-// align="left" anchors the popover to the trigger's left edge, for triggers
-// that sit near the left of a narrow container.
-export default function ColorPicker({ color, onChange, align = 'center' }) {
+const EDGE = 8;   // min gap between the popover and the viewport edge
+const GAP  = 8;   // gap between the trigger and the popover
+
+export default function ColorPicker({ color, onChange }) {
   const [open, setOpen]       = useState(false);
   const [hsv, setHsv]         = useState(() => { const [r,g,b]=hexToRgb(color); return rgbToHsv(r,g,b); });
   const [hexInput, setHexInput] = useState(color);
+  const [pos, setPos]         = useState(null);
   const wrapRef  = useRef(null);
+  const popRef   = useRef(null);
   const svRef    = useRef(null);
   const hueRef   = useRef(null);
   const dragging = useRef(null);
 
-  useClickOutside(wrapRef, () => setOpen(false));
+  useClickOutside([wrapRef, popRef], () => setOpen(false));
+
+  // The popover is portalled to <body> with fixed positioning so narrow or
+  // overflow-clipped containers (e.g. the calendar day panel) can't cut it off.
+  // Centred under the trigger, clamped to the viewport, flipped above if
+  // there's no room below; re-placed on scroll/resize so it stays attached.
+  useLayoutEffect(() => {
+    if (!open) { setPos(null); return; }
+    function place() {
+      const trig = wrapRef.current, pop = popRef.current;
+      if (!trig || !pop) return;
+      const t = trig.getBoundingClientRect();
+      const w = pop.offsetWidth, h = pop.offsetHeight;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const left = Math.max(EDGE, Math.min(t.left + t.width / 2 - w / 2, vw - w - EDGE));
+      const below = t.bottom + GAP;
+      const top = below + h > vh - EDGE && t.top - GAP - h >= EDGE ? t.top - GAP - h : below;
+      setPos({ top, left });
+    }
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [open]);
 
   // Sync internal state when the colour prop changes externally (preset
   // swatches) — adjusted during render instead of in an effect.
@@ -135,8 +165,9 @@ export default function ColorPicker({ color, onChange, align = 'center' }) {
       <div className={s.trigger} onClick={() => setOpen(o => !o)} title="Custom colour">
         <IconPalette size={15} />
       </div>
-      {open && (
-        <div className={`${s.popover} ${align === 'left' ? s.alignLeft : ''}`}>
+      {open && createPortal(
+        <div ref={popRef} className={s.popover} data-popover
+          style={pos ? { top: pos.top, left: pos.left } : { top: 0, left: 0, visibility: 'hidden' }}>
           <div className={s.canvases}>
             <canvas ref={svRef} width={180} height={160} className={s.svCanvas}
               onMouseDown={e => startDrag('sv', e)} onTouchStart={e => startDrag('sv', e)} />
@@ -155,7 +186,8 @@ export default function ColorPicker({ color, onChange, align = 'center' }) {
               <div className={s.field}><span className={s.label}>B</span><span className={s.val}>{b}</span></div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -433,7 +433,7 @@ function DetailPanel({ dateStr, tasks, badges, googleEvents, memberColor, member
               onClick={() => setColor(sw.color)}
             />
           ))}
-          <ColorPicker color={color} onChange={setColor} align="left" />
+          <ColorPicker color={color} onChange={setColor} />
         </div>
         {editing !== null && (
           <div className={s.editActions}>

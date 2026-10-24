@@ -7,23 +7,21 @@
 }
 .trigger:hover { color: var(--text); }
 
+/* Portalled to <body>; top/left are set inline by ColorPicker.jsx.
+   z-index sits above the Settings modal (9000), below Auth (9999). */
 .popover {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
   background: #1c1c22;
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   padding: 12px;
-  z-index: 200;
+  z-index: 9500;
   box-shadow: 0 8px 32px rgba(0,0,0,0.6);
   display: flex;
   flex-direction: column;
   gap: 10px;
   user-select: none;
 }
-.alignLeft { left: 0; transform: none; }
 
 .canvases {
   display: flex;
