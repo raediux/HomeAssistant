@@ -48,8 +48,9 @@ export default function Calendar() {
   const [year,  setYear]  = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [selected, setSelected] = useState(toDateStr(now));
-  const [sheetOpen, setSheetOpen] = useState(false);   // mobile day sheet
+  const [collapsed, setCollapsed] = useState(false);   // mobile: grid shrunk to the selected week
   const touchStart = useRef(null);
+  const detailRef  = useRef(null);
   const { badges, setBadges, googleEvents, hasGoogleToken, fetchGoogleEventsForMonth } = useCalendarData();
   const { tasks, setTasks } = useTasksData();
 
@@ -79,12 +80,35 @@ export default function Calendar() {
     const nm  = ((abs % 12) + 12) % 12;
     setYear(ny);
     setMonth(nm);
-    setSheetOpen(false);
     setSelected(prev => {
       if (!prev) return prev;
       const day = Math.min(Number(prev.slice(8)), new Date(ny, nm + 1, 0).getDate());
       return `${ny}-${String(nm + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     });
+  }
+
+  function goToDate(ds) {
+    const d = new Date(ds + 'T00:00:00');
+    setYear(d.getFullYear());
+    setMonth(d.getMonth());
+    setSelected(ds);
+  }
+
+  function shiftWeek(delta) {
+    const d = new Date((selected || toDateStr(new Date())) + 'T00:00:00');
+    d.setDate(d.getDate() + 7 * delta);
+    goToDate(toDateStr(d));
+  }
+
+  // Collapsed mobile grid only shows one week, so prev/next step by week
+  const step = delta => (!isDesktop && collapsed ? shiftWeek(delta) : shiftMonth(delta));
+
+  // Mobile: scrolling the day details collapses the grid; back at the top it expands
+  function onDetailScroll(e) {
+    if (isDesktop) return;
+    const top = e.currentTarget.scrollTop;
+    if (top > 12 && !collapsed) setCollapsed(true);
+    else if (top <= 0 && collapsed) setCollapsed(false);
   }
 
   // Mobile: horizontal flick on the grid changes month. Guarded so vertical
@@ -101,12 +125,7 @@ export default function Calendar() {
     touchStart.current = null;
     if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     e.preventDefault();   // suppress the synthesised click on the day under the finger
-    shiftMonth(dx < 0 ? 1 : -1);
-  }
-
-  function openDay(ds) {
-    setSelected(ds);
-    setSheetOpen(true);
+    step(dx < 0 ? 1 : -1);
   }
 
   // Build task map: dateStr → tasks (occasional, not done, this month)
@@ -141,6 +160,22 @@ export default function Calendar() {
   function memberLabel(person) {
     const m = (members || []).find(m => memberSlug(m.name) === person);
     return m?.name || person;
+  }
+
+  // Mobile "Coming up": the next days after fromDs that have anything on, across
+  // month boundaries (Google events only cover the loaded month).
+  function upcomingDays(fromDs, n) {
+    const byDate = {};
+    const push = (ds, item) => (byDate[ds] = byDate[ds] || []).push(item);
+    for (const t of tasks)
+      if (t.frequency === 'occasional' && t.dueDate > fromDs && !isTaskDone(t)) push(t.dueDate, { label: t.title, color: memberColor(t.person) });
+    for (const b of badges)
+      if (b.date > fromDs) push(b.date, { label: b.label, color: b.color });
+    for (const e of googleEvents) {
+      const ds = (e.start || '').split('T')[0];
+      if (ds > fromDs) push(ds, { label: e.title, color: e.color });
+    }
+    return Object.keys(byDate).sort().slice(0, n).map(ds => [ds, byDate[ds]]);
   }
 
   async function addBadge(dateStr, label, color) {
@@ -212,13 +247,16 @@ export default function Calendar() {
   const firstDay = new Date(year, month, 1);
   const startDow = monDow(firstDay.getDay());
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const selRow   = selected?.startsWith(prefix) ? Math.floor((startDow + Number(selected.slice(8)) - 1) / 7) : 0;
+  const rowClass = row => collapsed && row !== selRow && s.dayCollapsed;
+  const upcoming = !isDesktop && selected ? upcomingDays(selected, 6) : [];
 
   return (
     <div className={`${s.container} glass-edge`}>
       <div className={s.nav}>
-        <button className={s.ib} onClick={() => shiftMonth(-1)} aria-label="Previous month"><IconChevronLeft size={16} /></button>
+        <button className={s.ib} onClick={() => step(-1)} aria-label="Previous"><IconChevronLeft size={16} /></button>
         <span className={s.monthLabel}>{MONTH_NAMES[month]} {year}</span>
-        <button className={s.ib} onClick={() => shiftMonth(1)} aria-label="Next month"><IconChevronRight size={16} /></button>
+        <button className={s.ib} onClick={() => step(1)} aria-label="Next"><IconChevronRight size={16} /></button>
         {session?.user && (
           hasGoogleToken
             ? <span className={s.syncedChip}><span className={s.syncedDot} /><span className={s.gLabel}>Google Calendar synced</span><button className={s.refreshBtn} onClick={() => fetchGoogleEventsForMonth(year, month)} title="Refresh" aria-label="Refresh Google Calendar">↻</button></span>
@@ -231,7 +269,7 @@ export default function Calendar() {
           <div className={s.grid}>
             {DAY_HDRS.map(d => <div key={d} className={s.dayHdr}>{d}</div>)}
             {Array.from({ length: startDow }, (_, i) => (
-              <div key={`empty-${i}`} className={`${s.day} ${s.dayEmpty}`} />
+              <div key={`empty-${i}`} className={cn(s.day, s.dayEmpty, rowClass(0))} />
             ))}
             {Array.from({ length: daysInMonth }, (_, i) => {
               const day = i + 1;
@@ -246,30 +284,23 @@ export default function Calendar() {
               ];
               const shown    = combined.slice(0, MAX_BADGES_PER_DAY);
               const overflow = combined.length - MAX_BADGES_PER_DAY;
-              const classes  = cn(s.day, ds === todayStr && s.dayToday, ds === selected && s.daySelected, ds === dragOver && s.dayDropTarget);
+              const classes  = cn(s.day, ds === todayStr && s.dayToday, ds === selected && s.daySelected, ds === dragOver && s.dayDropTarget, rowClass(Math.floor((startDow + i) / 7)));
 
               return (
                 <div
                   key={ds}
                   className={classes}
-                  onClick={() => openDay(ds)}
+                  onClick={() => setSelected(ds)}
                   onDragOver={isDesktop ? e => onDayDragOver(e, ds) : undefined}
                   onDragLeave={isDesktop ? () => setDragOver(prev => prev === ds ? null : prev) : undefined}
                   onDrop={isDesktop ? e => onDayDrop(e, ds) : undefined}
                 >
                   <div className={s.dayNum}>{day}</div>
-                  {/* Mobile: compact chips stand in for the desktop text badges */}
-                  <div className={s.barRow}>
-                    {combined.slice(0, 3).map((item, j) => (
-                      <span
-                        key={j}
-                        className={s.bar}
-                        style={{ background: item.color + '26', color: item.color, borderLeftColor: item.color }}
-                      >
-                        {item.label}
-                      </span>
+                  {/* Mobile: one dot per colour stands in for the desktop text badges */}
+                  <div className={s.dots}>
+                    {[...new Set(combined.map(item => item.color))].slice(0, 4).map(c => (
+                      <i key={c} style={{ background: c }} />
                     ))}
-                    {combined.length > 3 && <span className={s.barMore}>+{combined.length - 3} more</span>}
                   </div>
                   {shown.map((item, j) => {
                     // Google events are read-only (calendar.readonly scope), so they stay put.
@@ -295,8 +326,10 @@ export default function Calendar() {
           </div>
         </div>
 
-        <div className={cn(s.detail, 'glass-edge', sheetOpen && s.sheetOpen)}>
-          <button className={s.sheetHandle} onClick={() => setSheetOpen(false)} aria-label="Close day details" />
+        <button className={s.grab} onClick={() => setCollapsed(c => !c)} aria-label={collapsed ? 'Show month' : 'Show week only'}><span /></button>
+
+        <div ref={detailRef} className={cn(s.detail, 'glass-edge')} onScroll={onDetailScroll}>
+          <div className={s.detailInner}>
           {!selected ? (
             <div className={s.detailEmpty}>Select a day</div>
           ) : (
@@ -314,10 +347,25 @@ export default function Calendar() {
               s={s}
             />
           )}
+          {upcoming.length > 0 && (
+            <div className={s.upcoming}>
+              <div className={s.detailSection}>Coming up</div>
+              {upcoming.map(([ds, items]) => {
+                const d = new Date(ds + 'T00:00:00');
+                return (
+                  <button key={ds} className={s.upRow} onClick={() => { goToDate(ds); detailRef.current?.scrollTo({ top: 0 }); }}>
+                    <span className={s.upDate}><span>{DAY_HDRS[monDow(d.getDay())]}</span>{d.getDate()}</span>
+                    <span className={s.upItems}>
+                      {items.map((it, j) => <span key={j} style={{ background: it.color + '2e', color: it.color }}>{it.label}</span>)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          </div>
         </div>
       </div>
-
-      <div className={cn(s.sheetBackdrop, sheetOpen && s.sheetOpen)} onClick={() => setSheetOpen(false)} />
     </div>
   );
 }
