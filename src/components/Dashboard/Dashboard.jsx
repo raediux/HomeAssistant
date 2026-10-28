@@ -6,7 +6,6 @@ import Tasks from '../Tasks/Tasks.jsx';
 import MealPlanner from '../MealPlanner/MealPlanner.jsx';
 import Calendar from '../Calendar/Calendar.jsx';
 import Prices from '../Prices/Prices.jsx';
-import { UndoProvider } from '../../contexts/UndoContext.jsx';
 import ErrorBoundary from '../ErrorBoundary.jsx';
 import s from './Dashboard.module.css';
 
@@ -33,7 +32,7 @@ export default function Dashboard() {
   }
 
   return (
-    <UndoProvider>
+    <>
     <Suspense fallback={null}><ThreeBackground /></Suspense>
     <div className={s.app}>
       <Topbar />
@@ -63,6 +62,6 @@ export default function Dashboard() {
         </AnimatePresence>
       </div>
     </div>
-    </UndoProvider>
+    </>
   );
 }

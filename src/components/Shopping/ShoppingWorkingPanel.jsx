@@ -109,7 +109,9 @@ function WorkingItem({ item, onToggle, onDelete, onEdit, onArchive }) {
       <div className={s.sMoveZone}>
         <span className={s.sName}>{item.name}</span>
       </div>
-      <div className={s.itemActions} onClick={e => e.stopPropagation()}>
+      {/* touchEnd too: the row's handler calls preventDefault (killing the
+          button's click) and toggles, so a tap on Delete would tick instead. */}
+      <div className={s.itemActions} onClick={e => e.stopPropagation()} onTouchEnd={e => e.stopPropagation()}>
         <button className={`${s.moveBtn} ${s.del}`} title="Delete" onClick={onDelete}><IconTrash size={12} /></button>
         <button className={`${s.moveBtn} ${s.edt}`} title="Edit" onClick={onEdit}><IconPencil size={12} /></button>
         <button className={`${s.moveBtn} ${s.rem}`} title="Move back to All Items" onClick={onArchive}><IconArrowBackUp size={12} /></button>
